@@ -5,6 +5,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/utils"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 func UserCreateValidator(c *fiber.Ctx) error {
@@ -21,7 +22,7 @@ func UserCreateValidator(c *fiber.Ctx) error {
 	var user models.User
 	initializers.DB.First(&user, "email = ?", reqBody.Email)
 
-	if user.ID != 0 {
+	if user.ID != uuid.Nil {
 		return &fiber.Error{Code: 400, Message: "User with this Email ID already exists"}
 	}
 

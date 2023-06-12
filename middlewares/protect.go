@@ -9,6 +9,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/spf13/viper"
 )
 
@@ -40,7 +41,7 @@ func Protect(c *fiber.Ctx) error {
 		var user models.User
 		initializers.DB.First(&user, claims["sub"])
 
-		if user.ID == 0 {
+		if user.ID == uuid.Nil {
 			return &fiber.Error{Code: 401, Message: "User of this token no longer exists"}
 		}
 

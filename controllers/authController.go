@@ -7,6 +7,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -71,7 +72,7 @@ func LogIn(c *fiber.Ctx) error {
 
 	initializers.DB.First(&user, "email = ?", reqBody.Email)
 
-	if user.ID == 0 {
+	if user.ID == uuid.Nil {
 		return &fiber.Error{Code: 400, Message: "No user with these credentials found."}
 	}
 
