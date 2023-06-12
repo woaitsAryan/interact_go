@@ -25,6 +25,7 @@ type UserCreateSchema struct {
 	Name              string    `json:"name" validate:"required"`
 	Username          string    `json:"username" validate:"required"`
 	PhoneNo           string    `json:"phoneNo"`
+	ProfilePic        string    `json:"profilePic"`
 	Email             string    `json:"email" validate:"required,email"`
 	Password          string    `json:"password" validate:"required,min=8"`
 	PasswordChangedAt time.Time `json:"passwordChangedAt" validate:"-"`

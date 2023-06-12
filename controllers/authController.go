@@ -5,6 +5,7 @@ import (
 
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/Pratham-Mishra04/interact/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
@@ -46,7 +47,21 @@ func SignUp(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error"}
 	}
 
-	newUser := models.User{Name: reqBody.Name, Email: reqBody.Email, Password: string(hash)}
+	var picName string = ""
+
+	picName, err = utils.SaveFile(c, "profilePic", "users/profilePics", true, true)
+	if err != nil {
+		return err
+	}
+
+	newUser := models.User{
+		Name:       reqBody.Name,
+		Email:      reqBody.Email,
+		Password:   string(hash),
+		Username:   reqBody.Username,
+		PhoneNo:    reqBody.PhoneNo,
+		ProfilePic: picName,
+	}
 
 	result := initializers.DB.Create(&newUser)
 
