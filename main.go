@@ -18,7 +18,8 @@ func init() {
 		log.Fatal(err)
 	}
 	initializers.ConnectToDB()
-	initializers.AutoMigrate()
+	// scripts.SeedDummyData()
+	// initializers.AutoMigrate()
 }
 
 func main() {

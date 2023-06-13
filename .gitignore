@@ -1,4 +1,4 @@
-./public
+/public
 .env*
 interact.exe*
-./scripts
+/scripts

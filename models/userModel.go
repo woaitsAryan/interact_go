@@ -22,8 +22,7 @@ type User struct {
 	Tags                      pq.StringArray `gorm:"type:text[]" json:"tags"`
 	Followers                 []*User        `gorm:"many2many:user_followers;joinForeignKey:follower_id;joinReferences:id" json:"followers,omitempty"`
 	Following                 []*User        `gorm:"many2many:user_followers;joinForeignKey:user_id;joinReferences:id" json:"following,omitempty"`
-	LastViewed                []*Project     `gorm:"many2many:user_last_viewed;joinForeignKey:user_id;joinReferences:id" json:"lastViewed,omitempty"`
-	ProfileViews              []*ProfileView `gorm:"foreignKey:UserID" json:"profileViews"`
+	LastViewed                []*Project     `gorm:"many2many:user_last_viewed_projects;" json:"lastViewed,omitempty"`
 	PasswordResetToken        string         `json:"-"`
 	PasswordResetTokenExpires time.Time      `json:"-"`
 	PasswordChangedAt         time.Time      `gorm:"default:current_timestamp" json:"-"`
