@@ -22,18 +22,28 @@ type User struct {
 	Tags                      pq.StringArray `gorm:"type:text[]" json:"tags"`
 	Followers                 []*User        `gorm:"many2many:user_followers;joinForeignKey:follower_id;joinReferences:id" json:"followers,omitempty"`
 	Following                 []*User        `gorm:"many2many:user_followers;joinForeignKey:user_id;joinReferences:id" json:"following,omitempty"`
-	LastViewed                []*Project     `gorm:"many2many:user_last_viewed_projects;" json:"lastViewed,omitempty"`
-	PasswordResetToken        string         `json:"-"`
-	PasswordResetTokenExpires time.Time      `json:"-"`
-	PasswordChangedAt         time.Time      `gorm:"default:current_timestamp" json:"-"`
-	Admin                     bool           `gorm:"default:false" json:"admin"`
-	Active                    bool           `gorm:"default:true" json:"active"`
+	NoOfFollowers             int32
+	NoOfFollowing             int32
+	LastViewed                []*Project `gorm:"many2many:user_last_viewed_projects;" json:"lastViewed,omitempty"`
+	PasswordResetToken        string     `json:"-"`
+	PasswordResetTokenExpires time.Time  `json:"-"`
+	PasswordChangedAt         time.Time  `gorm:"default:current_timestamp" json:"-"`
+	Admin                     bool       `gorm:"default:false" json:"admin"`
+	Active                    bool       `gorm:"default:true" json:"active"`
+}
+
+func (u *User) GetNoOfFollowers() int32 {
+	return int32(len(u.Followers))
+}
+
+func (u *User) GetNoOfFollowing() int32 {
+	return int32(len(u.Following))
 }
 
 type ProfileView struct {
 	ID     uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id,omitempty"`
 	UserID uuid.UUID `gorm:"type:uuid;not null" json:"userId"`
-	Date   time.Time `json:"date"`
+	Date   time.Time `gorm:"type:date" json:"date"`
 	Count  int       `json:"count"`
 }
 

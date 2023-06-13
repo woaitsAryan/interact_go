@@ -61,6 +61,8 @@ func Protect(c *fiber.Ctx) error {
 		return err
 	}
 
+	c.Set("loggedInUserID", user.ID.String())
+
 	c.Locals("loggedInUser", user)
 
 	return c.Next()
