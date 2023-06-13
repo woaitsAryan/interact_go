@@ -47,20 +47,6 @@ type ProfileView struct {
 	Count  int       `json:"count"`
 }
 
-type UserCreateSchema struct {
-	Name       string `json:"name" validate:"required"`
-	Username   string `json:"username" validate:"required"`
-	PhoneNo    string `json:"phoneNo"`
-	ProfilePic string `json:"profilePic"`
-
-	Email             string    `json:"email" validate:"required,email"`
-	Password          string    `json:"password" validate:"required,min=8"`
-	ConfirmPassword   string    `json:"confirmPassword" validate:"required,min=8"`
-	PasswordChangedAt time.Time `json:"-"`
-	Admin             bool      `json:"-"`
-	Active            bool      `json:"-"`
-}
-
 // This func is called before gorm conversion
 // func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 // 	u.PasswordChangedAt = time.Now()

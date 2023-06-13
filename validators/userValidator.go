@@ -1,21 +1,22 @@
 package validators
 
 import (
+	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
-	"github.com/Pratham-Mishra04/interact/utils"
+	"github.com/Pratham-Mishra04/interact/schemas"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
 
 func UserCreateValidator(c *fiber.Ctx) error {
-	var reqBody models.UserCreateSchema
+	var reqBody schemas.UserCreateSchema
 
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
 	}
 
-	if err := utils.Validate[models.UserCreateSchema](reqBody); err != nil {
+	if err := helpers.Validate[schemas.UserCreateSchema](reqBody); err != nil {
 		return err
 	}
 

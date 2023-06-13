@@ -84,6 +84,36 @@ func PartialProtect(c *fiber.Ctx) error {
 		return err
 	}
 
+	c.Set("loggedInUserID", user.ID.String())
+
+	c.Locals("loggedInUser", user)
+
+	return c.Next()
+}
+
+func SelfProtect(c *fiber.Ctx) error {
+	authHeader := c.Get("Authorization")
+	tokenArr := strings.Split(authHeader, " ")
+
+	if len(tokenArr) != 2 {
+		return &fiber.Error{Code: 401, Message: "You are Not Logged In."}
+	}
+
+	tokenString := tokenArr[1]
+	var user models.User
+
+	if err := verifyToken(tokenString, &user); err != nil {
+		return err
+	}
+
+	userID := c.Params("userID")
+
+	if user.ID.String() != userID {
+		return &fiber.Error{Code: 403, Message: "Cannot Modify this User"}
+	}
+
+	c.Set("loggedInUserID", user.ID.String())
+
 	c.Locals("loggedInUser", user)
 
 	return c.Next()

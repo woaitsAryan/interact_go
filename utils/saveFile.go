@@ -2,7 +2,7 @@ package utils
 
 import "github.com/gofiber/fiber/v2"
 
-func SaveFile(c *fiber.Ctx, fieldName string, path string, single bool, resize bool) (string, error) {
+func SaveFile(c *fiber.Ctx, fieldName string, path string, single bool, resize bool, d1 int, d2 int) (string, error) {
 
 	form, err := c.MultipartForm()
 	if err != nil {
@@ -23,7 +23,7 @@ func SaveFile(c *fiber.Ctx, fieldName string, path string, single bool, resize b
 		c.SaveFile(file, filePath)
 
 		if resize {
-			picName, err := ResizeImage(filePath, 500, 500)
+			picName, err := ResizeImage(filePath, d1, d2)
 			if err != nil {
 				return "", err
 			}

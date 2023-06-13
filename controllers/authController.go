@@ -5,7 +5,7 @@ import (
 
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
-	"github.com/Pratham-Mishra04/interact/utils"
+	"github.com/Pratham-Mishra04/interact/schemas"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
@@ -37,7 +37,7 @@ func createSendToken(c *fiber.Ctx, user models.User, statusCode int, message str
 
 func SignUp(c *fiber.Ctx) error {
 
-	var reqBody models.UserCreateSchema
+	var reqBody schemas.UserCreateSchema
 
 	c.BodyParser(&reqBody)
 
@@ -47,20 +47,12 @@ func SignUp(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error"}
 	}
 
-	var picName string = ""
-
-	picName, err = utils.SaveFile(c, "profilePic", "users/profilePics", true, true)
-	if err != nil {
-		return err
-	}
-
 	newUser := models.User{
-		Name:       reqBody.Name,
-		Email:      reqBody.Email,
-		Password:   string(hash),
-		Username:   reqBody.Username,
-		PhoneNo:    reqBody.PhoneNo,
-		ProfilePic: picName,
+		Name:     reqBody.Name,
+		Email:    reqBody.Email,
+		Password: string(hash),
+		Username: reqBody.Username,
+		PhoneNo:  reqBody.PhoneNo,
 	}
 
 	result := initializers.DB.Create(&newUser)
