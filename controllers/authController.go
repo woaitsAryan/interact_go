@@ -16,6 +16,7 @@ import (
 func createSendToken(c *fiber.Ctx, user models.User, statusCode int, message string) error {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": user.ID,
+		"crt": time.Now().Unix(),
 		"exp": time.Now().Add(time.Hour * 24 * 30).Unix(), // 30 days
 	})
 
@@ -30,8 +31,8 @@ func createSendToken(c *fiber.Ctx, user models.User, statusCode int, message str
 	return c.Status(statusCode).JSON(fiber.Map{
 		"status":  "success",
 		"message": message,
-		"user":    user,
 		"token":   tokenString,
+		"userID":  user.ID,
 	})
 }
 
@@ -48,11 +49,12 @@ func SignUp(c *fiber.Ctx) error {
 	}
 
 	newUser := models.User{
-		Name:     reqBody.Name,
-		Email:    reqBody.Email,
-		Password: string(hash),
-		Username: reqBody.Username,
-		PhoneNo:  reqBody.PhoneNo,
+		Name:              reqBody.Name,
+		Email:             reqBody.Email,
+		Password:          string(hash),
+		Username:          reqBody.Username,
+		PhoneNo:           reqBody.PhoneNo,
+		PasswordChangedAt: time.Now(),
 	}
 
 	result := initializers.DB.Create(&newUser)
@@ -67,7 +69,7 @@ func SignUp(c *fiber.Ctx) error {
 func LogIn(c *fiber.Ctx) error {
 
 	var reqBody struct {
-		Email    string `json:"email"`
+		Username string `json:"username"`
 		Password string `json:"password"`
 	}
 
@@ -77,7 +79,7 @@ func LogIn(c *fiber.Ctx) error {
 
 	var user models.User
 
-	initializers.DB.First(&user, "email = ?", reqBody.Email)
+	initializers.DB.First(&user, "username = ?", reqBody.Username)
 
 	if user.ID == uuid.Nil {
 		return &fiber.Error{Code: 400, Message: "No user with these credentials found."}

@@ -34,7 +34,11 @@ func verifyToken(tokenString string, user *models.User) error {
 			return &fiber.Error{Code: 401, Message: "User of this token no longer exists"}
 		}
 
-		if user.PasswordChangedAt.After(time.Unix(int64(claims["exp"].(float64)), 0)) {
+		if time.Now().After(time.Unix(int64(claims["exp"].(float64)), 0)) {
+			return &fiber.Error{Code: 401, Message: "Token has expired, log in again."}
+		}
+
+		if user.PasswordChangedAt.After(time.Unix(int64(claims["crt"].(float64)), 0)) {
 			return &fiber.Error{Code: 401, Message: "Password was recently changed, log in again."}
 		}
 

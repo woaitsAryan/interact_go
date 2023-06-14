@@ -3,6 +3,7 @@ package controllers
 import (
 	"errors"
 	"reflect"
+	"time"
 
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
@@ -13,6 +14,17 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
+
+func GetAllUsers(c *fiber.Ctx) error {
+	var users []models.User
+	initializers.DB.Find(&users)
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "",
+		"users":   users,
+	})
+}
 
 func GetMe(c *fiber.Ctx) error {
 	user := c.Locals("loggedInUser")
@@ -44,7 +56,7 @@ func GetUser(c *fiber.Ctx) error {
 	})
 }
 
-func UpdateUser(c *fiber.Ctx) error {
+func UpdateUser(c *fiber.Ctx) error { //!add achievements
 	userID := c.Params("userID")
 	var user models.User
 	if err := initializers.DB.First(&user, "id = ?", userID).Error; err != nil {
@@ -159,22 +171,23 @@ func UpdatePassord(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Passwords do not match."}
 	}
 
-	userID := c.Params("userID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var user models.User
-	initializers.DB.First(&user, "id = ?", userID)
+	initializers.DB.First(&user, "id = ?", loggedInUserID)
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(reqBody.Password)); err != nil {
 		return &fiber.Error{Code: 400, Message: "Incorret Password."}
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(reqBody.Password), 10)
+	hash, err := bcrypt.GenerateFromPassword([]byte(reqBody.NewPassword), 10)
 
 	if err != nil {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error"}
 	}
 
 	user.Password = string(hash)
+	user.PasswordChangedAt = time.Now()
 
 	if err := initializers.DB.Save(&user).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Database Error."}

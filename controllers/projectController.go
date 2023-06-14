@@ -13,8 +13,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func GetProject(c *fiber.Ctx) error {
-
+func GetProject(c *fiber.Ctx) error { // !make select congifs
 	projectID := c.Params("projectID")
 
 	var project models.Project
@@ -29,6 +28,36 @@ func GetProject(c *fiber.Ctx) error {
 		"status":  "success",
 		"message": "",
 		"project": project,
+	})
+}
+
+func GetUserProjects(c *fiber.Ctx) error {
+	userID := c.Params("userID")
+
+	var projects []models.Project
+	if err := initializers.DB.Where("user_id = ? AND is_private = ?", userID, false).Find(&projects).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":   "success",
+		"message":  "",
+		"projects": projects,
+	})
+}
+
+func GetMyProjects(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	var projects []models.Project
+	if err := initializers.DB.Where("user_id = ?", loggedInUserID).Find(&projects).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":   "success",
+		"message":  "",
+		"projects": projects,
 	})
 }
 

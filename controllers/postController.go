@@ -6,6 +6,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/schemas"
 	"github.com/Pratham-Mishra04/interact/utils"
+	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -15,8 +16,10 @@ func GetPost(c *fiber.Ctx) error {
 
 	postID := c.Params("postID")
 
+	postUserSelectedDB := utils.PostSelectConfig(initializers.DB.Preload("User"))
+
 	var post models.Post
-	if err := initializers.DB.Preload("User").Select("id, username, name, profile_pic").First(&post, "id = ?", postID).Error; err != nil {
+	if err := postUserSelectedDB.First(&post, "id = ?", postID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Post of this ID found."}
 		}
@@ -39,6 +42,44 @@ func GetPost(c *fiber.Ctx) error {
 		"status":  "success",
 		"message": "",
 		"post":    post,
+	})
+}
+
+func GetUserPosts(c *fiber.Ctx) error {
+	userID := c.Params("userID")
+
+	paginatedDB := API.Paginator(c)(initializers.DB)
+
+	postUserSelectedDB := utils.PostSelectConfig(paginatedDB.Preload("User"))
+
+	var posts []models.Post
+	if err := postUserSelectedDB.Where("user_id = ?", userID, false).Find(&posts).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "",
+		"posts":   posts,
+	})
+}
+
+func GetMyPosts(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	paginatedDB := API.Paginator(c)(initializers.DB)
+
+	postUserSelectedDB := utils.PostSelectConfig(paginatedDB.Preload("User"))
+
+	var posts []models.Post
+	if err := postUserSelectedDB.Where("user_id = ?", loggedInUserID).Find(&posts).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "",
+		"posts":   posts,
 	})
 }
 

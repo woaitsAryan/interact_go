@@ -5,8 +5,8 @@ import (
 )
 
 type UserCreateSchema struct {
-	Name            string `json:"name" validate:"alpha, required"`
-	Username        string `json:"username" validate:"alphanum, required"`
+	Name            string `json:"name" validate:"required"`
+	Username        string `json:"username" validate:"alphanum,required"`
 	PhoneNo         string `json:"phoneNo" validate:"e164"`
 	Email           string `json:"email" validate:"required,email"`
 	Password        string `json:"password" validate:"required,min=8"`
@@ -21,5 +21,5 @@ type UserUpdateSchema struct {
 	Bio        string         `json:"bio"`
 	Title      string         `json:"title"`
 	Tagline    string         `json:"tagline"`
-	Tags       pq.StringArray `json:"tags" validate:"dive, alpha"`
+	Tags       pq.StringArray `json:"tags" validate:"dive,alpha"`
 }

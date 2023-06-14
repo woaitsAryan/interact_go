@@ -21,5 +21,6 @@ func AutoMigrate() {
 		&models.ProjectView{},
 		&models.ProjectBookmarkItem{},
 		&models.PostBookmarkItem{},
+		&models.FollowFollower{},
 	)
 }
