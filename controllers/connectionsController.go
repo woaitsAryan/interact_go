@@ -5,6 +5,7 @@ import (
 
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	utils "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -19,7 +20,7 @@ func FollowUser(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &fiber.Error{Code: 400, Message: "Server error. Log in again."}
 		}
-		return &fiber.Error{Code: 400, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
 	var toFollow models.User
@@ -27,7 +28,7 @@ func FollowUser(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &fiber.Error{Code: 400, Message: "No user of this ID found."}
 		}
-		return &fiber.Error{Code: 400, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
 	var existingFollower models.User
@@ -39,15 +40,15 @@ func FollowUser(c *fiber.Ctx) error {
 
 	user.Following = append(user.Following, &toFollow)
 	if err := initializers.DB.Save(&user).Error; err != nil {
-		return &fiber.Error{Code: 400, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
 	toFollow.Followers = append(toFollow.Followers, &user)
 	if err := initializers.DB.Save(&toFollow).Error; err != nil {
-		return &fiber.Error{Code: 400, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "User followed successfully.",
 	})
@@ -62,7 +63,7 @@ func UnfollowUser(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &fiber.Error{Code: 400, Message: "Server error. Log in again."}
 		}
-		return &fiber.Error{Code: 400, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
 	var toUnfollow models.User
@@ -70,7 +71,7 @@ func UnfollowUser(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &fiber.Error{Code: 400, Message: "No user of this ID found."}
 		}
-		return &fiber.Error{Code: 400, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
 	var existingFollower models.User
@@ -84,7 +85,7 @@ func UnfollowUser(c *fiber.Ctx) error {
 
 	initializers.DB.Model(&toUnfollow).Association("Followers").Delete(&user)
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "User unfollowed successfully.",
 	})
@@ -99,7 +100,7 @@ func RemoveFollow(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &fiber.Error{Code: 400, Message: "Server error. Log in again."}
 		}
-		return &fiber.Error{Code: 400, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
 	var follower models.User
@@ -107,7 +108,7 @@ func RemoveFollow(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &fiber.Error{Code: 400, Message: "No follower of this ID found."}
 		}
-		return &fiber.Error{Code: 400, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
 	var existingFollowing models.User
@@ -121,8 +122,38 @@ func RemoveFollow(c *fiber.Ctx) error {
 
 	initializers.DB.Model(&follower).Association("Followers").Delete(&user)
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Follower removed successfully.",
+	})
+}
+
+func GetFollowers(c *fiber.Ctx) error {
+	userID := c.GetRespHeader("loggedInUserID")
+
+	paginatedDB := utils.Paginator(c)(initializers.DB)
+
+	var user models.User
+	paginatedDB.Preload("Followers").First(&user, "id = ?", userID)
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":    "success",
+		"message":   "",
+		"followers": user.Followers,
+	})
+}
+
+func GetFollowing(c *fiber.Ctx) error {
+	userID := c.GetRespHeader("loggedInUserID")
+
+	paginatedDB := utils.Paginator(c)(initializers.DB)
+
+	var user models.User
+	paginatedDB.Preload("Following").First(&user, "id = ?", userID)
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":    "success",
+		"message":   "",
+		"following": user.Following,
 	})
 }

@@ -16,7 +16,6 @@ type Post struct {
 	LikedBy  []*User        `gorm:"many2many:user_post_likes;joinForeignKey:user_id;joinReferences:id" json:"likedBy,omitempty"`
 	Images   pq.StringArray `gorm:"type:varchar(255);not null" json:"images"`
 	Hashes   pq.StringArray `gorm:"type:text[]" json:"hashes"`
-	Caption  string         `gorm:"type:varchar(255);not null" json:"caption"`
 	PostedBy uuid.UUID      `gorm:"type:uuid;not null" json:"postedBy"`
 	NoShares int            `json:"noShares"`
 	NoLikes  int            `json:"noLikes"`

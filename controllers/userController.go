@@ -51,7 +51,7 @@ func UpdateUser(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &fiber.Error{Code: 400, Message: "No user of this ID found."}
 		}
-		return &fiber.Error{Code: 400, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
 	var updateUser schemas.UserUpdateSchema
@@ -112,10 +112,10 @@ func UpdateUser(c *fiber.Ctx) error {
 	}
 
 	if err := initializers.DB.Save(&user).Error; err != nil {
-		return &fiber.Error{Code: 400, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "User updated successfully",
 		"user":    user,
@@ -130,11 +130,11 @@ func DeleteUser(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &fiber.Error{Code: 400, Message: "No user of this ID found."}
 		}
-		return &fiber.Error{Code: 400, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
 	if err := initializers.DB.Delete(&user).Error; err != nil {
-		return &fiber.Error{Code: 400, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
 	return c.Status(204).JSON(fiber.Map{
@@ -177,7 +177,7 @@ func UpdatePassord(c *fiber.Ctx) error {
 	user.Password = string(hash)
 
 	if err := initializers.DB.Save(&user).Error; err != nil {
-		return &fiber.Error{Code: 400, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
