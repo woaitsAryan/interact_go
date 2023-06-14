@@ -15,7 +15,7 @@ type Project struct {
 	Hashes       pq.StringArray `gorm:"type:text[]" json:"hashes"`
 	Description  string         `gorm:"type:text;not null" json:"description"`
 	Page         string         `gorm:"type:text" json:"page"`
-	UserID       uuid.UUID      `gorm:"type:uuid;not null" json:"postedBy"`
+	UserID       uuid.UUID      `gorm:"type:uuid;not null" json:"userID"`
 	User         User           `gorm:"constraint:OnDelete:CASCADE" json:"-"`
 	PostedAt     time.Time      `json:"postedAt"`
 	Tags         pq.StringArray `gorm:"type:text[]" json:"tags"`

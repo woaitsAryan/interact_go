@@ -16,8 +16,13 @@ import (
 func GetProject(c *fiber.Ctx) error { // !make select congifs
 	projectID := c.Params("projectID")
 
-	var project models.Project
-	if err := initializers.DB.Preload("User").Select("id, username, name, profile_pic").First(&project, "id = ?", projectID).Error; err != nil {
+	parsedProjectID, err := uuid.Parse(projectID)
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid ID"}
+	}
+
+	var project models.Project //! User not getting preloaded
+	if err := initializers.DB.Preload("User").First(&project, "id = ?", parsedProjectID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
 		}
@@ -80,13 +85,12 @@ func AddProject(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	reqBody.CoverPic = picName
 
 	newProject := models.Project{
 		UserID:      parsedID,
 		Title:       reqBody.Title,
 		Tagline:     reqBody.Tagline,
-		CoverPic:    reqBody.CoverPic,
+		CoverPic:    picName,
 		Description: reqBody.Description,
 		Tags:        reqBody.Tags,
 		Category:    reqBody.Category,
@@ -109,8 +113,19 @@ func AddProject(c *fiber.Ctx) error {
 
 func UpdateProject(c *fiber.Ctx) error {
 	projectID := c.Params("projectID")
+
+	parsedProjectID, err := uuid.Parse(projectID)
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid ID"}
+	}
+
 	var project models.Project
-	initializers.DB.First(&project, "id = ?", projectID)
+	if err := initializers.DB.First(&project, "id = ?", parsedProjectID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
+		}
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
 
 	var reqBody schemas.ProjectUpdateSchema
 	c.BodyParser(&reqBody)
@@ -178,8 +193,19 @@ func UpdateProject(c *fiber.Ctx) error {
 
 func DeleteProject(c *fiber.Ctx) error {
 	projectID := c.Params("projectID")
+
+	parsedProjectID, err := uuid.Parse(projectID)
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid ID"}
+	}
+
 	var project models.Project
-	initializers.DB.First(&project, "id = ?", projectID)
+	if err := initializers.DB.First(&project, "id = ?", parsedProjectID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
+		}
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
 
 	if err := initializers.DB.Delete(&project).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
