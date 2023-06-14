@@ -16,10 +16,13 @@ func GetPost(c *fiber.Ctx) error {
 
 	postID := c.Params("postID")
 
-	postUserSelectedDB := utils.PostSelectConfig(initializers.DB.Preload("User"))
+	parsedPostID, err := uuid.Parse(postID)
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid ID"}
+	}
 
 	var post models.Post
-	if err := postUserSelectedDB.First(&post, "id = ?", postID).Error; err != nil {
+	if err := initializers.DB.Preload("User").First(&post, "id = ?", parsedPostID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Post of this ID found."}
 		}
@@ -50,10 +53,8 @@ func GetUserPosts(c *fiber.Ctx) error {
 
 	paginatedDB := API.Paginator(c)(initializers.DB)
 
-	postUserSelectedDB := utils.PostSelectConfig(paginatedDB.Preload("User"))
-
 	var posts []models.Post
-	if err := postUserSelectedDB.Where("user_id = ?", userID, false).Find(&posts).Error; err != nil {
+	if err := paginatedDB.Preload("User").Where("user_id = ?", userID).Find(&posts).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
@@ -69,10 +70,8 @@ func GetMyPosts(c *fiber.Ctx) error {
 
 	paginatedDB := API.Paginator(c)(initializers.DB)
 
-	postUserSelectedDB := utils.PostSelectConfig(paginatedDB.Preload("User"))
-
 	var posts []models.Post
-	if err := postUserSelectedDB.Where("user_id = ?", loggedInUserID).Find(&posts).Error; err != nil {
+	if err := paginatedDB.Preload("User").Where("user_id = ?", loggedInUserID).Find(&posts).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
@@ -98,7 +97,7 @@ func AddPost(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Error Parsing the Loggedin User ID."}
 	}
 
-	images, err := utils.SaveMultipleFiles(c, "images", "posts/images", true, 1280, 720)
+	images, err := utils.SaveMultipleFiles(c, "images", "posts", true, 1280, 720)
 	if err != nil {
 		return err
 	}
@@ -123,10 +122,21 @@ func AddPost(c *fiber.Ctx) error {
 	})
 }
 
-func UpdatePost(c *fiber.Ctx) error {
+func UpdatePost(c *fiber.Ctx) error { //!gives db error instead of invalid ID
 	postID := c.Params("postID")
+
+	parsedPostID, err := uuid.Parse(postID)
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid ID"}
+	}
+
 	var post models.Post
-	initializers.DB.First(&post, "id = ?", postID)
+	if err := initializers.DB.Preload("User").First(&post, "id = ?", parsedPostID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return &fiber.Error{Code: 400, Message: "No Post of this ID found."}
+		}
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
 
 	var updatePost schemas.PostUpdateScheam
 	if err := c.BodyParser(&updatePost); err != nil {
@@ -155,8 +165,19 @@ func UpdatePost(c *fiber.Ctx) error {
 
 func DeletePost(c *fiber.Ctx) error {
 	postID := c.Params("postID")
+
+	parsedPostID, err := uuid.Parse(postID)
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid ID"}
+	}
+
 	var post models.Post
-	initializers.DB.First(&post, "id = ?", postID)
+	if err := initializers.DB.Preload("User").First(&post, "id = ?", parsedPostID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return &fiber.Error{Code: 400, Message: "No Post of this ID found."}
+		}
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
 
 	if err := initializers.DB.Delete(&post).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Database Error."}

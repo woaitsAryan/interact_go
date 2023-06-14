@@ -1,6 +1,8 @@
 package utils
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/gofiber/fiber/v2"
+)
 
 func SaveFile(c *fiber.Ctx, fieldName string, path string, resize bool, d1 int, d2 int) (string, error) {
 

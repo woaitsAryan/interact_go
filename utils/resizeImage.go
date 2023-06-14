@@ -26,7 +26,7 @@ func ResizeImage(picPath string, d1 int, d2 int) (string, error) {
 	extension := path.Ext(picPath)
 	fileNameWithoutExt := picPath[:len(picPath)-len(extension)]
 
-	resizedPicPath := fileNameWithoutExt + "-resized.jpg"
+	resizedPicPath := fileNameWithoutExt + "-resized.jpg" //!add time in the name
 
 	out, err := os.Create(resizedPicPath)
 	if err != nil {

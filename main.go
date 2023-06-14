@@ -26,7 +26,9 @@ func main() {
 
 	app := fiber.New(fiber.Config{
 		ErrorHandler: helpers.ErrorHandler,
+		BodyLimit:    10 * 1024 * 1024,
 	})
+
 	app.Use(helmet.New())
 	// app.Use(logger.New(logger.Config{}))
 	app.Use(cors.New(cors.Config{
