@@ -10,7 +10,7 @@ import (
 )
 
 func PostUserProtect(c *fiber.Ctx) error {
-	userID := c.GetRespHeader("loggedInUser")
+	userID := c.GetRespHeader("loggedInUserID")
 	postID := c.Params("postID")
 
 	var post models.Post
@@ -30,7 +30,7 @@ func PostUserProtect(c *fiber.Ctx) error {
 }
 
 func ProjectUserProtect(c *fiber.Ctx) error {
-	userID := c.GetRespHeader("loggedInUser")
+	userID := c.GetRespHeader("loggedInUserID")
 	projectID := c.Params("projectID")
 
 	var project models.Project

@@ -5,6 +5,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/schemas"
+	"github.com/Pratham-Mishra04/interact/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -51,15 +52,20 @@ func AddPost(c *fiber.Ctx) error {
 		return err
 	}
 
-	parsedID, err := uuid.Parse(c.GetRespHeader("loggedInUser"))
+	parsedID, err := uuid.Parse(c.GetRespHeader("loggedInUserID"))
 	if err != nil {
 		return &fiber.Error{Code: 500, Message: "Error Parsing the Loggedin User ID."}
+	}
+
+	images, err := utils.SaveMultipleFiles(c, "images", "posts/images", true, 1280, 720)
+	if err != nil {
+		return err
 	}
 
 	newPost := models.Post{
 		UserID:  parsedID,
 		Content: reqBody.Content,
-		Images:  reqBody.Images,
+		Images:  images,
 		Tags:    reqBody.Tags,
 	}
 
