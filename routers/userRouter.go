@@ -14,9 +14,6 @@ func UserRouter(app *fiber.App) {
 	userRoutes := app.Group("/users", middlewares.Protect)
 	userRoutes.Get("/me", controllers.GetMe)
 	userRoutes.Get("/:userID", controllers.GetUser)
-
-	// get followings pagination
-	// get followers pagination
-	//
-
+	userRoutes.Patch("/:userID", middlewares.SelfProtect, controllers.UpdatePost)
+	userRoutes.Delete("/:userID", middlewares.SelfProtect, controllers.DeletePost)
 }

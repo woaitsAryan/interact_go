@@ -38,7 +38,7 @@ func main() {
 
 	app.Static("/", "./public")
 
-	routers.UserRouter(app)
+	routers.Config(app)
 
 	app.Listen(":" + viper.GetString("PORT"))
 
