@@ -22,17 +22,17 @@ func GetPost(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
-	user, err := helpers.Filter(post.User, []string{"username", "name", "profilePic"})
-	if err != nil {
-		return err
-	}
+	// user, err := helpers.Filter(post.User, []string{"username", "name", "profilePic"})
+	// if err != nil {
+	// 	return err
+	// }
 
-	filteredUser, ok := user.(models.User)
-	if !ok {
-		return &fiber.Error{Code: 500, Message: "Failed to assert user type"}
-	}
+	// filteredUser, ok := user.(models.User)
+	// if !ok {
+	// 	return &fiber.Error{Code: 500, Message: "Failed to assert user type"}
+	// }
 
-	post.User = filteredUser
+	// post.User = filteredUser
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
@@ -66,7 +66,7 @@ func AddPost(c *fiber.Ctx) error {
 	result := initializers.DB.Create(&newPost)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while creating user"}
+		return &fiber.Error{Code: 500, Message: "Internal Server Error while creating post"}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
