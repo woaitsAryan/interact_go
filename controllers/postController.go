@@ -12,7 +12,7 @@ import (
 
 func GetPost(c *fiber.Ctx) error {
 
-	postID := c.Params("id")
+	postID := c.Params("postID")
 
 	var post models.Post
 	if err := initializers.DB.Preload("User").Select("id, username, name, profile_pic").First(&post, "id = ?", postID).Error; err != nil {

@@ -13,10 +13,10 @@ import (
 
 func GetProject(c *fiber.Ctx) error {
 
-	postID := c.Params("id")
+	projectID := c.Params("projectID")
 
 	var project models.Project
-	if err := initializers.DB.Preload("User").Select("id, username, name, profile_pic").First(&project, "id = ?", postID).Error; err != nil {
+	if err := initializers.DB.Preload("User").Select("id, username, name, profile_pic").First(&project, "id = ?", projectID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
 		}
@@ -73,5 +73,72 @@ func AddProject(c *fiber.Ctx) error {
 		"status":  "success",
 		"message": "Project Added",
 		"project": newProject,
+	})
+}
+
+func UpdateProject(c *fiber.Ctx) error {
+	projectID := c.Params("projectID")
+	var project models.Project
+	initializers.DB.First(&project, "id = ?", projectID)
+
+	var reqBody schemas.ProjectUpdateSchema
+	c.BodyParser(&reqBody)
+
+	picName, err := utils.SaveFile(c, "coverPic", "projects/coverPics", true, true, 900, 400)
+	if err != nil {
+		return err
+	}
+	reqBody.CoverPic = picName
+
+	if reqBody.Tagline != "" {
+		project.Tagline = reqBody.Tagline
+	}
+	if reqBody.CoverPic != "" {
+		project.CoverPic = reqBody.CoverPic
+	}
+	if reqBody.Description != "" {
+		project.Description = reqBody.Description
+	}
+	if reqBody.Page != "" {
+		project.Page = reqBody.Page
+	}
+	if len(reqBody.Tags) != 0 {
+		project.Tags = reqBody.Tags
+	}
+	if reqBody.IsPrivate {
+		project.IsPrivate = true
+	} else {
+		project.IsPrivate = false
+	}
+	if len(reqBody.Links) != 0 {
+		project.Links = reqBody.Links
+	}
+	if len(reqBody.PrivateLinks) != 0 {
+		project.PrivateLinks = reqBody.PrivateLinks
+	}
+
+	if err := initializers.DB.Save(&project).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Project updated successfully",
+		"project": project,
+	})
+}
+
+func DeleteProject(c *fiber.Ctx) error {
+	projectID := c.Params("projectID")
+	var project models.Project
+	initializers.DB.First(&project, "id = ?", projectID)
+
+	if err := initializers.DB.Delete(&project).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
+
+	return c.Status(204).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Project deleted successfully",
 	})
 }
