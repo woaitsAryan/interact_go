@@ -25,13 +25,10 @@ func GetFeed(c *fiber.Ctx) error { // !instead of having getFeedCOunt function, 
 	paginatedDB := API.Paginator(c)(initializers.DB)
 
 	var posts []models.Post
-	// if err := paginatedDB.Preload("User").Select("id, username, name, profile_pic").Where("user_id = ? OR user_id IN (?)", loggedInUserID, followingIDs).Order("posted_at DESC").Find(&posts).Error; err != nil {
-	// 	return &fiber.Error{Code: 500, Message: "Failed to get the User Feed."}
-	// }
 
 	postUserSelectedDB := utils.PostSelectConfig(paginatedDB.Preload("User"))
 
-	if err := postUserSelectedDB.Where("user_id = ? OR user_id IN (?)", loggedInUserID, followingIDs).Order("posted_at DESC").Find(&posts).Error; err != nil {
+	if err := postUserSelectedDB.Where("user_id = ? OR user_id IN (?)", loggedInUserID, followingIDs).Order("created_at DESC").Find(&posts).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Failed to get the User Feed."}
 	}
 

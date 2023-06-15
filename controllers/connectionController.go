@@ -5,6 +5,7 @@ import (
 
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -100,8 +101,10 @@ func GetFollowers(c *fiber.Ctx) error {
 	userIDStr := c.Params("userID")
 	userID := uuid.MustParse(userIDStr)
 
+	paginatedDB := API.Paginator(c)(initializers.DB)
+
 	var followers []models.FollowFollower
-	if err := initializers.DB.Preload("Follower").Select("follower_id").Where("followed_id = ?", userID).Find(&followers).Error; err != nil {
+	if err := paginatedDB.Preload("Follower").Select("follower_id").Where("followed_id = ?", userID).Find(&followers).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
@@ -121,8 +124,10 @@ func GetFollowing(c *fiber.Ctx) error {
 	userIDStr := c.Params("userID")
 	userID := uuid.MustParse(userIDStr)
 
+	paginatedDB := API.Paginator(c)(initializers.DB)
+
 	var following []models.FollowFollower
-	if err := initializers.DB.Preload("Followed").Where("follower_id = ?", userID).Find(&following).Error; err != nil {
+	if err := paginatedDB.Preload("Followed").Where("follower_id = ?", userID).Find(&following).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
