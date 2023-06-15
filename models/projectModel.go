@@ -8,16 +8,16 @@ import (
 )
 
 type Project struct {
-	ID           uuid.UUID      `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id,omitempty"`
+	ID           uuid.UUID      `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	Title        string         `gorm:"type:varchar(255);not null" json:"title"`
 	Tagline      string         `gorm:"type:varchar(255);not null" json:"tagline"`
 	CoverPic     string         `gorm:"type:varchar(255)" json:"coverPic"`
-	Hashes       pq.StringArray `gorm:"type:text[]" json:"hashes"`
+	Hash         string         `gorm:"type:varchar(255)" json:"hash"`
 	Description  string         `gorm:"type:text;not null" json:"description"`
 	Page         string         `gorm:"type:text" json:"page"`
 	UserID       uuid.UUID      `gorm:"type:uuid;not null" json:"userID"`
-	User         User           `gorm:"constraint:OnDelete:CASCADE" json:"-"`
-	PostedAt     time.Time      `json:"postedAt"`
+	User         User           `gorm:"constraint:OnDelete:CASCADE" json:"user"`
+	CreatedAt    time.Time      `json:"postedAt"`
 	Tags         pq.StringArray `gorm:"type:text[]" json:"tags"`
 	NoLikes      int            `json:"noLikes"`
 	NoShares     int            `json:"noShares"`
@@ -30,7 +30,7 @@ type Project struct {
 }
 
 type ProjectView struct {
-	ID        uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id,omitempty"`
+	ID        uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	ProjectID uuid.UUID `gorm:"type:uuid;not null" json:"projectId"`
 	Date      time.Time `json:"date"`
 	Count     int       `json:"count"`

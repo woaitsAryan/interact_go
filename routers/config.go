@@ -7,4 +7,5 @@ func Config(app *fiber.App) {
 	PostRouter(app)
 	ProjectRouter(app)
 	UserRouter(app)
+	FeedRouter(app)
 }

@@ -7,13 +7,13 @@ import (
 )
 
 type Message struct {
-	ID       uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id,omitempty"`
-	ChatID   uuid.UUID `gorm:"type:uuid;not null" json:"chatId"`
-	Chat     Chat      `gorm:"constraint:OnDelete:CASCADE" json:"-"`
-	SenderID uuid.UUID `gorm:"type:uuid;not null" json:"senderId"`
-	Sender   User      `gorm:"constraint:OnDelete:CASCADE" json:"-"`
-	Content  string    `gorm:"type:text;not null" json:"text"`
-	SentAt   time.Time `json:"sentAt"`
-	IsRead   bool      `gorm:"default:false" json:"isRead"`
-	ReadBy   []User    `gorm:"many2many:message_read_by;constraint:OnDelete:CASCADE" json:"readBy"`
+	ID      uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	ChatID  uuid.UUID `gorm:"type:uuid;not null" json:"chatId"`
+	Chat    Chat      `gorm:"constraint:OnDelete:CASCADE" json:"chat"`
+	UserID  uuid.UUID `gorm:"type:uuid;not null" json:"senderId"`
+	User    User      `gorm:"constraint:OnDelete:CASCADE" json:"sentBy"`
+	Content string    `gorm:"type:text;not null" json:"content"`
+	SentAt  time.Time `json:"sentAt"`
+	Read    bool      `gorm:"default:false" json:"read"`
+	ReadBy  []User    `gorm:"many2many:message_read_by;constraint:OnDelete:CASCADE" json:"readBy"`
 }

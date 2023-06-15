@@ -7,7 +7,7 @@ import (
 )
 
 type Notification struct {
-	ID               uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id,omitempty"`
+	ID               uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	NotificationType int       `json:"notificationType"`
 	UserID           uuid.UUID `gorm:"type:uuid;not null" json:"userId"`
 	User             User      `gorm:"constraint:OnDelete:CASCADE" json:"-"`

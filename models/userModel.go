@@ -8,7 +8,7 @@ import (
 )
 
 type User struct {
-	ID                        uuid.UUID      `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id,omitempty"`
+	ID                        uuid.UUID      `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	Name                      string         `gorm:"varchar(25);not null" json:"name"`
 	Username                  string         `gorm:"varchar(10);unique;not null" json:"username"`
 	Email                     string         `gorm:"unique;not null" json:"email"`
@@ -20,14 +20,14 @@ type User struct {
 	Title                     string         `json:"title"`
 	Tagline                   string         `json:"tagline"`
 	Tags                      pq.StringArray `gorm:"type:text[]" json:"tags"`
-	LastViewed                []*Project     `gorm:"many2many:user_last_viewed_projects;" json:"lastViewed,omitempty"`
 	PasswordResetToken        string         `json:"-"`
 	PasswordResetTokenExpires time.Time      `json:"-"`
 	PasswordChangedAt         time.Time      `gorm:"default:current_timestamp" json:"-"`
 	Admin                     bool           `gorm:"default:false" json:"-"`
 	Active                    bool           `gorm:"default:true" json:"-"`
 	CreatedAt                 time.Time      `gorm:"default:current_timestamp" json:"-"`
-}
+	Achievements              []Achievement  `gorm:"foreignKey:UserID" json:"achievements,omitempty"`
+} //! add last viewed projects
 
 type ProfileView struct {
 	ID     uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id,omitempty"`
@@ -48,4 +48,11 @@ type FollowFollower struct {
 	FollowedID uuid.UUID
 	Followed   User      `gorm:"foreignKey:FollowedID"`
 	CreatedAt  time.Time `gorm:"default:current_timestamp" json:"-"`
+}
+
+type Achievement struct {
+	UserID uuid.UUID      `gorm:"type:uuid;not null" json:"userID"`
+	User   User           `gorm:"constraint:OnDelete:CASCADE" json:"user"`
+	Title  string         `gorm:"type:text;not null" json:"title"`
+	Skills pq.StringArray `gorm:"type:text[];not null" json:"skills"`
 }
