@@ -11,6 +11,7 @@ type ProjectBookmark struct {
 	UserID    uuid.UUID `gorm:"type:uuid;not null" json:"userId"`
 	Title     string    `json:"title"`
 	CreatedAt time.Time `json:"createdAt"`
+	Items     []Project `gorm:"foreignKey:ProjectBookmarkID;constraint:OnDelete:CASCADE" json:"items,omitempty"`
 }
 
 type ProjectBookmarkItem struct {
@@ -23,6 +24,7 @@ type PostBookmark struct {
 	UserID    uuid.UUID `gorm:"type:uuid;not null" json:"userId"`
 	Title     string    `json:"title"`
 	CreatedAt time.Time `json:"createdAt"`
+	Items     []Post    `gorm:"foreignKey:PostBookmarkID;constraint:OnDelete:CASCADE" json:"items,omitempty"`
 }
 
 type PostBookmarkItem struct {

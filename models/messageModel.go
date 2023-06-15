@@ -9,9 +9,9 @@ import (
 type Message struct {
 	ID      uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	ChatID  uuid.UUID `gorm:"type:uuid;not null" json:"chatId"`
-	Chat    Chat      `gorm:"constraint:OnDelete:CASCADE" json:"chat"`
+	Chat    Chat      `gorm:"" json:"chat"`
 	UserID  uuid.UUID `gorm:"type:uuid;not null" json:"senderId"`
-	User    User      `gorm:"constraint:OnDelete:CASCADE" json:"sentBy"`
+	User    User      `gorm:"" json:"sentBy"`
 	Content string    `gorm:"type:text;not null" json:"content"`
 	SentAt  time.Time `json:"sentAt"`
 	Read    bool      `gorm:"default:false" json:"read"`

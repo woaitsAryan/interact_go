@@ -11,6 +11,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -38,7 +39,7 @@ func GetMe(c *fiber.Ctx) error {
 func GetUser(c *fiber.Ctx) error {
 	userID := c.Params("userID")
 	var user models.User
-	initializers.DB.First(&user, "id = ?", userID)
+	initializers.DB.Preload("Achievements").First(&user, "id = ?", userID)
 	if user.ID == uuid.Nil {
 		return &fiber.Error{Code: 400, Message: "No user of this ID found."}
 	}
@@ -123,6 +124,14 @@ func UpdateUser(c *fiber.Ctx) error { //!add achievements
 		}
 	}
 
+	achievement1 := models.Achievement{
+		UserID: user.ID,
+		Title:  "I did somethidawdawdadawdwdwadadng 1",
+		Skills: pq.StringArray{"fwiadaiwdon", "dawndidwldnw"},
+	}
+
+	initializers.DB.Create(&achievement1)
+
 	if err := initializers.DB.Save(&user).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
@@ -130,7 +139,6 @@ func UpdateUser(c *fiber.Ctx) error { //!add achievements
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "User updated successfully",
-		"user":    user,
 	})
 }
 

@@ -24,9 +24,10 @@ type User struct {
 	PasswordResetTokenExpires time.Time      `json:"-"`
 	PasswordChangedAt         time.Time      `gorm:"default:current_timestamp" json:"-"`
 	Admin                     bool           `gorm:"default:false" json:"-"`
-	Active                    bool           `gorm:"default:true" json:"-"`
+	Active                    bool           `gorm:"default:true" json:"-"` //! add a functionality that on delete the acc goes inActive and if the user logs in within 30 days, it goes active again
 	CreatedAt                 time.Time      `gorm:"default:current_timestamp" json:"-"`
-	Achievements              []Achievement  `gorm:"foreignKey:UserID" json:"achievements,omitempty"`
+	Achievements              []Achievement  `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"achievements,omitempty"`
+	Applications              []Application  `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"applications,omitempty"`
 } //! add last viewed projects
 
 type ProfileView struct {
@@ -52,7 +53,7 @@ type FollowFollower struct {
 
 type Achievement struct {
 	UserID uuid.UUID      `gorm:"type:uuid;not null" json:"userID"`
-	User   User           `gorm:"constraint:OnDelete:CASCADE" json:"user"`
+	User   User           `json:"user"`
 	Title  string         `gorm:"type:text;not null" json:"title"`
 	Skills pq.StringArray `gorm:"type:text[];not null" json:"skills"`
 }

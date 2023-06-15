@@ -10,9 +10,9 @@ import (
 type Application struct {
 	ID                uuid.UUID      `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	OpeningID         uuid.UUID      `gorm:"type:uuid;not null" json:"openingId"`
-	Opening           Opening        `gorm:"constraint:OnDelete:CASCADE" json:"opening"`
+	Opening           Opening        `gorm:"" json:"opening"`
 	UserID            uuid.UUID      `gorm:"type:uuid;not null" json:"applicantId"`
-	User              User           `gorm:"constraint:OnDelete:CASCADE" json:"applicant"`
+	User              User           `gorm:"" json:"applicant"`
 	CreatedAt         time.Time      `json:"appliedAt"`
 	ApplicationStatus int            `json:"applicationStatus"`
 	Content           string         `gorm:"type:text;not null" json:"content"`

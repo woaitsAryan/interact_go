@@ -11,10 +11,11 @@ type Chat struct {
 	Title       string    `gorm:"type:varchar(50);" json:"title"`
 	Description string    `gorm:"type:text" json:"description"`
 	UserID      uuid.UUID `gorm:"type:uuid;not null" json:"createdByID"`
-	User        User      `gorm:"constraint:OnDelete:CASCADE" json:"createdBy"`
+	User        User      `gorm:"" json:"createdBy"`
 	CreatedAt   time.Time `json:"createdAt"`
 	Members     []User    `gorm:"many2many:chat_members;constraint:OnDelete:CASCADE" json:"members"`
 	Group       bool      `gorm:"default:false" json:"group"`
+	Messages    []Message `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE" json:"messages"`
 }
 
 type ProjectChat struct {
@@ -22,9 +23,10 @@ type ProjectChat struct {
 	Title       string    `gorm:"type:varchar(50);" json:"title"`
 	Description string    `gorm:"type:text" json:"description"`
 	UserID      uuid.UUID `gorm:"type:uuid;not null" json:"createdByID"`
-	User        User      `gorm:"constraint:OnDelete:CASCADE" json:"createdBy"`
+	User        User      `gorm:"" json:"createdBy"`
 	ProjectID   uuid.UUID `gorm:"type:uuid;not null" json:"projectID"`
-	Project     Project   `gorm:"constraint:OnDelete:CASCADE" json:"project"`
+	Project     Project   `gorm:"" json:"project"`
 	CreatedAt   time.Time `json:"createdAt"`
 	Members     []User    `gorm:"many2many:project_chat_members;constraint:OnDelete:CASCADE" json:"members"`
+	Messages    []Message `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE" json:"messages"`
 }
