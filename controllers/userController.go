@@ -11,7 +11,6 @@ import (
 	"github.com/Pratham-Mishra04/interact/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -67,8 +66,8 @@ func UpdateUser(c *fiber.Ctx) error { //!add achievements
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
-	var updateUser schemas.UserUpdateSchema
-	if err := c.BodyParser(&updateUser); err != nil {
+	var reqBody schemas.UserUpdateSchema
+	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Request Body."}
 	}
 
@@ -76,13 +75,13 @@ func UpdateUser(c *fiber.Ctx) error { //!add achievements
 	if err != nil {
 		return err
 	}
-	updateUser.ProfilePic = picName
+	reqBody.ProfilePic = picName
 
 	coverName, err := utils.SaveFile(c, "coverPic", "users/coverPics", true, 900, 400)
 	if err != nil {
 		return err
 	}
-	updateUser.CoverPic = coverName
+	reqBody.CoverPic = coverName
 
 	// if updateUser.Name != "" {
 	// 	user.Name = updateUser.Name
@@ -109,7 +108,7 @@ func UpdateUser(c *fiber.Ctx) error { //!add achievements
 	// 	user.Tags = updateUser.Tags
 	// }
 
-	updateUserValue := reflect.ValueOf(&updateUser).Elem()
+	updateUserValue := reflect.ValueOf(&reqBody).Elem()
 	userValue := reflect.ValueOf(&user).Elem()
 
 	for i := 0; i < updateUserValue.NumField(); i++ {
@@ -124,13 +123,26 @@ func UpdateUser(c *fiber.Ctx) error { //!add achievements
 		}
 	}
 
-	achievement1 := models.Achievement{
-		UserID: user.ID,
-		Title:  "I did somethidawdawdadawdwdwadadng 1",
-		Skills: pq.StringArray{"fwiadaiwdon", "dawndidwldnw"},
-	}
+	if reqBody.Achievements != nil {
+		for _, achievement := range reqBody.Achievements {
 
-	initializers.DB.Create(&achievement1)
+			var achievementModel models.Achievement
+
+			err := initializers.DB.First(&achievementModel, "id = ?", achievement.ID).Error
+			if err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					initializers.DB.Create(&achievement)
+				}
+				return &fiber.Error{Code: 500, Message: "Database Error."}
+			} else {
+				achievementModel.Skills = achievement.Skills
+				achievementModel.Title = achievement.Title
+				if err := initializers.DB.Save(&achievementModel).Error; err != nil {
+					return &fiber.Error{Code: 500, Message: "Database Error."}
+				}
+			}
+		}
+	}
 
 	if err := initializers.DB.Save(&user).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
@@ -153,7 +165,9 @@ func DeleteUser(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
-	if err := initializers.DB.Delete(&user).Error; err != nil {
+	user.Active = false
+
+	if err := initializers.DB.Save(&user).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 

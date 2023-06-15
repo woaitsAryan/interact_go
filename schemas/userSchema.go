@@ -14,12 +14,19 @@ type UserCreateSchema struct {
 }
 
 type UserUpdateSchema struct {
-	Name       string         `json:"name" validate:"alpha"`
-	PhoneNo    string         `json:"phoneNo"  validate:"e164"`
-	ProfilePic string         `json:"profilePic" validate:"image"`
-	CoverPic   string         `json:"coverPic" validate:"image"`
-	Bio        string         `json:"bio"`
-	Title      string         `json:"title"`
-	Tagline    string         `json:"tagline"`
-	Tags       pq.StringArray `json:"tags" validate:"dive,alpha"`
+	Name         string              `json:"name" validate:"alpha"`
+	PhoneNo      string              `json:"phoneNo"  validate:"e164"`
+	ProfilePic   string              `json:"profilePic" validate:"image"`
+	CoverPic     string              `json:"coverPic" validate:"image"`
+	Bio          string              `json:"bio"`
+	Title        string              `json:"title"`
+	Tagline      string              `json:"tagline"`
+	Tags         pq.StringArray      `json:"tags" validate:"dive,alpha"`
+	Achievements []AchievementSchema `json:"achievements"`
+}
+
+type AchievementSchema struct {
+	ID     string         `json:"id"`
+	Title  string         `json:"title" validate:"alpha"`
+	Skills pq.StringArray `json:"skills" validate:"dive,alpha"`
 }

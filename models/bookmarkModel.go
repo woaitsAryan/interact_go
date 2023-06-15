@@ -7,11 +7,11 @@ import (
 )
 
 type ProjectBookmark struct {
-	ID        uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	UserID    uuid.UUID `gorm:"type:uuid;not null" json:"userId"`
-	Title     string    `json:"title"`
-	CreatedAt time.Time `json:"createdAt"`
-	Items     []Project `gorm:"foreignKey:ProjectBookmarkID;constraint:OnDelete:CASCADE" json:"items,omitempty"`
+	ID        uuid.UUID             `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	UserID    uuid.UUID             `gorm:"type:uuid;not null" json:"userId"`
+	Title     string                `json:"title"`
+	CreatedAt time.Time             `json:"createdAt"`
+	Items     []ProjectBookmarkItem `gorm:"foreignKey:ProjectBookmarkID;constraint:OnDelete:CASCADE" json:"items,omitempty"`
 }
 
 type ProjectBookmarkItem struct {
@@ -20,11 +20,11 @@ type ProjectBookmarkItem struct {
 }
 
 type PostBookmark struct {
-	ID        uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	UserID    uuid.UUID `gorm:"type:uuid;not null" json:"userId"`
-	Title     string    `json:"title"`
-	CreatedAt time.Time `json:"createdAt"`
-	Items     []Post    `gorm:"foreignKey:PostBookmarkID;constraint:OnDelete:CASCADE" json:"items,omitempty"`
+	ID        uuid.UUID          `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	UserID    uuid.UUID          `gorm:"type:uuid;not null" json:"userId"`
+	Title     string             `json:"title"`
+	CreatedAt time.Time          `json:"createdAt"`
+	Items     []PostBookmarkItem `gorm:"foreignKey:PostBookmarkID;constraint:OnDelete:CASCADE" json:"items,omitempty"`
 }
 
 type PostBookmarkItem struct {

@@ -29,6 +29,7 @@ type Project struct {
 	LikedBy      []User           `gorm:"many2many:user_project_likes;joinForeignKey:user_id;joinReferences:id;constraint:OnDelete:CASCADE" json:"likedBy,omitempty"`
 	Comments     []ProjectComment `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"comments,omitempty"`
 	Openings     []Opening        `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"openings,omitempty"`
+	Chats        []ProjectChat    `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"chats,omitempty"`
 }
 
 type ProjectView struct {

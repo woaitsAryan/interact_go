@@ -17,14 +17,14 @@ func AutoMigrate() {
 		&models.Message{},
 		&models.Chat{},
 		&models.ProjectChat{},
-		&models.ProjectChat{},
 		&models.Post{},
 		&models.Project{},
-		&models.ProfileView{},
+		&models.ProjectView{},
 		&models.Opening{},
 		&models.Application{},
 		&models.Membership{},
 		&models.PostComment{},
 		&models.ProjectComment{},
 	)
+
 }

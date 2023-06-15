@@ -17,6 +17,5 @@ type Application struct {
 	ApplicationStatus int            `json:"applicationStatus"`
 	Content           string         `gorm:"type:text;not null" json:"content"`
 	Resume            string         `gorm:"type:varchar(255)" json:"resume"`
-	Skills            pq.StringArray `gorm:"type:text[]" json:"skills"`
 	Links             pq.StringArray `gorm:"type:text[]" json:"links"`
 }
