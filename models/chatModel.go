@@ -30,5 +30,5 @@ type ProjectChat struct {
 	Project     Project   `gorm:"" json:"project"`
 	CreatedAt   time.Time `json:"createdAt"`
 	Members     []User    `gorm:"many2many:project_chat_members;constraint:OnDelete:CASCADE" json:"members"`
-	Messages    []Message `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE" json:"messages"`
+	Messages    []Message `gorm:"foreignKey:ProjectChatID;constraint:OnDelete:CASCADE" json:"messages"`
 }
