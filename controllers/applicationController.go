@@ -56,7 +56,7 @@ func GetAllApplicationsOfOpening(c *fiber.Ctx) error {
 
 func AddApplication(c *fiber.Ctx) error {
 	openingID := c.Params("openingID")
-	userID := c.GetRespHeader("loggedInUser")
+	userID := c.GetRespHeader("loggedInUserID")
 
 	parsedOpeningID, err := uuid.Parse(openingID)
 	if err != nil {

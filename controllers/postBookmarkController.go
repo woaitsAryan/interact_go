@@ -10,7 +10,7 @@ import (
 
 func AddPostBookmark(c *fiber.Ctx) error {
 
-	userID := c.GetRespHeader("loggedInUser")
+	userID := c.GetRespHeader("loggedInUserID")
 	parsedUserID, _ := uuid.Parse(userID)
 
 	var reqBody struct {

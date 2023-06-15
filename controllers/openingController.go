@@ -61,7 +61,7 @@ func GetAllOpeningsOfProject(c *fiber.Ctx) error {
 
 func AddOpening(c *fiber.Ctx) error {
 	projectID := c.Params("projectID")
-	userID := c.GetRespHeader("loggedInUser")
+	userID := c.GetRespHeader("loggedInUserID")
 
 	parsedProjectID, err := uuid.Parse(projectID)
 	if err != nil {
