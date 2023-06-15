@@ -15,8 +15,10 @@ type ProjectBookmark struct {
 }
 
 type ProjectBookmarkItem struct {
+	ID                uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	ProjectBookmarkID uuid.UUID `gorm:"type:uuid;not null"`
 	ProjectID         uuid.UUID `gorm:"type:uuid;not null"`
+	Project           Project
 }
 
 type PostBookmark struct {
@@ -28,6 +30,8 @@ type PostBookmark struct {
 }
 
 type PostBookmarkItem struct {
+	ID             uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	PostBookmarkID uuid.UUID `gorm:"type:uuid;not null"`
-	ProjectID      uuid.UUID `gorm:"type:uuid;not null"`
+	PostID         uuid.UUID `gorm:"type:uuid;not null"`
+	Post           Post
 }
