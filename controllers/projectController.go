@@ -51,12 +51,17 @@ func GetUserProjects(c *fiber.Ctx) error {
 	})
 }
 
-func GetMyProjects(c *fiber.Ctx) error {
-	loggedInUserID := c.GetRespHeader("loggedInUserID")
+func GetUserContributingProjects(c *fiber.Ctx) error {
+	userID := c.Params("userID")
+
+	var memberships []models.Membership
+	if err := initializers.DB.Preload("Project").Select("project_id").Where("user_id = ?", userID).Find(&memberships).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
 
 	var projects []models.Project
-	if err := initializers.DB.Where("user_id = ?", loggedInUserID).Find(&projects).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+	for _, membership := range memberships {
+		projects = append(projects, membership.Project)
 	}
 
 	return c.Status(200).JSON(fiber.Map{
