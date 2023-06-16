@@ -29,18 +29,6 @@ func GetPost(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
-	// user, err := helpers.Filter(post.User, []string{"username", "name", "profilePic"})
-	// if err != nil {
-	// 	return err
-	// }
-
-	// filteredUser, ok := user.(models.User)
-	// if !ok {
-	// 	return &fiber.Error{Code: 500, Message: "Failed to assert user type"}
-	// }
-
-	// post.User = filteredUser
-
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "",

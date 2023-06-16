@@ -4,11 +4,13 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
 
-func Search(index int, searchStr string) func(db *gorm.DB) *gorm.DB {
+func Search(c *fiber.Ctx, index int) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
+		searchStr := c.Query("search", "")
 		if searchStr == "" {
 			return db
 		}
@@ -51,7 +53,7 @@ func Search(index int, searchStr string) func(db *gorm.DB) *gorm.DB {
 		case 2: // !posts
 			searchCondition = gorm.Expr("$or", []interface{}{
 				map[string]interface{}{
-					"caption": gorm.Expr("$in", regexArry),
+					"content": gorm.Expr("$in", regexArry),
 				},
 				map[string]interface{}{
 					"tags": gorm.Expr("$elemMatch", map[string]interface{}{

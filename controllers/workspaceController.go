@@ -3,14 +3,17 @@ package controllers
 import (
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
 )
 
 func GetMyProjects(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
+	searchedDB := API.Search(c, 1)(initializers.DB)
+
 	var projects []models.Project
-	if err := initializers.DB.Where("user_id = ?", loggedInUserID).Find(&projects).Error; err != nil {
+	if err := searchedDB.Where("user_id = ?", loggedInUserID).Find(&projects).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
@@ -21,7 +24,7 @@ func GetMyProjects(c *fiber.Ctx) error {
 	})
 }
 
-func GetMyContributingProjects(c *fiber.Ctx) error {
+func GetMyContributingProjects(c *fiber.Ctx) error { //!Add search here
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var memberships []models.Membership
@@ -41,7 +44,7 @@ func GetMyContributingProjects(c *fiber.Ctx) error {
 	})
 }
 
-func GetMyApplications(c *fiber.Ctx) error {
+func GetMyApplications(c *fiber.Ctx) error { //! Add search here
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var applications []models.Application

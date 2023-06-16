@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func GetProject(c *fiber.Ctx) error { // !make select congifs
+func GetProject(c *fiber.Ctx) error {
 	projectID := c.Params("projectID")
 
 	parsedProjectID, err := uuid.Parse(projectID)
@@ -21,7 +21,7 @@ func GetProject(c *fiber.Ctx) error { // !make select congifs
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
 	}
 
-	var project models.Project //! User not getting preloaded
+	var project models.Project
 	if err := initializers.DB.Preload("User").First(&project, "id = ?", parsedProjectID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
@@ -68,6 +68,31 @@ func GetUserContributingProjects(c *fiber.Ctx) error {
 		"status":   "success",
 		"message":  "",
 		"projects": projects,
+	})
+}
+
+func GetProjectContributors(c *fiber.Ctx) error { //! Add search here
+	projectID := c.Params("projectID")
+
+	parsedProjectID, err := uuid.Parse(projectID)
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid ID"}
+	}
+
+	var memberships []models.Membership
+	if err := initializers.DB.Preload("User").Where("project_id = ?", parsedProjectID).Find(&memberships).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
+
+	var users []models.User
+	for _, membership := range memberships {
+		users = append(users, membership.User)
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "",
+		"users":   users,
 	})
 }
 

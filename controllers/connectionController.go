@@ -114,7 +114,7 @@ func RemoveFollow(c *fiber.Ctx) error {
 	}
 }
 
-func GetFollowers(c *fiber.Ctx) error {
+func GetFollowers(c *fiber.Ctx) error { //! Add search here
 	userIDStr := c.Params("userID")
 	userID := uuid.MustParse(userIDStr)
 
@@ -137,7 +137,7 @@ func GetFollowers(c *fiber.Ctx) error {
 	})
 }
 
-func GetFollowing(c *fiber.Ctx) error {
+func GetFollowing(c *fiber.Ctx) error { //! Add search here
 	userIDStr := c.Params("userID")
 	userID := uuid.MustParse(userIDStr)
 

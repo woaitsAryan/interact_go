@@ -14,7 +14,9 @@ func GetTrendingPosts(c *fiber.Ctx) error {
 
 	postUserSelectedDB := utils.PostSelectConfig(paginatedDB.Preload("User"))
 
-	if err := postUserSelectedDB.Order("created_at DESC").Find(&posts).Error; err != nil {
+	searchedDB := API.Search(c, 2)(postUserSelectedDB)
+
+	if err := searchedDB.Order("created_at DESC").Find(&posts).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Failed to get the Trending Posts."}
 	}
 	return c.Status(200).JSON(fiber.Map{
@@ -27,11 +29,43 @@ func GetTrendingOpenings(c *fiber.Ctx) error {
 	paginatedDB := API.Paginator(c)(initializers.DB)
 	var openings []models.Opening
 
-	if err := paginatedDB.Preload("Project").Order("created_at DESC").Find(&openings).Error; err != nil {
+	searchedDB := API.Search(c, 3)(paginatedDB)
+
+	if err := searchedDB.Preload("Project").Order("created_at DESC").Find(&openings).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Failed to get the Trending Openings."}
 	}
 	return c.Status(200).JSON(fiber.Map{
 		"status":   "success",
 		"openings": openings,
+	})
+}
+
+func GetTrendingProjects(c *fiber.Ctx) error {
+	paginatedDB := API.Paginator(c)(initializers.DB)
+	var projects []models.Project
+
+	searchedDB := API.Search(c, 1)(paginatedDB)
+
+	if err := searchedDB.Order("created_at DESC").Find(&projects).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Failed to get the Trending Projects."}
+	}
+	return c.Status(200).JSON(fiber.Map{
+		"status":   "success",
+		"projects": projects,
+	})
+}
+
+func GetTrendingUsers(c *fiber.Ctx) error {
+	paginatedDB := API.Paginator(c)(initializers.DB)
+	var users []models.User
+
+	searchedDB := API.Search(c, 0)(paginatedDB)
+
+	if err := searchedDB.Order("created_at DESC").Find(&users).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Failed to get the Trending Projects."}
+	}
+	return c.Status(200).JSON(fiber.Map{
+		"status": "success",
+		"users":  users,
 	})
 }
