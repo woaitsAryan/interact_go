@@ -26,6 +26,9 @@ func AutoMigrate() {
 		&models.Comment{},
 		&models.ChatInvitation{},
 		&models.ProjectInvitation{},
+		&models.UserPostLike{},
+		&models.UserProjectLike{},
+		&models.UserCommentLike{},
 	)
 
 }

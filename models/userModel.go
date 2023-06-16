@@ -22,6 +22,7 @@ type User struct {
 	Tags                      pq.StringArray `gorm:"type:text[]" json:"tags"`
 	PasswordResetToken        string         `json:"-"`
 	PasswordResetTokenExpires time.Time      `json:"-"`
+	Views                     int            `json:"views"` //! Show No of Views
 	PasswordChangedAt         time.Time      `gorm:"default:current_timestamp" json:"-"`
 	Admin                     bool           `gorm:"default:false" json:"-"`
 	Active                    bool           `gorm:"default:true" json:"-"` //! add a functionality that on delete the acc goes inActive and if the user logs in within 30 days, it goes active again

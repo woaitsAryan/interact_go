@@ -25,3 +25,21 @@ func UpdateProfileViews(user *models.User) {
 		initializers.DB.Save(&profileView)
 	}
 }
+
+func UpdateProjectViews(project *models.Project) {
+	today := time.Now().UTC().Truncate(24 * time.Hour)
+	var projectView models.ProjectView
+	initializers.DB.Where("project_id = ? AND date = ?", project.ID, today).First(&projectView)
+
+	if projectView.ID == uuid.Nil {
+		projectView = models.ProjectView{
+			ProjectID: project.ID,
+			Date:      today,
+			Count:     1,
+		}
+		initializers.DB.Create(&projectView)
+	} else {
+		projectView.Count++
+		initializers.DB.Save(&projectView)
+	}
+}

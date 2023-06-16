@@ -29,6 +29,8 @@ func GetProject(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
+	utils.UpdateProjectViews(&project)
+
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "",
