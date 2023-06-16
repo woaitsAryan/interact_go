@@ -13,4 +13,6 @@ func ProjectRouter(app *fiber.App) {
 	projectRoutes.Get("/:projectID", controllers.GetProject)
 	projectRoutes.Patch("/:projectID", middlewares.ProjectUserProtect, controllers.UpdateProject)
 	projectRoutes.Delete("/:projectID", middlewares.ProjectUserProtect, controllers.DeleteProject)
+
+	projectRoutes.Get("/like/:projectID", controllers.LikeProject)
 }

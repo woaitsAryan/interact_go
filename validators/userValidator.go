@@ -24,8 +24,6 @@ func UserCreateValidator(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Passwords do not match."}
 	}
 
-	// add phone number validator
-
 	var user models.User
 	initializers.DB.First(&user, "email = ?", reqBody.Email)
 

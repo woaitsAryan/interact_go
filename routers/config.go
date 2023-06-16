@@ -8,4 +8,13 @@ func Config(app *fiber.App) {
 	ProjectRouter(app)
 	UserRouter(app)
 	FeedRouter(app)
+	ApplicationRouter(app)
+	BookmarkRouter(app)
+	CommentRouter(app)
+	ExploreRouter(app)
+	InvitationRouter(app)
+	MessagingRouter(app)
+	NotificationRouter(app)
+	OpeningRouter(app)
+	WorkspaceRouter(app)
 }

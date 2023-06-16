@@ -26,6 +26,24 @@ func GetChat(c *fiber.Ctx) error {
 	})
 }
 
+func GetProjectChat(c *fiber.Ctx) error {
+	chatID := c.Params("projectChatID")
+
+	var chat models.ProjectChat
+
+	err := initializers.DB.First(&chat, "id=?", chatID).Error
+
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "",
+		"chat":    chat,
+	})
+}
+
 //! GET USER CHATS
 
 func AddChat(c *fiber.Ctx) error {
