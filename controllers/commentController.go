@@ -74,6 +74,10 @@ func AddComment(c *fiber.Ctx) error {
 		Content: reqBody.Content,
 	}
 
+	notification := models.Notification{
+		SenderID: parsedUserID,
+	}
+
 	if postID != "" {
 		parsedPostID, err := uuid.Parse(postID)
 		if err != nil {
@@ -86,6 +90,10 @@ func AddComment(c *fiber.Ctx) error {
 		}
 
 		comment.PostID = parsedPostID
+		notification.NotificationType = 2
+		notification.UserID = post.UserID
+		notification.PostID = post.ID
+
 	} else if projectID != "" {
 		parsedProjectID, err := uuid.Parse(projectID)
 		if err != nil {
@@ -98,8 +106,16 @@ func AddComment(c *fiber.Ctx) error {
 		}
 
 		comment.ProjectID = parsedProjectID
+		notification.NotificationType = 4
+		notification.UserID = project.UserID
+		notification.PostID = project.ID
+
 	} else {
 		return &fiber.Error{Code: 400, Message: "Invalid ID."}
+	}
+
+	if err := initializers.DB.Create(&notification).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
 	}
 
 	result := initializers.DB.Create(&comment)

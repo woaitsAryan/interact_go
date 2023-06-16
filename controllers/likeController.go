@@ -41,6 +41,17 @@ func LikePost(c *fiber.Ctx) error {
 				return &fiber.Error{Code: 500, Message: "Internal Server Error while adding the like."}
 			}
 
+			notification := models.Notification{
+				NotificationType: 1,
+				UserID:           post.UserID,
+				SenderID:         userID,
+				PostID:           post.ID,
+			}
+
+			if err := initializers.DB.Create(&notification).Error; err != nil {
+				return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
+			}
+
 			post.NoLikes++
 		}
 		return &fiber.Error{Code: 500, Message: "Database Error."}
@@ -96,6 +107,17 @@ func LikeProject(c *fiber.Ctx) error {
 
 			if result.Error != nil {
 				return &fiber.Error{Code: 500, Message: "Internal Server Error while adding the like."}
+			}
+
+			notification := models.Notification{
+				NotificationType: 3,
+				UserID:           project.UserID,
+				SenderID:         userID,
+				ProjectID:        project.ID,
+			}
+
+			if err := initializers.DB.Create(&notification).Error; err != nil {
+				return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
 			}
 
 			project.NoLikes++

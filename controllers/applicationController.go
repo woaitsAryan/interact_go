@@ -77,6 +77,11 @@ func AddApplication(c *fiber.Ctx) error {
 		return err
 	}
 
+	var opening models.Opening
+	if err := initializers.DB.First(&opening, "id=?", parsedOpeningID).Error; err != nil {
+		return &fiber.Error{Code: 400, Message: "No Opening of this ID found."}
+	}
+
 	resumePath, err := utils.SaveFile(c, "resume", "projects/openings/applications", false, 0, 0)
 	if err != nil {
 		return err
@@ -94,6 +99,17 @@ func AddApplication(c *fiber.Ctx) error {
 
 	if result.Error != nil {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error while creating the application."}
+	}
+
+	notification := models.Notification{
+		NotificationType: 5,
+		UserID:           opening.UserID,
+		SenderID:         parsedUserID,
+		OpeningID:        opening.ID,
+	}
+
+	if err := initializers.DB.Create(&notification).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
 	}
 
 	return c.Status(201).JSON(fiber.Map{

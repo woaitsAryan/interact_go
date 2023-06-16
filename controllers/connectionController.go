@@ -21,6 +21,13 @@ func FollowUser(c *fiber.Ctx) error {
 	if loggedInUserID == toFollowID {
 		return &fiber.Error{Code: 400, Message: "Cannot Follow Yourself."}
 	}
+
+	var toFollowUser models.User
+	err := initializers.DB.First(&toFollowUser, "id=?", toFollowID).Error
+	if err != nil {
+		return &fiber.Error{Code: 500, Message: "No User with this ID exists."}
+	}
+
 	var follow models.FollowFollower
 	if err := initializers.DB.Where("follower_id = ? AND followed_id = ?", loggedInUserID, toFollowID).First(&follow).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -29,7 +36,17 @@ func FollowUser(c *fiber.Ctx) error {
 			newFollow.FollowedID = toFollowID
 
 			if err := initializers.DB.Create(&newFollow).Error; err != nil {
-				return &fiber.Error{Code: 500, Message: "Database Error."}
+				return &fiber.Error{Code: 500, Message: "Database Error while creating follow."}
+			}
+
+			notification := models.Notification{
+				NotificationType: 0,
+				UserID:           toFollowUser.ID,
+				SenderID:         loggedInUserID,
+			}
+
+			if err := initializers.DB.Create(&notification).Error; err != nil {
+				return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
 			}
 
 			return c.Status(200).JSON(fiber.Map{

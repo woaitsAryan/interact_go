@@ -47,6 +47,16 @@ func AcceptApplication(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error while creating membership."}
 	}
 
+	notification := models.Notification{
+		NotificationType: 6,
+		UserID:           application.UserID,
+		OpeningID:        application.OpeningID,
+	}
+
+	if err := initializers.DB.Create(&notification).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
+	}
+
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Application Accepted.",
@@ -77,6 +87,16 @@ func RejectApplication(c *fiber.Ctx) error {
 
 	if result.Error != nil {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error while updating the application."}
+	}
+
+	notification := models.Notification{
+		NotificationType: 7,
+		UserID:           application.UserID,
+		OpeningID:        application.OpeningID,
+	}
+
+	if err := initializers.DB.Create(&notification).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
