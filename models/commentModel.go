@@ -15,6 +15,7 @@ type Comment struct {
 	UserID    uuid.UUID `gorm:"type:uuid;not null" json:"commentedByID"`
 	User      User      `gorm:"" json:"commentedBy"`
 	Content   string    `gorm:"type:text;not null" json:"content"`
+	NoLikes   int       `json:"noLikes"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
