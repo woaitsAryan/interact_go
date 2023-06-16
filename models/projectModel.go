@@ -26,7 +26,6 @@ type Project struct {
 	TRatio       int              `json:"-"`
 	Links        pq.StringArray   `gorm:"type:text[]" json:"links"`
 	PrivateLinks pq.StringArray   `gorm:"type:text[]" json:"privateLinks"`
-	LikedBy      []User           `gorm:"many2many:user_project_likes;joinForeignKey:user_id;joinReferences:id;constraint:OnDelete:CASCADE" json:"likedBy,omitempty"`
 	Comments     []Comment        `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"comments,omitempty"`
 	Openings     []Opening        `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"openings,omitempty"`
 	Chats        []ProjectChat    `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"chats,omitempty"`
