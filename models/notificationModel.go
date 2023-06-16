@@ -33,5 +33,5 @@ type Notification struct {
 	Opening          Opening     `gorm:"" json:"opening"`
 	ApplicationID    uuid.UUID   `gorm:"type:uuid" json:"applicationID"`
 	Application      Application `gorm:"" json:"application"`
-	CreatedAt        time.Time   `json:"createdAt"`
+	CreatedAt        time.Time   `gorm:"default:current_timestamp" json:"createdAt"`
 }

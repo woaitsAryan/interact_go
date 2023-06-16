@@ -12,7 +12,7 @@ type Post struct {
 	UserID    uuid.UUID `gorm:"type:uuid;not null" json:"userID"`
 	User      User      `gorm:"" json:"user"`
 	Content   string    `gorm:"type:text;not null" json:"content"`
-	CreatedAt time.Time `json:"postedAt"`
+	CreatedAt time.Time `gorm:"default:current_timestamp" json:"postedAt"`
 	// LikedBy   []User         `gorm:"many2many:user_post_likes;joinForeignKey:user_id;joinReferences:id;constraint:OnDelete:CASCADE" json:"likedBy,omitempty"`
 	Images   pq.StringArray `gorm:"type:text[]" json:"images"`
 	Hashes   pq.StringArray `gorm:"type:text[]" json:"hashes"`
@@ -29,5 +29,5 @@ type UserPostLike struct {
 	User      User      `gorm:"" json:"likedBy"`
 	PostID    uuid.UUID `gorm:"type:uuid;not null" json:"postID"`
 	Post      Post      `gorm:"" json:"post"`
-	CreatedAt time.Time `json:"likedAt"`
+	CreatedAt time.Time `gorm:"default:current_timestamp" json:"likedAt"`
 }

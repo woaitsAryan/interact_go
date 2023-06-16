@@ -17,8 +17,8 @@ type Comment struct {
 	Content   string    `gorm:"type:text;not null" json:"content"`
 	NoLikes   int       `json:"noLikes"`
 	Edited    bool      `gorm:"default:false" json:"edited"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	CreatedAt time.Time `gorm:"default:current_timestamp" json:"createdAt"`
+	UpdatedAt time.Time `gorm:"default:current_timestamp" json:"updatedAt"`
 }
 type UserCommentLike struct {
 	ID        uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
@@ -26,5 +26,5 @@ type UserCommentLike struct {
 	User      User      `gorm:"" json:"likedBy"`
 	CommentID uuid.UUID `gorm:"type:uuid;not null" json:"commentID"`
 	Comment   Comment   `gorm:"" json:"comment"`
-	CreatedAt time.Time `json:"likedAt"`
+	CreatedAt time.Time `gorm:"default:current_timestamp" json:"likedAt"`
 }

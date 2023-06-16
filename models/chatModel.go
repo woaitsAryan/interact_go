@@ -12,7 +12,7 @@ type Chat struct {
 	Description string           `gorm:"type:text" json:"description"`
 	UserID      uuid.UUID        `gorm:"type:uuid;not null" json:"createdByID"`
 	User        User             `gorm:"" json:"createdBy"`
-	CreatedAt   time.Time        `json:"createdAt"`
+	CreatedAt   time.Time        `gorm:"default:current_timestamp" json:"createdAt"`
 	Members     []User           `gorm:"many2many:chat_members;constraint:OnDelete:CASCADE" json:"members"`
 	Group       bool             `gorm:"default:false" json:"group"`
 	Messages    []Message        `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE" json:"messages"`
@@ -28,7 +28,7 @@ type ProjectChat struct {
 	User        User      `gorm:"" json:"createdBy"`
 	ProjectID   uuid.UUID `gorm:"type:uuid;not null" json:"projectID"`
 	Project     Project   `gorm:"" json:"project"`
-	CreatedAt   time.Time `json:"createdAt"`
+	CreatedAt   time.Time `gorm:"default:current_timestamp" json:"createdAt"`
 	Members     []User    `gorm:"many2many:project_chat_members;constraint:OnDelete:CASCADE" json:"members"`
 	Messages    []Message `gorm:"foreignKey:ProjectChatID;constraint:OnDelete:CASCADE" json:"messages"`
 }

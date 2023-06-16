@@ -17,7 +17,7 @@ type Project struct {
 	Page         string              `gorm:"type:text" json:"page"`
 	UserID       uuid.UUID           `gorm:"type:uuid;not null" json:"userID"`
 	User         User                `gorm:"" json:"user"`
-	CreatedAt    time.Time           `json:"postedAt"`
+	CreatedAt    time.Time           `gorm:"default:current_timestamp" json:"postedAt"`
 	Tags         pq.StringArray      `gorm:"type:text[]" json:"tags"`
 	NoLikes      int                 `json:"noLikes"`
 	NoShares     int                 `json:"noShares"`
@@ -46,5 +46,5 @@ type UserProjectLike struct {
 	User      User      `gorm:"" json:"likedBy"`
 	ProjectID uuid.UUID `gorm:"type:uuid;not null" json:"projectID"`
 	Project   Project   `gorm:"" json:"project"`
-	CreatedAt time.Time `json:"likedAt"`
+	CreatedAt time.Time `gorm:"default:current_timestamp" json:"likedAt"`
 }

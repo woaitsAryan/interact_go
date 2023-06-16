@@ -13,7 +13,7 @@ type ChatInvitation struct {
 	ChatID    uuid.UUID `gorm:"type:uuid;not null" json:"chatID"`
 	Chat      Chat      `gorm:"constraint:OnDelete:CASCADE" json:"chat"`
 	Status    int       `gorm:"default:0" json:"status"` //* -1 for reject, 0 for waiting and, 1 for accept
-	CreatedAt time.Time `json:"createdAt"`
+	CreatedAt time.Time `gorm:"default:current_timestamp" json:"createdAt"`
 }
 
 type ProjectInvitation struct {
@@ -23,5 +23,5 @@ type ProjectInvitation struct {
 	ProjectID uuid.UUID `gorm:"type:uuid;not null" json:"projectID"`
 	Project   Project   `gorm:"constraint:OnDelete:CASCADE" json:"project"`
 	Status    int       `gorm:"default:0" json:"status"` //* -1 for reject, 0 for waiting and, 1 for accept
-	CreatedAt time.Time `json:"createdAt"`
+	CreatedAt time.Time `gorm:"default:current_timestamp" json:"createdAt"`
 }

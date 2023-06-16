@@ -10,7 +10,7 @@ type ProjectBookmark struct {
 	ID        uuid.UUID             `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	UserID    uuid.UUID             `gorm:"type:uuid;not null" json:"userID"`
 	Title     string                `json:"title"`
-	CreatedAt time.Time             `json:"createdAt"`
+	CreatedAt time.Time             `gorm:"default:current_timestamp" json:"createdAt"`
 	Items     []ProjectBookmarkItem `gorm:"foreignKey:ProjectBookmarkID;constraint:OnDelete:CASCADE" json:"items,omitempty"`
 }
 
@@ -25,7 +25,7 @@ type PostBookmark struct {
 	ID        uuid.UUID          `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	UserID    uuid.UUID          `gorm:"type:uuid;not null" json:"userID"`
 	Title     string             `json:"title"`
-	CreatedAt time.Time          `json:"createdAt"`
+	CreatedAt time.Time          `gorm:"default:current_timestamp" json:"createdAt"`
 	Items     []PostBookmarkItem `gorm:"foreignKey:PostBookmarkID;constraint:OnDelete:CASCADE" json:"items,omitempty"`
 }
 

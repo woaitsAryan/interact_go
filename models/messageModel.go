@@ -15,7 +15,7 @@ type Message struct {
 	UserID        uuid.UUID   `gorm:"type:uuid;not null" json:"senderID"`
 	User          User        `gorm:"" json:"sentBy"`
 	Content       string      `gorm:"type:text;not null" json:"content"`
-	CreatedAt     time.Time   `json:"sentAt"`
+	CreatedAt     time.Time   `gorm:"default:current_timestamp" json:"sentAt"`
 	Read          bool        `gorm:"default:false" json:"read"`
 	ReadBy        []User      `gorm:"many2many:message_read_by;constraint:OnDelete:CASCADE" json:"readBy"`
 }
