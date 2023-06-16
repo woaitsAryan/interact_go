@@ -9,7 +9,7 @@ import (
 
 type Opening struct {
 	ID               uuid.UUID      `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	ProjectID        uuid.UUID      `gorm:"type:uuid;not null" json:"projectId"`
+	ProjectID        uuid.UUID      `gorm:"type:uuid;not null" json:"projectID"`
 	Project          Project        `gorm:"" json:"project"`
 	Title            string         `gorm:"type:varchar(255);not null" json:"title"`
 	Description      string         `gorm:"type:text;not null" json:"description"`

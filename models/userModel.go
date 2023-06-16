@@ -32,7 +32,7 @@ type User struct {
 
 type ProfileView struct {
 	ID     uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id,omitempty"`
-	UserID uuid.UUID `gorm:"type:uuid;not null" json:"userId"`
+	UserID uuid.UUID `gorm:"type:uuid;not null" json:"userID"`
 	Date   time.Time `gorm:"type:date" json:"date"`
 	Count  int       `json:"count"`
 }

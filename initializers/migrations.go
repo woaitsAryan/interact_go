@@ -15,7 +15,6 @@ func AutoMigrate() {
 		&models.ProjectBookmark{},
 		&models.ProjectBookmarkItem{},
 		&models.Message{},
-		&models.ProjectChatMessage{},
 		&models.Chat{},
 		&models.ProjectChat{},
 		&models.Post{},
@@ -24,8 +23,7 @@ func AutoMigrate() {
 		&models.Opening{},
 		&models.Application{},
 		&models.Membership{},
-		&models.PostComment{},
-		&models.ProjectComment{},
+		&models.Comment{},
 		&models.ChatInvitation{},
 		&models.ProjectInvitation{},
 	)

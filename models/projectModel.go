@@ -27,7 +27,7 @@ type Project struct {
 	Links        pq.StringArray   `gorm:"type:text[]" json:"links"`
 	PrivateLinks pq.StringArray   `gorm:"type:text[]" json:"privateLinks"`
 	LikedBy      []User           `gorm:"many2many:user_project_likes;joinForeignKey:user_id;joinReferences:id;constraint:OnDelete:CASCADE" json:"likedBy,omitempty"`
-	Comments     []ProjectComment `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"comments,omitempty"`
+	Comments     []Comment        `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"comments,omitempty"`
 	Openings     []Opening        `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"openings,omitempty"`
 	Chats        []ProjectChat    `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"chats,omitempty"`
 	Invitations  []ChatInvitation `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"invitations"`
@@ -35,7 +35,16 @@ type Project struct {
 
 type ProjectView struct {
 	ID        uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	ProjectID uuid.UUID `gorm:"type:uuid;not null" json:"projectId"`
+	ProjectID uuid.UUID `gorm:"type:uuid;not null" json:"projectID"`
 	Date      time.Time `json:"date"`
 	Count     int       `json:"count"`
+}
+
+type UserProjectLike struct {
+	ID        uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	UserID    uuid.UUID `gorm:"type:uuid;not null" json:"likedByID"`
+	User      User      `gorm:"" json:"likedBy"`
+	ProjectID uuid.UUID `gorm:"type:uuid;not null" json:"projectID"`
+	Project   Project   `gorm:"" json:"project"`
+	CreatedAt time.Time `json:"likedAt"`
 }
