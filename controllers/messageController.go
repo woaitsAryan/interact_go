@@ -83,7 +83,6 @@ func AddMessage(c *fiber.Ctx) error {
 		"status":  "success",
 		"message": "Message Added",
 	})
-
 }
 
 func DeleteMessage(c *fiber.Ctx) error {

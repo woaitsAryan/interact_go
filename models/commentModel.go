@@ -16,6 +16,7 @@ type Comment struct {
 	User      User      `gorm:"" json:"commentedBy"`
 	Content   string    `gorm:"type:text;not null" json:"content"`
 	NoLikes   int       `json:"noLikes"`
+	Edited    bool      `gorm:"default:false" json:"edited"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
