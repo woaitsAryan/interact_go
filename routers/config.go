@@ -3,10 +3,12 @@ package routers
 import "github.com/gofiber/fiber/v2"
 
 func Config(app *fiber.App) {
+	UserRouter(app)
+
 	ConnectionRouter(app)
 	PostRouter(app)
 	ProjectRouter(app)
-	UserRouter(app)
+
 	FeedRouter(app)
 	ApplicationRouter(app)
 	BookmarkRouter(app)
@@ -17,4 +19,5 @@ func Config(app *fiber.App) {
 	NotificationRouter(app)
 	OpeningRouter(app)
 	WorkspaceRouter(app)
+	MembershipRouter(app)
 }

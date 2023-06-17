@@ -2,6 +2,7 @@ package initializers
 
 import (
 	"fmt"
+	"log"
 	"reflect"
 
 	"github.com/spf13/viper"
@@ -13,29 +14,28 @@ type Config struct {
 	JWT_SECRET string `mapstructure:"JWT_SECRET"`
 }
 
-func LoadEnv() error {
+func LoadEnv() {
 	viper.SetConfigFile(".env")
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
 
 	var config Config
 
 	err = viper.Unmarshal(&config)
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
 
 	requiredKeys := getRequiredKeys(config)
 	missingKeys := checkMissingKeys(requiredKeys, config)
 
 	if len(missingKeys) > 0 {
-		return fmt.Errorf("following environment variables not found: %v", missingKeys)
+		err := fmt.Errorf("following environment variables not found: %v", missingKeys)
+		log.Fatal(err)
 	}
-
-	return nil
 }
 
 func getRequiredKeys(config Config) []string {

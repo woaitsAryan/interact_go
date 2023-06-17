@@ -53,7 +53,6 @@ func SignUp(c *fiber.Ctx) error {
 		Email:             reqBody.Email,
 		Password:          string(hash),
 		Username:          reqBody.Username,
-		PhoneNo:           reqBody.PhoneNo,
 		PasswordChangedAt: time.Now(),
 	}
 
