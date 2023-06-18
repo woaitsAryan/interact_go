@@ -15,6 +15,7 @@ func AutoMigrate() {
 		&models.ProjectBookmark{},
 		&models.ProjectBookmarkItem{},
 		&models.Message{},
+		&models.ProjectChatMessage{},
 		&models.Chat{},
 		&models.ProjectChat{},
 		&models.Post{},

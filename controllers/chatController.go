@@ -13,7 +13,7 @@ func GetChat(c *fiber.Ctx) error {
 
 	var chat models.Chat
 
-	err := initializers.DB.First(&chat, "id=?", chatID).Error
+	err := initializers.DB.Preload("Messages").First(&chat, "id=?", chatID).Error
 
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}

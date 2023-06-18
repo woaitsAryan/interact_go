@@ -21,4 +21,8 @@ func MessagingRouter(app *fiber.App) {
 
 	messagingRoutes.Delete("/:chatID", controllers.DeleteChat)
 	messagingRoutes.Delete("/project/:projectChatID", controllers.DeleteProjectChat)
+
+	messagingRoutes.Get("/content/:chatID", controllers.GetMessages)
+	messagingRoutes.Post("/content", controllers.AddMessage)
+	messagingRoutes.Delete("/content/:messageID", controllers.DeleteMessage)
 }

@@ -30,48 +30,30 @@ func AddMessage(c *fiber.Ctx) error {
 	parsedUserID, _ := uuid.Parse(loggedInUserID)
 
 	var reqBody struct {
-		Content       string `json:"content"`
-		ChatID        string `json:"chatID"`
-		ProjectChatID string `json:"projectChatID"`
+		Content string `json:"content"`
+		ChatID  string `json:"chatID"`
 	}
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
 	}
 
 	chatID := reqBody.ChatID
-	projectChatID := reqBody.ProjectChatID
-
-	var parsedChatID uuid.UUID
-
-	if chatID != "" {
-		parsedChatID, err := uuid.Parse(chatID)
-		if err != nil {
-			return &fiber.Error{Code: 400, Message: "Invalid ID."}
-		}
-
-		var chat models.Chat
-		if err := initializers.DB.First(&chat, "id=?", parsedChatID).Error; err != nil {
-			return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
-		}
-	} else if projectChatID != "" {
-		parsedChatID, err := uuid.Parse(projectChatID)
-		if err != nil {
-			return &fiber.Error{Code: 400, Message: "Invalid ID."}
-		}
-
-		var chat models.ProjectChat
-		if err := initializers.DB.First(&chat, "id=?", parsedChatID).Error; err != nil {
-			return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
-		}
-	} else {
-		return &fiber.Error{Code: 400, Message: "Invalid Chat ID."}
-	}
 
 	message := models.Message{
 		UserID:  parsedUserID,
-		ChatID:  parsedChatID,
 		Content: reqBody.Content,
 	}
+
+	parsedChatID, err := uuid.Parse(chatID)
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid ID."}
+	}
+
+	var chat models.Chat
+	if err := initializers.DB.First(&chat, "id=?", parsedChatID).Error; err != nil {
+		return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
+	}
+	message.ChatID = parsedChatID
 
 	result := initializers.DB.Create(&message)
 
