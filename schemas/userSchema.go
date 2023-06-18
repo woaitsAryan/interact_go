@@ -1,9 +1,5 @@
 package schemas
 
-import (
-	"github.com/lib/pq"
-)
-
 type UserCreateSchema struct {
 	Name            string `json:"name" validate:"required"`
 	Username        string `json:"username" validate:"alphanum,required"`
@@ -20,12 +16,12 @@ type UserUpdateSchema struct {
 	Bio          string              `json:"bio"`
 	Title        string              `json:"title"`
 	Tagline      string              `json:"tagline"`
-	Tags         pq.StringArray      `json:"tags" validate:"dive,alpha"`
+	Tags         []string            `json:"tags" validate:"dive,alpha"`
 	Achievements []AchievementSchema `json:"achievements"`
 }
 
 type AchievementSchema struct {
-	ID     string         `json:"id"`
-	Title  string         `json:"title" validate:"alpha"`
-	Skills pq.StringArray `json:"skills" validate:"dive,alpha"`
+	ID     string   `json:"id"`
+	Title  string   `json:"title" validate:"alpha"`
+	Skills []string `json:"skills" validate:"dive,alpha"`
 }

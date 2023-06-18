@@ -9,7 +9,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"github.com/spf13/viper"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -20,7 +19,7 @@ func createSendToken(c *fiber.Ctx, user models.User, statusCode int, message str
 		"exp": time.Now().Add(time.Hour * 24 * 30).Unix(), // 30 days
 	})
 
-	tokenString, err := token.SignedString([]byte(viper.GetString("JWT_SECRET")))
+	tokenString, err := token.SignedString([]byte(initializers.CONFIG.JWT_SECRET))
 
 	if err != nil {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error"}

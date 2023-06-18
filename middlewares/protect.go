@@ -10,7 +10,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"github.com/spf13/viper"
 )
 
 func verifyToken(tokenString string, user *models.User) error {
@@ -19,7 +18,7 @@ func verifyToken(tokenString string, user *models.User) error {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 
-		return []byte(viper.GetString("JWT_SECRET")), nil
+		return []byte(initializers.CONFIG.JWT_SECRET), nil
 	})
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {

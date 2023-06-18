@@ -12,8 +12,6 @@ require (
 	gorm.io/gorm v1.25.1
 )
 
-require github.com/lib/pq v1.10.9
-
 require (
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect

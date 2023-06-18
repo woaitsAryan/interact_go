@@ -14,6 +14,8 @@ type Config struct {
 	JWT_SECRET string `mapstructure:"JWT_SECRET"`
 }
 
+var CONFIG Config
+
 func LoadEnv() {
 	viper.SetConfigFile(".env")
 
@@ -22,15 +24,13 @@ func LoadEnv() {
 		log.Fatal(err)
 	}
 
-	var config Config
-
-	err = viper.Unmarshal(&config)
+	err = viper.Unmarshal(&CONFIG)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	requiredKeys := getRequiredKeys(config)
-	missingKeys := checkMissingKeys(requiredKeys, config)
+	requiredKeys := getRequiredKeys(CONFIG)
+	missingKeys := checkMissingKeys(requiredKeys, CONFIG)
 
 	if len(missingKeys) > 0 {
 		err := fmt.Errorf("following environment variables not found: %v", missingKeys)

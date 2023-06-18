@@ -44,7 +44,26 @@ func GetProjectChat(c *fiber.Ctx) error {
 	})
 }
 
-//! GET USER CHATS
+func GetUserChats(c *fiber.Ctx) error { // ! GET USER CHATS
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	var chats models.Chat
+	if err := initializers.DB.Where("user_id=?", loggedInUserID).Find(&chats).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
+
+	var projectChats models.ProjectChat
+	if err := initializers.DB.Where("user_id=?", loggedInUserID).Find(&projectChats).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":       "success",
+		"message":      "",
+		"chat":         chats,
+		"projectChats": projectChats,
+	})
+}
 
 func AddChat(c *fiber.Ctx) error {
 	var reqBody struct {

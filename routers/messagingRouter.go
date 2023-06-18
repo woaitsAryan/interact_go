@@ -9,6 +9,7 @@ import (
 func MessagingRouter(app *fiber.App) {
 	messagingRoutes := app.Group("/messaging", middlewares.Protect)
 
+	messagingRoutes.Get("/", controllers.GetUserChats)
 	messagingRoutes.Get("/:chatID", controllers.GetChat)
 	messagingRoutes.Get("/project/:projectChatID", controllers.GetChat)
 

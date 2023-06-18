@@ -5,12 +5,12 @@ import "github.com/gofiber/fiber/v2"
 func SaveMultipleFiles(c *fiber.Ctx, fieldName string, path string, resize bool, d1 int, d2 int) ([]string, error) {
 	form, err := c.MultipartForm()
 	if err != nil {
-		return nil, err
+		return []string{}, err
 	}
 
 	files := form.File[fieldName]
 	if files == nil {
-		return nil, nil
+		return []string{}, nil
 	}
 
 	var savedImages []string
@@ -21,7 +21,7 @@ func SaveMultipleFiles(c *fiber.Ctx, fieldName string, path string, resize bool,
 		if resize {
 			picName, err := ResizeImage(filePath, d1, d2)
 			if err != nil {
-				return nil, err
+				return []string{}, err
 			}
 			savedImages = append(savedImages, picName)
 		} else {

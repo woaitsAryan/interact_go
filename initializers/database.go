@@ -3,7 +3,6 @@ package initializers
 import (
 	"log"
 
-	"github.com/spf13/viper"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -13,7 +12,7 @@ var DB *gorm.DB
 func ConnectToDB() {
 	var err error
 
-	dsn := viper.GetString("DB_URL")
+	dsn := CONFIG.DB_URL
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {

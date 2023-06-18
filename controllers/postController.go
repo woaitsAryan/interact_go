@@ -103,10 +103,15 @@ func AddPost(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error while creating post"}
 	}
 
+	var post models.Post
+	if err := initializers.DB.Preload("User").First(&post, "id = ?", newPost.ID).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
+
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Post Added",
-		"post":    newPost,
+		"post":    post,
 	})
 }
 

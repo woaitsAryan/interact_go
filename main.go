@@ -8,7 +8,6 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/spf13/viper"
 )
 
 func init() {
@@ -40,6 +39,6 @@ func main() {
 
 	routers.Config(app)
 
-	app.Listen(":" + viper.GetString("PORT"))
+	app.Listen(":" + initializers.CONFIG.PORT)
 
 }
