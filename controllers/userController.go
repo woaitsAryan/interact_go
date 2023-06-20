@@ -15,6 +15,23 @@ import (
 	"gorm.io/gorm"
 )
 
+func GetViews(c *fiber.Ctx) error {
+	userID := c.GetRespHeader("loggedInUserID")
+	parsedUserID, _ := uuid.Parse(userID)
+
+	viewsArr, count, err := utils.GetProfileViews(parsedUserID)
+	if err != nil {
+		return err
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":   "success",
+		"message":  "",
+		"viewsArr": viewsArr,
+		"count":    count,
+	})
+}
+
 func GetAllUsers(c *fiber.Ctx) error {
 	var users []models.User
 	initializers.DB.Find(&users)

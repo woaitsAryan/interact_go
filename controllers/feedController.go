@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func GetFeed(c *fiber.Ctx) error { // !instead of having getFeedCOunt function, have a field which turns false when incoming feed is equal to the current feed. (for hasMore)
+func GetFeed(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var followings []models.FollowFollower

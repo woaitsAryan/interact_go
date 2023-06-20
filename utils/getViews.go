@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"sort"
 	"time"
 
 	"github.com/Pratham-Mishra04/interact/initializers"
@@ -9,26 +10,63 @@ import (
 	"github.com/google/uuid"
 )
 
-type ProfileViewResponse struct {
+type ViewResponse struct {
 	Date  time.Time `json:"date"`
 	Count int       `json:"count"`
 }
 
-func GetProfileViews(userID uuid.UUID) ([]ProfileViewResponse, int, error) {
+func GetProfileViews(userID uuid.UUID) ([]ViewResponse, int, error) {
+	// Create a map to store the count for each date
+	viewsMap := make(map[time.Time]int)
 
-	// Query the database to get the profile views for the past 30 days
+	// Initialize the map with all past 7 dates and count as 0
+	for i := 6; i >= 0; i-- {
+		date := time.Now().AddDate(0, 0, -i).Truncate(24 * time.Hour)
+		viewsMap[date] = 0
+	}
+
+	// Retrieve the profile views from the database
 	var profileViews []models.ProfileView
-	if err := initializers.DB.Where("user_id = ? AND date >= ?", userID, time.Now().AddDate(0, 0, -30).Format("2006-01-02")).Find(&profileViews).Error; err != nil {
+	if err := initializers.DB.Where("user_id = ? AND date >= ?", userID, time.Now().AddDate(0, 0, -7).Format("2006-01-02")).Find(&profileViews).Error; err != nil {
 		return nil, 0, &fiber.Error{Code: 500, Message: "Failed to get profile views."}
 	}
 
-	// Create a slice of ProfileViewResponse objects containing only date and count
+	// Update the count in the map based on the retrieved profile views
+	for _, view := range profileViews {
+		date := view.Date.Truncate(24 * time.Hour)
+		viewsMap[date] += view.Count
+	}
+
+	// Convert the map entries to ViewResponse objects
+	var response []ViewResponse
+	var totalViews int
+	for date, count := range viewsMap {
+		response = append(response, ViewResponse{
+			Date:  date,
+			Count: count,
+		})
+		totalViews += count
+	}
+
+	sort.Slice(response, func(i, j int) bool {
+		return response[i].Date.Before(response[j].Date)
+	})
+
+	return response, totalViews, nil
+}
+
+func GetProjectViews(projectID uuid.UUID) ([]ViewResponse, int, error) {
+
+	var projectViews []models.ProjectView
+	if err := initializers.DB.Where("project_id = ? AND date >= ?", projectID, time.Now().AddDate(0, 0, -30).Format("2006-01-02")).Find(&projectViews).Error; err != nil {
+		return nil, 0, &fiber.Error{Code: 500, Message: "Failed to get project views."}
+	}
 
 	var totalViews int
 
-	var response []ProfileViewResponse
-	for _, view := range profileViews {
-		response = append(response, ProfileViewResponse{
+	var response []ViewResponse
+	for _, view := range projectViews {
+		response = append(response, ViewResponse{
 			Date:  view.Date,
 			Count: view.Count,
 		})

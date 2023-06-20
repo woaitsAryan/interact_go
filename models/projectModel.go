@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 type Project struct {
@@ -17,15 +18,15 @@ type Project struct {
 	UserID       uuid.UUID           `gorm:"type:uuid;not null" json:"userID"`
 	User         User                `gorm:"" json:"user"`
 	CreatedAt    time.Time           `gorm:"default:current_timestamp" json:"postedAt"`
-	Tags         []string            `gorm:"type:text[]" json:"tags"`
+	Tags         pq.StringArray      `gorm:"type:text[]" json:"tags"`
 	NoLikes      int                 `json:"noLikes"`
 	NoShares     int                 `json:"noShares"`
 	Category     string              `gorm:"type:varchar(255);not null" json:"category"`
 	IsPrivate    bool                `gorm:"default:false" json:"isPrivate"`
 	TRatio       int                 `json:"-"`
 	Views        int                 `json:"views"` //! Show No of Views
-	Links        []string            `gorm:"type:text[]" json:"links"`
-	PrivateLinks []string            `gorm:"type:text[]" json:"privateLinks"`
+	Links        pq.StringArray      `gorm:"type:text[]" json:"links"`
+	PrivateLinks pq.StringArray      `gorm:"type:text[]" json:"privateLinks"`
 	Comments     []Comment           `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"comments,omitempty"`
 	Openings     []Opening           `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"openings,omitempty"`
 	Chats        []ProjectChat       `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"chats,omitempty"`

@@ -27,7 +27,7 @@ func Search(c *fiber.Ctx, index int) func(db *gorm.DB) *gorm.DB {
 
 		var searchCondition interface{}
 		switch index {
-		case 0: // !users
+		case 0: //! users
 			searchCondition = gorm.Expr("$or", []interface{}{
 				map[string]interface{}{
 					"username": gorm.Expr("$in", regexArry),
@@ -36,7 +36,7 @@ func Search(c *fiber.Ctx, index int) func(db *gorm.DB) *gorm.DB {
 					"name": gorm.Expr("$in", regexArry),
 				},
 			})
-		case 1: // !projects
+		case 1: //! projects
 			searchCondition = gorm.Expr("$or", []interface{}{
 				map[string]interface{}{
 					"title": gorm.Expr("$in", regexArry),
@@ -50,7 +50,7 @@ func Search(c *fiber.Ctx, index int) func(db *gorm.DB) *gorm.DB {
 					"category": gorm.Expr("$in", regexArry),
 				},
 			})
-		case 2: // !posts
+		case 2: //! posts
 			searchCondition = gorm.Expr("$or", []interface{}{
 				map[string]interface{}{
 					"content": gorm.Expr("$in", regexArry),
@@ -61,7 +61,7 @@ func Search(c *fiber.Ctx, index int) func(db *gorm.DB) *gorm.DB {
 					}),
 				},
 			})
-		case 3: // !openings
+		case 3: //! openings
 			searchCondition = gorm.Expr("$or", []interface{}{
 				map[string]interface{}{
 					"title": gorm.Expr("$in", regexArry),
