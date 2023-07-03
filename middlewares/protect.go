@@ -76,8 +76,12 @@ func PartialProtect(c *fiber.Ctx) error {
 	authHeader := c.Get("Authorization")
 	tokenArr := strings.Split(authHeader, " ")
 
+	if len(tokenArr) == 1 {
+		return c.Next()
+	}
+
 	if len(tokenArr) != 2 {
-		return nil
+		return &fiber.Error{Code: 401, Message: "Invalid Token."}
 	}
 
 	tokenString := tokenArr[1]

@@ -13,8 +13,8 @@ type User struct {
 	Username                  string         `gorm:"varchar(10);unique;not null" json:"username"`
 	Email                     string         `gorm:"unique;not null" json:"email"`
 	Password                  string         `json:"-"`
-	ProfilePic                string         `json:"profilePic"`
-	CoverPic                  string         `json:"coverPic"`
+	ProfilePic                string         `gorm:"default:default.jpg" json:"profilePic"`
+	CoverPic                  string         `gorm:"default:default.jpg" json:"coverPic"`
 	PhoneNo                   string         `json:"phoneNo"`
 	Bio                       string         `json:"bio"`
 	Title                     string         `json:"title"`
@@ -23,6 +23,8 @@ type User struct {
 	PasswordResetToken        string         `json:"-"`
 	PasswordResetTokenExpires time.Time      `json:"-"`
 	Views                     int            `json:"views"` //! Show No of Views
+	NoFollowing               int            `gorm:"default:0" json:"noFollowing"`
+	NoFollowers               int            `gorm:"default:0" json:"noFollowers"`
 	PasswordChangedAt         time.Time      `gorm:"default:current_timestamp" json:"-"`
 	Admin                     bool           `gorm:"default:false" json:"-"`
 	Active                    bool           `gorm:"default:true" json:"-"` //! add a functionality that on delete the acc goes inActive and if the user logs in within 30 days, it goes active again

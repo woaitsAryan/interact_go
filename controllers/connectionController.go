@@ -28,6 +28,9 @@ func FollowUser(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "No User with this ID exists."}
 	}
 
+	var loggedInUser models.User
+	initializers.DB.First(&loggedInUser, "id=?", loggedInUserID)
+
 	var follow models.FollowFollower
 	if err := initializers.DB.Where("follower_id = ? AND followed_id = ?", loggedInUserID, toFollowID).First(&follow).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -47,6 +50,16 @@ func FollowUser(c *fiber.Ctx) error {
 
 			if err := initializers.DB.Create(&notification).Error; err != nil {
 				return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
+			}
+
+			toFollowUser.NoFollowers++
+			if err := initializers.DB.Save(&toFollowUser).Error; err != nil {
+				return &fiber.Error{Code: 500, Message: "Database Error while incrementing number followers."}
+			}
+
+			loggedInUser.NoFollowing++
+			if err := initializers.DB.Save(&loggedInUser).Error; err != nil {
+				return &fiber.Error{Code: 500, Message: "Database Error while incrementing number following."}
 			}
 
 			return c.Status(200).JSON(fiber.Map{
@@ -81,6 +94,22 @@ func UnfollowUser(c *fiber.Ctx) error {
 			return &fiber.Error{Code: 500, Message: "Database Error."}
 		}
 
+		var toUnFollowUser models.User
+		initializers.DB.First(&toUnFollowUser, "id=?", toUnFollowID)
+
+		var loggedInUser models.User
+		initializers.DB.First(&loggedInUser, "id=?", loggedInUserID)
+
+		toUnFollowUser.NoFollowers--
+		if err := initializers.DB.Save(&toUnFollowUser).Error; err != nil {
+			return &fiber.Error{Code: 500, Message: "Database Error while decrementing number followers."}
+		}
+
+		loggedInUser.NoFollowing--
+		if err := initializers.DB.Save(&loggedInUser).Error; err != nil {
+			return &fiber.Error{Code: 500, Message: "Database Error while decrementing number following."}
+		}
+
 		return c.Status(200).JSON(fiber.Map{
 			"status":  "success",
 			"message": "User followed unfollowed.",
@@ -105,6 +134,22 @@ func RemoveFollow(c *fiber.Ctx) error {
 	} else {
 		if err := initializers.DB.Where(&follow).Delete(&follow).Error; err != nil {
 			return &fiber.Error{Code: 500, Message: "Database Error."}
+		}
+
+		var followerToRemove models.User
+		initializers.DB.First(&followerToRemove, "id=?", followerToRemoveID)
+
+		var loggedInUser models.User
+		initializers.DB.First(&loggedInUser, "id=?", loggedInUserID)
+
+		followerToRemove.NoFollowing--
+		if err := initializers.DB.Save(&followerToRemove).Error; err != nil {
+			return &fiber.Error{Code: 500, Message: "Database Error while decrementing number following."}
+		}
+
+		loggedInUser.NoFollowers--
+		if err := initializers.DB.Save(&loggedInUser).Error; err != nil {
+			return &fiber.Error{Code: 500, Message: "Database Error while decrementing number followers."}
 		}
 
 		return c.Status(200).JSON(fiber.Map{

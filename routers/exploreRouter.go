@@ -12,4 +12,5 @@ func ExploreRouter(app *fiber.App) {
 	exploreRoutes.Get("/openings", controllers.GetTrendingOpenings)
 	exploreRoutes.Get("/projects", controllers.GetTrendingProjects)
 	exploreRoutes.Get("/users", controllers.GetTrendingUsers)
+	exploreRoutes.Get("/users/:userID", controllers.GetUser)
 }

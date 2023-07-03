@@ -28,10 +28,11 @@ func createSendToken(c *fiber.Ctx, user models.User, statusCode int, message str
 	//set cookie
 
 	return c.Status(statusCode).JSON(fiber.Map{
-		"status":  "success",
-		"message": message,
-		"token":   tokenString,
-		"userID":  user.ID,
+		"status":     "success",
+		"message":    message,
+		"token":      tokenString,
+		"userID":     user.ID,
+		"profilePic": user.ProfilePic,
 	})
 }
 

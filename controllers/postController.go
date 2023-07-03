@@ -71,12 +71,12 @@ func GetMyPosts(c *fiber.Ctx) error {
 }
 
 func AddPost(c *fiber.Ctx) error {
-	var reqBody schemas.PostCreateScheam
+	var reqBody schemas.PostCreateSchema
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
 	}
 
-	if err := helpers.Validate[schemas.PostCreateScheam](reqBody); err != nil {
+	if err := helpers.Validate[schemas.PostCreateSchema](reqBody); err != nil {
 		return err
 	}
 
@@ -131,7 +131,7 @@ func UpdatePost(c *fiber.Ctx) error { //!gives db error instead of invalid ID
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
-	var updatePost schemas.PostUpdateScheam
+	var updatePost schemas.PostUpdateSchema
 	if err := c.BodyParser(&updatePost); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Request Body."}
 	}

@@ -194,7 +194,7 @@ func DeleteUser(c *fiber.Ctx) error {
 	})
 }
 
-func UpdatePassord(c *fiber.Ctx) error {
+func UpdatePassword(c *fiber.Ctx) error {
 
 	var reqBody struct {
 		Password        string `json:"password"`

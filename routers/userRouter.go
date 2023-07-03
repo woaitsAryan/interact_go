@@ -15,8 +15,7 @@ func UserRouter(app *fiber.App) {
 	userRoutes.Get("/", controllers.GetAllUsers)
 	userRoutes.Get("/me", controllers.GetMe)
 	userRoutes.Get("/views", controllers.GetViews)
-	userRoutes.Patch("/update_password", controllers.UpdatePassord)
-	userRoutes.Get("/:userID", controllers.GetUser)
+	userRoutes.Patch("/update_password", controllers.UpdatePassword)
 	userRoutes.Patch("/:userID", middlewares.SelfProtect, controllers.UpdateUser)
 	userRoutes.Delete("/:userID", middlewares.SelfProtect, controllers.DeleteUser)
 }
