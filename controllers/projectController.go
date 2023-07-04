@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func GetProject(c *fiber.Ctx) error {
+func GetProject(c *fiber.Ctx) error { //! Add project view history
 	projectID := c.Params("projectID")
 
 	parsedProjectID, err := uuid.Parse(projectID)
@@ -30,6 +30,12 @@ func GetProject(c *fiber.Ctx) error {
 	}
 
 	utils.UpdateProjectViews(&project)
+
+	_, count, err := utils.GetProjectViews(parsedProjectID)
+	if err != nil {
+		return err
+	}
+	project.Views = count
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",

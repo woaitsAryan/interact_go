@@ -9,8 +9,8 @@ import (
 
 type Post struct {
 	ID        uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	UserID    uuid.UUID `gorm:"type:uuid;not null" json:"postedByID"`
-	User      User      `gorm:"" json:"postedBy"`
+	UserID    uuid.UUID `gorm:"type:uuid;not null" json:"userID"`
+	User      User      `gorm:"" json:"user"`
 	Content   string    `gorm:"type:text;not null" json:"content"`
 	CreatedAt time.Time `gorm:"default:current_timestamp" json:"postedAt"`
 	// LikedBy   []User         `gorm:"many2many:user_post_likes;joinForeignKey:user_id;joinReferences:id;constraint:OnDelete:CASCADE" json:"likedBy,omitempty"`

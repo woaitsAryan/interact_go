@@ -15,15 +15,18 @@ func FollowUser(c *fiber.Ctx) error {
 	loggedInUserIDStr := c.GetRespHeader("loggedInUserID")
 	toFollowIDStr := c.Params("userID")
 
-	loggedInUserID := uuid.MustParse(loggedInUserIDStr)
-	toFollowID := uuid.MustParse(toFollowIDStr)
+	loggedInUserID, _ := uuid.Parse(loggedInUserIDStr)
+	toFollowID, err := uuid.Parse(toFollowIDStr)
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid ID"}
+	}
 
 	if loggedInUserID == toFollowID {
 		return &fiber.Error{Code: 400, Message: "Cannot Follow Yourself."}
 	}
 
 	var toFollowUser models.User
-	err := initializers.DB.First(&toFollowUser, "id=?", toFollowID).Error
+	err = initializers.DB.First(&toFollowUser, "id=?", toFollowID).Error
 	if err != nil {
 		return &fiber.Error{Code: 500, Message: "No User with this ID exists."}
 	}
@@ -42,16 +45,6 @@ func FollowUser(c *fiber.Ctx) error {
 				return &fiber.Error{Code: 500, Message: "Database Error while creating follow."}
 			}
 
-			notification := models.Notification{
-				NotificationType: 0,
-				UserID:           toFollowUser.ID,
-				SenderID:         loggedInUserID,
-			}
-
-			if err := initializers.DB.Create(&notification).Error; err != nil {
-				return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
-			}
-
 			toFollowUser.NoFollowers++
 			if err := initializers.DB.Save(&toFollowUser).Error; err != nil {
 				return &fiber.Error{Code: 500, Message: "Database Error while incrementing number followers."}
@@ -61,6 +54,16 @@ func FollowUser(c *fiber.Ctx) error {
 			if err := initializers.DB.Save(&loggedInUser).Error; err != nil {
 				return &fiber.Error{Code: 500, Message: "Database Error while incrementing number following."}
 			}
+
+			// notification := models.Notification{
+			// 	NotificationType: 0,
+			// 	UserID:           toFollowUser.ID,
+			// 	SenderID:         loggedInUserID,
+			// }
+
+			// if err := initializers.DB.Create(&notification).Error; err != nil {
+			// 	return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
+			// }
 
 			return c.Status(200).JSON(fiber.Map{
 				"status":  "success",

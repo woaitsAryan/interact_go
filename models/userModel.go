@@ -46,11 +46,11 @@ type ProfileView struct {
 // 	return nil
 // }
 
-type FollowFollower struct {
-	FollowerID uuid.UUID
-	Follower   User `gorm:"foreignKey:FollowerID"`
-	FollowedID uuid.UUID
-	Followed   User      `gorm:"foreignKey:FollowedID"`
+type FollowFollower struct { //* follower follows followed
+	FollowerID uuid.UUID `json:"followerID"`
+	Follower   User      `gorm:"foreignKey:FollowerID" json:"follower"`
+	FollowedID uuid.UUID `json:"followedID"`
+	Followed   User      `gorm:"foreignKey:FollowedID" json:"followed"`
 	CreatedAt  time.Time `gorm:"default:current_timestamp" json:"-"`
 }
 

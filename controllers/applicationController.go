@@ -68,12 +68,12 @@ func AddApplication(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
 	}
 
-	var reqBody schemas.ApplicationCreateScheam
+	var reqBody schemas.ApplicationCreateSchema
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
 	}
 
-	if err := helpers.Validate[schemas.ApplicationCreateScheam](reqBody); err != nil {
+	if err := helpers.Validate[schemas.ApplicationCreateSchema](reqBody); err != nil {
 		return err
 	}
 

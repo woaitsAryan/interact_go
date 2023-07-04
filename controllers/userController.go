@@ -44,7 +44,10 @@ func GetAllUsers(c *fiber.Ctx) error {
 }
 
 func GetMe(c *fiber.Ctx) error {
-	user := c.Locals("loggedInUser")
+	userID := c.GetRespHeader("loggedInUserID")
+
+	var user models.User
+	initializers.DB.Preload("Achievements").First(&user, "id = ?", userID)
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "",
@@ -73,8 +76,8 @@ func GetUser(c *fiber.Ctx) error {
 	})
 }
 
-func UpdateUser(c *fiber.Ctx) error { //!add achievements
-	userID := c.Params("userID")
+func UpdateMe(c *fiber.Ctx) error {
+	userID := c.GetRespHeader("loggedInUserID")
 	var user models.User
 	if err := initializers.DB.First(&user, "id = ?", userID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -100,31 +103,6 @@ func UpdateUser(c *fiber.Ctx) error { //!add achievements
 	}
 	reqBody.CoverPic = coverName
 
-	// if updateUser.Name != "" {
-	// 	user.Name = updateUser.Name
-	// }
-	// if updateUser.PhoneNo != "" {
-	// 	user.PhoneNo = updateUser.PhoneNo
-	// }
-	// if updateUser.ProfilePic != "" {
-	// 	user.ProfilePic = updateUser.ProfilePic
-	// }
-	// if updateUser.CoverPic != "" {
-	// 	user.CoverPic = updateUser.CoverPic
-	// }
-	// if updateUser.Bio != "" {
-	// 	user.Bio = updateUser.Bio
-	// }
-	// if updateUser.Title != "" {
-	// 	user.Title = updateUser.Title
-	// }
-	// if updateUser.Tagline != "" {
-	// 	user.Tagline = updateUser.Tagline
-	// }
-	// if len(updateUser.Tags) > 0 {
-	// 	user.Tags = updateUser.Tags
-	// }
-
 	updateUserValue := reflect.ValueOf(&reqBody).Elem()
 	userValue := reflect.ValueOf(&user).Elem()
 
@@ -140,27 +118,6 @@ func UpdateUser(c *fiber.Ctx) error { //!add achievements
 		}
 	}
 
-	if reqBody.Achievements != nil {
-		for _, achievement := range reqBody.Achievements {
-
-			var achievementModel models.Achievement
-
-			err := initializers.DB.First(&achievementModel, "id = ?", achievement.ID).Error
-			if err != nil {
-				if errors.Is(err, gorm.ErrRecordNotFound) {
-					initializers.DB.Create(&achievement)
-				}
-				return &fiber.Error{Code: 500, Message: "Database Error."}
-			} else {
-				achievementModel.Skills = achievement.Skills
-				achievementModel.Title = achievement.Title
-				if err := initializers.DB.Save(&achievementModel).Error; err != nil {
-					return &fiber.Error{Code: 500, Message: "Database Error."}
-				}
-			}
-		}
-	}
-
 	if err := initializers.DB.Save(&user).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
@@ -171,8 +128,8 @@ func UpdateUser(c *fiber.Ctx) error { //!add achievements
 	})
 }
 
-func DeleteUser(c *fiber.Ctx) error {
-	userID := c.Params("userID")
+func DeleteMe(c *fiber.Ctx) error {
+	userID := c.GetRespHeader("loggedInUserID")
 
 	var user models.User
 	if err := initializers.DB.First(&user, "id = ?", userID).Error; err != nil {

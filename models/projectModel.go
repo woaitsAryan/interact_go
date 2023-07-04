@@ -11,7 +11,7 @@ type Project struct {
 	ID           uuid.UUID           `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	Title        string              `gorm:"type:varchar(255);not null" json:"title"`
 	Tagline      string              `gorm:"type:varchar(255);not null" json:"tagline"`
-	CoverPic     string              `gorm:"type:varchar(255)" json:"coverPic"`
+	CoverPic     string              `gorm:"type:varchar(255); default:default.jpg" json:"coverPic"`
 	Hash         string              `gorm:"type:varchar(255)" json:"hash"`
 	Description  string              `gorm:"type:text;not null" json:"description"`
 	Page         string              `gorm:"type:text" json:"page"`
@@ -24,7 +24,7 @@ type Project struct {
 	Category     string              `gorm:"type:varchar(255);not null" json:"category"`
 	IsPrivate    bool                `gorm:"default:false" json:"isPrivate"`
 	TRatio       int                 `json:"-"`
-	Views        int                 `json:"views"` //! Show No of Views
+	Views        int                 `json:"views"`
 	Links        pq.StringArray      `gorm:"type:text[]" json:"links"`
 	PrivateLinks pq.StringArray      `gorm:"type:text[]" json:"privateLinks"`
 	Comments     []Comment           `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"comments,omitempty"`
