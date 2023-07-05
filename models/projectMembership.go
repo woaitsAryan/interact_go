@@ -15,5 +15,5 @@ type Membership struct {
 	Role      string    `gorm:"type:varchar(25);not null" json:"role"`
 	Title     string    `gorm:"type:varchar(25);not null" json:"title"`
 	Active    bool      `gorm:"default:true" json:"active"`
-	CreatedAt time.Time `gorm:"default:current_timestamp" json:"joinedAt"`
+	CreatedAt time.Time `gorm:"default:current_timestamp" json:"createdAt"`
 }

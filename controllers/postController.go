@@ -70,6 +70,26 @@ func GetMyPosts(c *fiber.Ctx) error {
 	})
 }
 
+func GetMyLikedPosts(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	var postLikes []models.UserPostLike
+	if err := initializers.DB.Where("user_id = ?", loggedInUserID).Find(&postLikes).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
+
+	var postIDs []string
+	for _, post := range postLikes {
+		postIDs = append(postIDs, post.PostID.String())
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "",
+		"posts":   postIDs,
+	})
+}
+
 func AddPost(c *fiber.Ctx) error {
 	var reqBody schemas.PostCreateSchema
 	if err := c.BodyParser(&reqBody); err != nil {

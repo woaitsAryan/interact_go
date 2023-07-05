@@ -19,18 +19,13 @@ func GetOpening(c *fiber.Ctx) error {
 	}
 
 	var opening models.Opening
-	if err := initializers.DB.First(&opening, "id = ?", parsedOpeningID).Error; err != nil {
+	if err := initializers.DB.Preload("Project").First(&opening, "id = ?", parsedOpeningID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Opening of this ID found."}
 		}
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
-
-	var applications []models.Application
-
-	initializers.DB.Where("opening_id=?", parsedOpeningID).Find(&applications)
-
-	opening.NoOfApplications = len(applications)
+	//! Update no of applications on applications
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
@@ -73,12 +68,12 @@ func AddOpening(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
 	}
 
-	var reqBody schemas.OpeningCreateScheam
+	var reqBody schemas.OpeningCreateSchema
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
 	}
 
-	if err := helpers.Validate[schemas.OpeningCreateScheam](reqBody); err != nil {
+	if err := helpers.Validate[schemas.OpeningCreateSchema](reqBody); err != nil {
 		return err
 	}
 
@@ -99,6 +94,7 @@ func AddOpening(c *fiber.Ctx) error {
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",
 		"message": "New Opening Added",
+		"opening": newOpening,
 	})
 }
 
@@ -110,12 +106,12 @@ func EditOpening(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
 	}
 
-	var reqBody schemas.OpeningEditScheam
+	var reqBody schemas.OpeningEditSchema
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
 	}
 
-	if err := helpers.Validate[schemas.OpeningEditScheam](reqBody); err != nil {
+	if err := helpers.Validate[schemas.OpeningEditSchema](reqBody); err != nil {
 		return err
 	}
 
@@ -132,6 +128,9 @@ func EditOpening(c *fiber.Ctx) error {
 	}
 	if reqBody.Tags != nil {
 		opening.Tags = reqBody.Tags
+	}
+	if reqBody.Active != nil {
+		opening.Active = *reqBody.Active
 	}
 
 	result := initializers.DB.Save(&opening)

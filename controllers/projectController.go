@@ -44,6 +44,35 @@ func GetProject(c *fiber.Ctx) error { //! Add project view history
 	})
 }
 
+func GetWorkSpaceProject(c *fiber.Ctx) error {
+	projectID := c.Params("projectID")
+
+	parsedProjectID, err := uuid.Parse(projectID)
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid ID"}
+	}
+
+	var project models.Project
+	if err := initializers.DB.Preload("User").Preload("Memberships").First(&project, "id = ?", parsedProjectID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
+		}
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
+
+	_, count, err := utils.GetProjectViews(parsedProjectID)
+	if err != nil {
+		return err
+	}
+	project.Views = count
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "",
+		"project": project,
+	})
+}
+
 func GetUserProjects(c *fiber.Ctx) error {
 	userID := c.Params("userID")
 
@@ -151,6 +180,7 @@ func AddProject(c *fiber.Ctx) error {
 
 func UpdateProject(c *fiber.Ctx) error {
 	projectID := c.Params("projectID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	parsedProjectID, err := uuid.Parse(projectID)
 	if err != nil {
@@ -158,7 +188,7 @@ func UpdateProject(c *fiber.Ctx) error {
 	}
 
 	var project models.Project
-	if err := initializers.DB.First(&project, "id = ?", parsedProjectID).Error; err != nil {
+	if err := initializers.DB.Where("id = ? AND user_id = ?", parsedProjectID, loggedInUserID).First(&project).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
 		}
@@ -174,34 +204,7 @@ func UpdateProject(c *fiber.Ctx) error {
 	}
 	reqBody.CoverPic = picName
 
-	// if reqBody.Tagline != "" {
-	// 	project.Tagline = reqBody.Tagline
-	// }
-	// if reqBody.CoverPic != "" {
-	// 	project.CoverPic = reqBody.CoverPic
-	// }
-	// if reqBody.Description != "" {
-	// 	project.Description = reqBody.Description
-	// }
-	// if reqBody.Page != "" {
-	// 	project.Page = reqBody.Page
-	// }
-	// if len(reqBody.Tags) != 0 {
-	// 	project.Tags = reqBody.Tags
-	// }
-	// if reqBody.IsPrivate {
-	// 	project.IsPrivate = true
-	// } else {
-	// 	project.IsPrivate = false
-	// }
-	// if len(reqBody.Links) != 0 {
-	// 	project.Links = reqBody.Links
-	// }
-	// if len(reqBody.PrivateLinks) != 0 {
-	// 	project.PrivateLinks = reqBody.PrivateLinks
-	// }
-
-	projectValue := reflect.ValueOf(project).Elem()
+	projectValue := reflect.ValueOf(&project).Elem()
 	reqBodyValue := reflect.ValueOf(reqBody)
 
 	for i := 0; i < reqBodyValue.NumField(); i++ {

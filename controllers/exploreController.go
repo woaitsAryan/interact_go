@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"log"
+
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/utils"
@@ -14,9 +16,10 @@ func GetTrendingPosts(c *fiber.Ctx) error {
 
 	postUserSelectedDB := utils.PostSelectConfig(paginatedDB.Preload("User"))
 
-	searchedDB := API.Search(c, 2)(postUserSelectedDB)
+	searchedDB := API.SearchPosts(c)(postUserSelectedDB)
 
-	if err := searchedDB.Order("created_at DESC").Find(&posts).Error; err != nil {
+	if err := searchedDB.Find(&posts).Order("created_at DESC").Error; err != nil {
+		log.Fatal(err)
 		return &fiber.Error{Code: 500, Message: "Failed to get the Trending Posts."}
 	}
 	return c.Status(200).JSON(fiber.Map{

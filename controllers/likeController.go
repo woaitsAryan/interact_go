@@ -28,7 +28,9 @@ func LikePost(c *fiber.Ctx) error {
 	}
 
 	var like models.UserPostLike
-	if err := initializers.DB.Where("user_id=? AND post_id=?", userID, parsedPostID).First(&like).Error; err != nil {
+	err = initializers.DB.Where("user_id=? AND post_id=?", userID, parsedPostID).First(&like).Error
+
+	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			likeModel := models.UserPostLike{
 				PostID: parsedPostID,
@@ -41,31 +43,31 @@ func LikePost(c *fiber.Ctx) error {
 				return &fiber.Error{Code: 500, Message: "Internal Server Error while adding the like."}
 			}
 
-			notification := models.Notification{
-				NotificationType: 1,
-				UserID:           post.UserID,
-				SenderID:         userID,
-				PostID:           post.ID,
-			}
-
-			if err := initializers.DB.Create(&notification).Error; err != nil {
-				return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
-			}
-
 			post.NoLikes++
+
+			// notification := models.Notification{
+			// 	NotificationType: 1,
+			// 	UserID:           post.UserID,
+			// 	SenderID:         userID,
+			// 	PostID:           post.ID,
+			// }
+
+			// if err := initializers.DB.Create(&notification).Error; err != nil {
+			// 	return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
+			// }
+		} else {
+			return &fiber.Error{Code: 500, Message: "Database Error."}
 		}
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+	} else {
+		result := initializers.DB.Delete(&like)
+
+		if result.Error != nil {
+			return &fiber.Error{Code: 500, Message: "Internal Server Error while deleting the like."}
+		}
+		post.NoLikes--
 	}
 
-	result := initializers.DB.Delete(&like)
-
-	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while deleting the like."}
-	}
-
-	post.NoLikes--
-
-	result = initializers.DB.Save(&post)
+	result := initializers.DB.Save(&post)
 
 	if result.Error != nil {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error while saving the post."}
@@ -144,7 +146,7 @@ func LikeProject(c *fiber.Ctx) error {
 	})
 }
 
-func LikeComment(c *fiber.Ctx) error {
+func LikePostComment(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	userID, _ := uuid.Parse(loggedInUserID)
 
@@ -155,7 +157,7 @@ func LikeComment(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
 	}
 
-	var comment models.Comment
+	var comment models.PostComment
 	if err := initializers.DB.First(&comment, "id = ?", parsedCommentID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
@@ -166,9 +168,9 @@ func LikeComment(c *fiber.Ctx) error {
 	var like models.UserProjectLike
 	if err := initializers.DB.Where("user_id=? AND comment_id=?", userID, parsedCommentID).First(&like).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			likeModel := models.UserCommentLike{
-				CommentID: parsedCommentID,
-				UserID:    userID,
+			likeModel := models.UserPostCommentLike{
+				PostCommentID: parsedCommentID,
+				UserID:        userID,
 			}
 
 			result := initializers.DB.Create(&likeModel)

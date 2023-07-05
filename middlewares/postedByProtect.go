@@ -34,7 +34,6 @@ func ProjectUserProtect(c *fiber.Ctx) error {
 	projectID := c.Params("projectID")
 
 	var project models.Project
-
 	if err := initializers.DB.First(&project, "id = ?", projectID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &fiber.Error{Code: 400, Message: "No post of this ID found."}
@@ -43,7 +42,7 @@ func ProjectUserProtect(c *fiber.Ctx) error {
 	}
 
 	if project.UserID.String() != userID {
-		return &fiber.Error{Code: 403, Message: "Not Allowed to Perfom this Action."}
+		return &fiber.Error{Code: 403, Message: "Not Allowed to Perform this Action."}
 	}
 
 	return c.Next()
