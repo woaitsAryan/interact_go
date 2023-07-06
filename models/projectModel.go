@@ -17,7 +17,7 @@ type Project struct {
 	Page         string         `gorm:"type:text" json:"page"`
 	UserID       uuid.UUID      `gorm:"type:uuid;not null" json:"userID"`
 	User         User           `gorm:"" json:"user"`
-	CreatedAt    time.Time      `gorm:"default:current_timestamp" json:"postedAt"`
+	CreatedAt    time.Time      `gorm:"default:current_timestamp" json:"createdAt"`
 	Tags         pq.StringArray `gorm:"type:text[]" json:"tags"`
 	NoLikes      int            `json:"noLikes"`
 	NoShares     int            `json:"noShares"`

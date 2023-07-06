@@ -12,7 +12,8 @@ func OpeningRouter(app *fiber.App) {
 	app.Get("/openings/project/:projectID", controllers.GetAllOpeningsOfProject)
 
 	openingRoutes := app.Group("/openings", middlewares.Protect) //! Add project roles and protect
-	openingRoutes.Post("/:openingID", controllers.AddOpening)
+	openingRoutes.Get("/applications/:openingID", controllers.GetAllApplicationsOfOpening)
+	openingRoutes.Post("/:projectID", controllers.AddOpening)
 	openingRoutes.Patch("/:openingID", controllers.EditOpening)
 	openingRoutes.Delete("/:openingID", controllers.DeleteOpening)
 }

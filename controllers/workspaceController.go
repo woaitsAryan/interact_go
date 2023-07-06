@@ -48,7 +48,7 @@ func GetMyApplications(c *fiber.Ctx) error { //! Add search here
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var applications []models.Application
-	if err := initializers.DB.Where("user_id=?", loggedInUserID).Find(&applications).Error; err != nil {
+	if err := initializers.DB.Preload("Opening").Where("user_id=?", loggedInUserID).Find(&applications).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 

@@ -31,6 +31,6 @@ func SaveFile(c *fiber.Ctx, fieldName string, path string, resize bool, d1 int, 
 		return picName, nil
 	}
 
-	return filePath, nil
+	return c.GetRespHeader("loggedInUserID") + "-" + file.Filename, nil
 
 }

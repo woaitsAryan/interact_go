@@ -12,13 +12,13 @@ func GetBookMarks(c *fiber.Ctx) error {
 	parsedUserID, _ := uuid.Parse(userID)
 
 	var postBookmarks []models.PostBookmark
-	err := initializers.DB.Preload("Items").Find(&postBookmarks, "user_id=?", parsedUserID).Error
+	err := initializers.DB.Preload("PostItems").Find(&postBookmarks, "user_id=?", parsedUserID).Error
 	if err != nil {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error."}
 	}
 
 	var projectBookmarks []models.ProjectBookmark
-	err = initializers.DB.Preload("Items").Find(&projectBookmarks, "user_id=?", parsedUserID).Error
+	err = initializers.DB.Preload("ProjectItems").Find(&projectBookmarks, "user_id=?", parsedUserID).Error
 	if err != nil {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error."}
 	}
@@ -54,8 +54,9 @@ func AddPostBookMark(c *fiber.Ctx) error {
 	}
 
 	return c.Status(201).JSON(fiber.Map{
-		"status":  "success",
-		"message": "Bookmark Created.",
+		"status":   "success",
+		"message":  "Bookmark Created.",
+		"bookmark": bookmark,
 	})
 }
 
@@ -82,8 +83,9 @@ func AddProjectBookMark(c *fiber.Ctx) error {
 	}
 
 	return c.Status(201).JSON(fiber.Map{
-		"status":  "success",
-		"message": "Bookmark Created.",
+		"status":   "success",
+		"message":  "Bookmark Created.",
+		"bookmark": bookmark,
 	})
 }
 

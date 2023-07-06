@@ -16,9 +16,9 @@ func BookmarkRouter(app *fiber.App) {
 	bookmarkRoutes.Delete("/post/:bookmarkID", controllers.DeletePostBookMark)
 	bookmarkRoutes.Delete("/project/:bookmarkID", controllers.DeleteProjectBookMark)
 
-	bookmarkRoutes.Post("/post/item", controllers.AddPostBookMarkItem)
-	bookmarkRoutes.Post("/project/item", controllers.AddProjectBookMarkItem)
+	bookmarkRoutes.Post("/post/item/:bookmarkID", controllers.AddPostBookMarkItem)
+	bookmarkRoutes.Post("/project/item/:bookmarkID", controllers.AddProjectBookMarkItem)
 
-	bookmarkRoutes.Delete("/post/item/:bookmarkID", controllers.DeletePostBookMarkItem)
-	bookmarkRoutes.Delete("/project/item/:bookmarkID", controllers.DeleteProjectBookMarkItem)
+	bookmarkRoutes.Delete("/post/item/:bookmarkItemID", controllers.DeletePostBookMarkItem)
+	bookmarkRoutes.Delete("/project/item/:bookmarkItemID", controllers.DeleteProjectBookMarkItem)
 }

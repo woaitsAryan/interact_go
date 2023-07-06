@@ -111,31 +111,32 @@ func LikeProject(c *fiber.Ctx) error {
 				return &fiber.Error{Code: 500, Message: "Internal Server Error while adding the like."}
 			}
 
-			notification := models.Notification{
-				NotificationType: 3,
-				UserID:           project.UserID,
-				SenderID:         userID,
-				ProjectID:        project.ID,
-			}
+			// notification := models.Notification{
+			// 	NotificationType: 3,
+			// 	UserID:           project.UserID,
+			// 	SenderID:         userID,
+			// 	ProjectID:        project.ID,
+			// }
 
-			if err := initializers.DB.Create(&notification).Error; err != nil {
-				return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
-			}
+			// if err := initializers.DB.Create(&notification).Error; err != nil {
+			// 	return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
+			// }
 
 			project.NoLikes++
+		} else {
+			return &fiber.Error{Code: 500, Message: "Database Error."}
 		}
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+	} else {
+		result := initializers.DB.Delete(&like)
+
+		if result.Error != nil {
+			return &fiber.Error{Code: 500, Message: "Internal Server Error while deleting the like."}
+		}
+
+		project.NoLikes--
 	}
 
-	result := initializers.DB.Delete(&like)
-
-	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while deleting the like."}
-	}
-
-	project.NoLikes--
-
-	result = initializers.DB.Save(&project)
+	result := initializers.DB.Save(&project)
 
 	if result.Error != nil {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error while saving the project."}
@@ -165,8 +166,8 @@ func LikePostComment(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
-	var like models.UserProjectLike
-	if err := initializers.DB.Where("user_id=? AND comment_id=?", userID, parsedCommentID).First(&like).Error; err != nil {
+	var like models.UserPostCommentLike
+	if err := initializers.DB.Where("user_id=? AND post_comment_id=?", userID, parsedCommentID).First(&like).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			likeModel := models.UserPostCommentLike{
 				PostCommentID: parsedCommentID,
@@ -180,19 +181,79 @@ func LikePostComment(c *fiber.Ctx) error {
 			}
 
 			comment.NoLikes++
+		} else {
+			return &fiber.Error{Code: 500, Message: "Database Error."}
+		}
+	} else {
+		result := initializers.DB.Delete(&like)
+
+		if result.Error != nil {
+			return &fiber.Error{Code: 500, Message: "Internal Server Error while deleting the like."}
+		}
+
+		comment.NoLikes--
+	}
+
+	result := initializers.DB.Save(&comment)
+
+	if result.Error != nil {
+		return &fiber.Error{Code: 500, Message: "Internal Server Error while saving the comment."}
+	}
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Comment Liked/Unliked.",
+	})
+}
+
+func LikeProjectComment(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	userID, _ := uuid.Parse(loggedInUserID)
+
+	commentID := c.Params("commentID")
+	parsedCommentID, err := uuid.Parse(commentID)
+
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid ID"}
+	}
+
+	var comment models.ProjectComment
+	if err := initializers.DB.First(&comment, "id = ?", parsedCommentID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
 		}
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
-	result := initializers.DB.Delete(&like)
+	var like models.UserProjectCommentLike
+	if err := initializers.DB.Where("user_id=? AND project_comment_id=?", userID, parsedCommentID).First(&like).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			likeModel := models.UserProjectCommentLike{
+				ProjectCommentID: parsedCommentID,
+				UserID:           userID,
+			}
 
-	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while deleting the like."}
+			result := initializers.DB.Create(&likeModel)
+
+			if result.Error != nil {
+				return &fiber.Error{Code: 500, Message: "Internal Server Error while adding the like."}
+			}
+
+			comment.NoLikes++
+		} else {
+			return &fiber.Error{Code: 500, Message: "Database Error."}
+		}
+
+	} else {
+		result := initializers.DB.Delete(&like)
+
+		if result.Error != nil {
+			return &fiber.Error{Code: 500, Message: "Internal Server Error while deleting the like."}
+		}
+
+		comment.NoLikes--
 	}
 
-	comment.NoLikes--
-
-	result = initializers.DB.Save(&comment)
+	result := initializers.DB.Save(&comment)
 
 	if result.Error != nil {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error while saving the comment."}

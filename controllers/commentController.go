@@ -31,27 +31,27 @@ func GetPostComments(c *fiber.Ctx) error {
 	})
 }
 
-// func GetProjectComments(c *fiber.Ctx) error {
-// 	projectID := c.Params("projectID")
+func GetProjectComments(c *fiber.Ctx) error {
+	projectID := c.Params("projectID")
 
-// 	parsedProjectID, err := uuid.Parse(projectID)
-// 	if err != nil {
-// 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
-// 	}
+	parsedProjectID, err := uuid.Parse(projectID)
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid ID"}
+	}
 
-// 	paginatedDB := API.Paginator(c)(initializers.DB)
+	paginatedDB := API.Paginator(c)(initializers.DB)
 
-// 	var comments []models.Comment
-// 	if err := paginatedDB.Where("project_id=?", parsedProjectID).Find(&comments).Error; err != nil {
-// 		return &fiber.Error{Code: 500, Message: "Database Error."}
-// 	}
+	var comments []models.ProjectComment
+	if err := paginatedDB.Preload("User").Where("project_id=?", parsedProjectID).Order("created_at DESC").Find(&comments).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
 
-// 	return c.Status(200).JSON(fiber.Map{
-// 		"status":   "success",
-// 		"message":  "",
-// 		"comments": comments,
-// 	})
-// }
+	return c.Status(200).JSON(fiber.Map{
+		"status":   "success",
+		"message":  "",
+		"comments": comments,
+	})
+}
 
 func AddPostComment(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
@@ -119,71 +119,72 @@ func AddPostComment(c *fiber.Ctx) error {
 	})
 }
 
-// func AddProjectComment(c *fiber.Ctx) error {
-// 	loggedInUserID := c.GetRespHeader("loggedInUserID")
-// 	parsedUserID, _ := uuid.Parse(loggedInUserID)
+func AddProjectComment(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	parsedUserID, _ := uuid.Parse(loggedInUserID)
 
-// 	var reqBody struct {
-// 		Content   string `json:"content"`
-// 		ProjectID    string `json:"projectID"`
-// 	}
-// 	if err := c.BodyParser(&reqBody); err != nil {
-// 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
-// 	}
+	var reqBody struct {
+		Content   string `json:"content"`
+		ProjectID string `json:"projectID"`
+	}
+	if err := c.BodyParser(&reqBody); err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
+	}
 
-// 	projectID := reqBody.projectID
+	projectID := reqBody.ProjectID
 
-// 	comment := models.PostComment{
-// 		UserID:  parsedUserID,
-// 		Content: reqBody.Content,
-// 	}
+	comment := models.ProjectComment{
+		UserID:  parsedUserID,
+		Content: reqBody.Content,
+	}
 
-// 	notification := models.Notification{
-// 		SenderID: parsedUserID,
-// 	}
+	notification := models.Notification{
+		SenderID: parsedUserID,
+	}
 
-// 	if projectID != "" {
-// 		parsedProjectID, err := uuid.Parse(projectID)
-// 		if err != nil {
-// 			return &fiber.Error{Code: 400, Message: "Invalid ID."}
-// 		}
+	parsedProjectID, err := uuid.Parse(projectID)
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid ID."}
+	}
 
-// 		var project models.Project
-// 		if err := initializers.DB.First(&project, "id=?", parsedProjectID).Error; err != nil {
-// 			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
-// 		}
+	var project models.Project
+	if err := initializers.DB.First(&project, "id=?", parsedProjectID).Error; err != nil {
+		return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
+	}
 
-// 		comment.ProjectID = parsedProjectID
-// 		notification.NotificationType = 4
-// 		notification.UserID = project.UserID
-// 		notification.PostID = project.ID
+	comment.ProjectID = parsedProjectID
+	notification.NotificationType = 4
+	notification.UserID = project.UserID
+	notification.PostID = project.ID
 
-// 		result := initializers.DB.Create(&comment)
+	result := initializers.DB.Create(&comment)
 
-// 		if result.Error != nil {
-// 			return &fiber.Error{Code: 500, Message: "Internal Server Error while creating the comment."}
-// 		}
+	if result.Error != nil {
+		return &fiber.Error{Code: 500, Message: "Internal Server Error while creating the comment."}
+	}
 
-// 		project.NoComments++
-// 		result = initializers.DB.Save(&project)
+	project.NoComments++
+	result = initializers.DB.Save(&project)
 
-// 		if result.Error != nil {
-// 			return &fiber.Error{Code: 500, Message: "Internal Server Error while saving the Project."}
-// 		}
+	if result.Error != nil {
+		return &fiber.Error{Code: 500, Message: "Internal Server Error while saving the Project."}
+	}
 
-// 	} else {
-// 		return &fiber.Error{Code: 400, Message: "Invalid ID."}
-// 	}
+	// if err := initializers.DB.Create(&notification).Error; err != nil {
+	// 	return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
+	// }
 
-// 	// if err := initializers.DB.Create(&notification).Error; err != nil {
-// 	// 	return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
-// 	// }
+	if err := initializers.DB.Preload("User").First(&comment).Error; err != nil {
+		// Handle the error if the preload fails
+		return &fiber.Error{Code: 500, Message: "Internal Server Error while loading the user."}
+	}
 
-// 	return c.Status(201).JSON(fiber.Map{
-// 		"status":  "success",
-// 		"message": "Comment Added",
-// 	})
-// }
+	return c.Status(201).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Comment Added",
+		"comment": comment,
+	})
+}
 
 func UpdatePostComment(c *fiber.Ctx) error {
 	commentID := c.Params("commentID")
@@ -261,5 +262,84 @@ func DeletePostComment(c *fiber.Ctx) error {
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Comment deleted successfully",
+	})
+}
+
+func DeleteProjectComment(c *fiber.Ctx) error {
+	commentID := c.Params("commentID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	parsedCommentID, err := uuid.Parse(commentID)
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid ID"}
+	}
+
+	var comment models.ProjectComment
+	if err := initializers.DB.First(&comment, "id = ? AND user_id = ?", parsedCommentID, loggedInUserID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
+		}
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
+
+	var project models.Project
+	if err := initializers.DB.First(&project, "id=?", comment.ProjectID).Error; err != nil {
+		return &fiber.Error{Code: 400, Message: "Database Error."}
+	}
+
+	if err := initializers.DB.Delete(&comment).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
+
+	project.NoComments--
+	result := initializers.DB.Save(&project)
+
+	if result.Error != nil {
+		return &fiber.Error{Code: 500, Message: "Internal Server Error while saving the project."}
+	}
+
+	return c.Status(204).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Comment deleted successfully",
+	})
+}
+
+func GetMyLikedPostsComments(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	var postCommentLikes []models.UserPostCommentLike
+	if err := initializers.DB.Where("user_id = ?", loggedInUserID).Find(&postCommentLikes).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
+
+	var postCommentIDs []string
+	for _, postCommentLike := range postCommentLikes {
+		postCommentIDs = append(postCommentIDs, postCommentLike.PostCommentID.String())
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":   "success",
+		"message":  "",
+		"comments": postCommentIDs,
+	})
+}
+
+func GetMyLikedProjectsComments(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	var projectCommentLikes []models.UserProjectCommentLike
+	if err := initializers.DB.Where("user_id = ?", loggedInUserID).Find(&projectCommentLikes).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
+
+	var projectCommentIDs []string
+	for _, projectCommentLike := range projectCommentLikes {
+		projectCommentIDs = append(projectCommentIDs, projectCommentLike.ProjectCommentID.String())
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":   "success",
+		"message":  "",
+		"comments": projectCommentIDs,
 	})
 }

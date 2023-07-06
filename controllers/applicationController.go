@@ -20,7 +20,7 @@ func GetApplication(c *fiber.Ctx) error {
 	}
 
 	var application models.Application
-	if err := initializers.DB.First(&application, "id = ?", parsedApplicationID).Error; err != nil {
+	if err := initializers.DB.Preload("User").First(&application, "id = ?", parsedApplicationID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Application of this ID found."}
 		}
@@ -43,7 +43,7 @@ func GetAllApplicationsOfOpening(c *fiber.Ctx) error {
 	}
 
 	var applications []models.Application
-	if err := initializers.DB.Where("opening_id=?", parsedOpeningID).Find(&applications).Error; err != nil {
+	if err := initializers.DB.Preload("User").Where("opening_id=?", parsedOpeningID).Find(&applications).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
@@ -63,9 +63,11 @@ func AddApplication(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
 	}
 
-	parsedUserID, err := uuid.Parse(userID)
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid ID"}
+	parsedUserID, _ := uuid.Parse(userID)
+
+	var application models.Application
+	if err := initializers.DB.Where("opening_id=? AND user_id=?", parsedOpeningID, parsedUserID).First(&application).Error; err == nil {
+		return &fiber.Error{Code: 400, Message: "You already have applied for this opening."}
 	}
 
 	var reqBody schemas.ApplicationCreateSchema
@@ -101,16 +103,23 @@ func AddApplication(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error while creating the application."}
 	}
 
-	notification := models.Notification{
-		NotificationType: 5,
-		UserID:           opening.UserID,
-		SenderID:         parsedUserID,
-		OpeningID:        opening.ID,
+	opening.NoOfApplications++
+	result = initializers.DB.Save(&opening)
+
+	if result.Error != nil {
+		return &fiber.Error{Code: 500, Message: "Internal Server Error while saving the opening."}
 	}
 
-	if err := initializers.DB.Create(&notification).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
-	}
+	// notification := models.Notification{
+	// 	NotificationType: 5,
+	// 	UserID:           opening.UserID,
+	// 	SenderID:         parsedUserID,
+	// 	OpeningID:        opening.ID,
+	// }
+
+	// if err := initializers.DB.Create(&notification).Error; err != nil {
+	// 	return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
+	// }
 
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",
@@ -134,10 +143,24 @@ func DeleteApplication(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
+	parsedOpeningID := application.OpeningID
+
 	result := initializers.DB.Delete(&application)
 
 	if result.Error != nil {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error while deleting the application."}
+	}
+
+	var opening models.Opening
+	if err := initializers.DB.First(&opening, "id=?", parsedOpeningID).Error; err != nil {
+		return &fiber.Error{Code: 400, Message: "No Opening of this ID found."}
+	}
+
+	opening.NoOfApplications--
+	result = initializers.DB.Save(&opening)
+
+	if result.Error != nil {
+		return &fiber.Error{Code: 500, Message: "Internal Server Error while saving the opening."}
 	}
 
 	return c.Status(204).JSON(fiber.Map{

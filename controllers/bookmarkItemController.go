@@ -10,7 +10,7 @@ import (
 
 func AddPostBookMarkItem(c *fiber.Ctx) error {
 
-	bookmarkID := c.GetRespHeader("bookmarkID")
+	bookmarkID := c.Params("bookmarkID")
 
 	parsedBookmarkID, err := uuid.Parse(bookmarkID)
 	if err != nil {
@@ -24,13 +24,13 @@ func AddPostBookMarkItem(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
 	}
 
-	parsedpostID, err := uuid.Parse(reqBody.PostID)
+	parsedPostID, err := uuid.Parse(reqBody.PostID)
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
 	}
 
 	var post models.Post
-	if err := initializers.DB.First(&post, "id = ?", parsedpostID).Error; err != nil {
+	if err := initializers.DB.First(&post, "id = ?", parsedPostID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Post of this ID found."}
 		}
@@ -47,7 +47,7 @@ func AddPostBookMarkItem(c *fiber.Ctx) error {
 
 	bookmarkItem := models.PostBookmarkItem{
 		PostBookmarkID: parsedBookmarkID,
-		PostID:         parsedpostID,
+		PostID:         parsedPostID,
 	}
 
 	result := initializers.DB.Create(&bookmarkItem)
@@ -57,14 +57,15 @@ func AddPostBookMarkItem(c *fiber.Ctx) error {
 	}
 
 	return c.Status(201).JSON(fiber.Map{
-		"status":  "success",
-		"message": "Bookmark Item Created.",
+		"status":       "success",
+		"message":      "Bookmark Item Created.",
+		"bookmarkItem": bookmarkItem,
 	})
 }
 
 func AddProjectBookMarkItem(c *fiber.Ctx) error {
 
-	bookmarkID := c.GetRespHeader("bookmarkID")
+	bookmarkID := c.Params("bookmarkID")
 
 	parsedBookmarkID, err := uuid.Parse(bookmarkID)
 	if err != nil {
@@ -78,13 +79,13 @@ func AddProjectBookMarkItem(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
 	}
 
-	parsedprojectID, err := uuid.Parse(reqBody.ProjectID)
+	parsedProjectID, err := uuid.Parse(reqBody.ProjectID)
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
 	}
 
 	var project models.Project
-	if err := initializers.DB.First(&project, "id = ?", parsedprojectID).Error; err != nil {
+	if err := initializers.DB.First(&project, "id = ?", parsedProjectID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
 		}
@@ -101,7 +102,7 @@ func AddProjectBookMarkItem(c *fiber.Ctx) error {
 
 	bookmarkItem := models.ProjectBookmarkItem{
 		ProjectBookmarkID: parsedBookmarkID,
-		ProjectID:         parsedprojectID,
+		ProjectID:         parsedProjectID,
 	}
 
 	result := initializers.DB.Create(&bookmarkItem)
@@ -111,8 +112,9 @@ func AddProjectBookMarkItem(c *fiber.Ctx) error {
 	}
 
 	return c.Status(201).JSON(fiber.Map{
-		"status":  "success",
-		"message": "Bookmark Item Created.",
+		"status":       "success",
+		"message":      "Bookmark Item Created.",
+		"bookmarkItem": bookmarkItem,
 	})
 }
 
@@ -143,7 +145,7 @@ func DeletePostBookMarkItem(c *fiber.Ctx) error {
 }
 
 func DeleteProjectBookMarkItem(c *fiber.Ctx) error {
-	projectBookmarkItemID := c.Params("projectBookmarkItemID")
+	projectBookmarkItemID := c.Params("bookmarkItemID")
 
 	parsedBookmarkItemID, err := uuid.Parse(projectBookmarkItemID)
 	if err != nil {

@@ -8,7 +8,12 @@ import (
 
 func ApplicationRouter(app *fiber.App) {
 	applicationRoutes := app.Group("/applications", middlewares.Protect)
+	applicationRoutes.Post("/:openingID", controllers.AddApplication)
+
+	applicationRoutes.Get("/accept/:applicationID", controllers.AcceptApplication)
+	applicationRoutes.Get("/reject/:applicationID", controllers.RejectApplication)
+	applicationRoutes.Get("/review/:applicationID", controllers.SetApplicationUnderReview)
+
 	applicationRoutes.Get("/:applicationID", controllers.GetApplication)
 	applicationRoutes.Delete("/:applicationID", controllers.DeleteApplication)
-	applicationRoutes.Post("/:openingID", controllers.AddApplication)
 }

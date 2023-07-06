@@ -25,10 +25,12 @@ func AutoMigrate() {
 		&models.Application{},
 		&models.Membership{},
 		&models.PostComment{},
+		&models.ProjectComment{},
 		&models.ChatInvitation{},
 		&models.ProjectInvitation{},
 		&models.UserPostLike{},
 		&models.UserProjectLike{},
 		&models.UserPostCommentLike{},
+		&models.UserProjectCommentLike{},
 	)
 }

@@ -29,6 +29,11 @@ func GetProject(c *fiber.Ctx) error { //! Add project view history
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
+	var memberships []models.Membership
+	if err := initializers.DB.Preload("User").Find(&memberships, "project_id = ?", parsedProjectID).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
+
 	utils.UpdateProjectViews(&project)
 
 	_, count, err := utils.GetProjectViews(parsedProjectID)
@@ -36,6 +41,7 @@ func GetProject(c *fiber.Ctx) error { //! Add project view history
 		return err
 	}
 	project.Views = count
+	project.Memberships = memberships
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
@@ -53,10 +59,15 @@ func GetWorkSpaceProject(c *fiber.Ctx) error {
 	}
 
 	var project models.Project
-	if err := initializers.DB.Preload("User").Preload("Memberships").First(&project, "id = ?", parsedProjectID).Error; err != nil {
+	if err := initializers.DB.Preload("User").First(&project, "id = ?", parsedProjectID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
 		}
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
+
+	var memberships []models.Membership
+	if err := initializers.DB.Preload("User").Find(&memberships, "project_id = ?", parsedProjectID).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
@@ -65,11 +76,32 @@ func GetWorkSpaceProject(c *fiber.Ctx) error {
 		return err
 	}
 	project.Views = count
+	project.Memberships = memberships
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "",
 		"project": project,
+	})
+}
+
+func GetMyLikedProjects(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	var projectLikes []models.UserProjectLike
+	if err := initializers.DB.Where("user_id = ?", loggedInUserID).Find(&projectLikes).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
+
+	var projectIDs []string
+	for _, projectLike := range projectLikes {
+		projectIDs = append(projectIDs, projectLike.ProjectID.String())
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":   "success",
+		"message":  "",
+		"projects": projectIDs,
 	})
 }
 
