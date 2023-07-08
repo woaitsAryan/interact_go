@@ -19,7 +19,7 @@ func SaveFile(c *fiber.Ctx, fieldName string, path string, resize bool, d1 int, 
 
 	file := files[0]
 
-	filePath := "public/" + path + "/" + c.GetRespHeader("loggedInUserID") + "-" + file.Filename
+	filePath := "public/" + path[:len(path)-1] + "/" + c.GetRespHeader("loggedInUserID") + "-" + file.Filename
 
 	c.SaveFile(file, filePath)
 

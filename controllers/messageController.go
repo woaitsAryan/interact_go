@@ -61,9 +61,13 @@ func AddMessage(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error while creating the message."}
 	}
 
+	if err := initializers.DB.Preload("User").First(&message).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Internal Server Error while loading the user."}
+	}
+
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",
-		"message": "Message Added",
+		"message": message,
 	})
 }
 

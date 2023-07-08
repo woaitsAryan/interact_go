@@ -10,6 +10,9 @@ func BookmarkRouter(app *fiber.App) {
 	bookmarkRoutes := app.Group("/bookmarks", middlewares.Protect)
 	bookmarkRoutes.Get("/", controllers.GetBookMarks)
 
+	bookmarkRoutes.Get("/post", controllers.GetPopulatedPostBookMarks)
+	bookmarkRoutes.Get("/project", controllers.GetPopulatedProjectBookMarks)
+
 	bookmarkRoutes.Post("/post", controllers.AddPostBookMark)
 	bookmarkRoutes.Post("/project", controllers.AddProjectBookMark)
 

@@ -15,7 +15,7 @@ func SaveMultipleFiles(c *fiber.Ctx, fieldName string, path string, resize bool,
 
 	var savedImages []string
 	for _, file := range files {
-		filePath := "public/" + path + "/" + c.GetRespHeader("loggedInUserID") + "-" + file.Filename
+		filePath := "public/" + path[:len(path)-1] + "/" + c.GetRespHeader("loggedInUserID") + "-" + file.Filename
 		c.SaveFile(file, filePath)
 
 		if resize {

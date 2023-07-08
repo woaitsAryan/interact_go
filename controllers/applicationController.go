@@ -111,10 +111,12 @@ func AddApplication(c *fiber.Ctx) error {
 	}
 
 	// notification := models.Notification{
-	// 	NotificationType: 5,
-	// 	UserID:           opening.UserID,
-	// 	SenderID:         parsedUserID,
-	// 	OpeningID:        opening.ID,
+	// 	NotificationType:       5,
+	// 	ReceiverID:             opening.UserID,
+	// 	SenderID:               parsedUserID,
+	// 	ConcernedOpeningID:     opening.ID,
+	// 	ConcernedApplicationID: newApplication.ID,
+	// 	ConcernedProjectID:     opening.ProjectID,
 	// }
 
 	// if err := initializers.DB.Create(&notification).Error; err != nil {

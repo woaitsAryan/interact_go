@@ -31,6 +31,40 @@ func GetBookMarks(c *fiber.Ctx) error {
 	})
 }
 
+func GetPopulatedPostBookMarks(c *fiber.Ctx) error {
+	userID := c.GetRespHeader("loggedInUserID")
+	parsedUserID, _ := uuid.Parse(userID)
+
+	var postBookmarks []models.PostBookmark
+	err := initializers.DB.Preload("PostItems.Post").Preload("PostItems.Post.User").Find(&postBookmarks, "user_id=?", parsedUserID).Error
+	if err != nil {
+		return &fiber.Error{Code: 500, Message: "Internal Server Error."}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":    "success",
+		"message":   "",
+		"bookmarks": postBookmarks,
+	})
+}
+
+func GetPopulatedProjectBookMarks(c *fiber.Ctx) error {
+	userID := c.GetRespHeader("loggedInUserID")
+	parsedUserID, _ := uuid.Parse(userID)
+
+	var projectBookmarks []models.ProjectBookmark
+	err := initializers.DB.Preload("ProjectItems.Project").Find(&projectBookmarks, "user_id=?", parsedUserID).Error
+	if err != nil {
+		return &fiber.Error{Code: 500, Message: "Internal Server Error."}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":    "success",
+		"message":   "",
+		"bookmarks": projectBookmarks,
+	})
+}
+
 func AddPostBookMark(c *fiber.Ctx) error {
 	userID := c.GetRespHeader("loggedInUserID")
 	parsedUserID, _ := uuid.Parse(userID)
@@ -123,7 +157,7 @@ func DeleteProjectBookMark(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
 	}
 
-	var bookmark models.PostBookmark
+	var bookmark models.ProjectBookmark
 	err = initializers.DB.First(&bookmark, "id=?", parsedBookmarkID).Error
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "No Bookmark of this ID found."}
