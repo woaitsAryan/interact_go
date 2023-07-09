@@ -20,6 +20,7 @@ func AutoMigrate() {
 		&models.Chat{},
 		&models.GroupChat{},
 		&models.ProjectChat{},
+		&models.ProjectChatMembership{},
 		&models.Post{},
 		&models.Project{},
 		&models.ProjectView{},

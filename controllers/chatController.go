@@ -63,20 +63,35 @@ func GetUserChats(c *fiber.Ctx) error { // ! GET USER CHATS
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var chats []models.Chat
-	if err := initializers.DB.Preload("CreatingUser").Preload("AcceptingUser").Where("creating_user_id=?", loggedInUserID).Or("accepting_user_id = ?", loggedInUserID).Find(&chats).Error; err != nil {
+	if err := initializers.DB.
+		Preload("CreatingUser").
+		Preload("AcceptingUser").
+		Preload("LatestMessage").
+		Preload("LatestMessage.User").
+		Where("creating_user_id=?", loggedInUserID).
+		Or("accepting_user_id = ?", loggedInUserID).
+		Find(&chats).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
-	// var projectChats models.ProjectChat
-	// if err := initializers.DB.Where("user_id=?", loggedInUserID).Find(&projectChats).Error; err != nil {
-	// 	return &fiber.Error{Code: 500, Message: "Database Error."}
-	// }
+	var projectChats []models.ProjectChat
+	if err := initializers.DB.
+		Preload("Project").
+		Preload("LatestMessage").
+		Preload("LatestMessage.User").
+		Preload("Memberships").
+		Preload("Memberships.User").
+		Joins("JOIN project_chat_memberships ON project_chat_memberships.project_chat_id = project_chats.id").
+		Where("project_chat_memberships.user_id = ?", loggedInUserID).
+		Find(&projectChats).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
 
 	return c.Status(200).JSON(fiber.Map{
-		"status":  "success",
-		"message": "",
-		"chats":   chats,
-		// "projectChats": projectChats,
+		"status":       "success",
+		"message":      "",
+		"chats":        chats,
+		"projectChats": projectChats,
 	})
 }
 
@@ -245,9 +260,9 @@ func AddProjectChat(c *fiber.Ctx) error {
 	userID := c.GetRespHeader("loggedInUserID")
 	chatUserIDs := reqBody.UserIDs
 
-	parsedUserID, err := uuid.Parse(userID)
+	parsedLoggedInUserID, err := uuid.Parse(userID)
 	if err != nil {
-		return &fiber.Error{Code: 500, Message: "Error Parsing the Loggedin User ID."}
+		return &fiber.Error{Code: 500, Message: "Error Parsing the LoggedIn User ID."}
 	}
 
 	projectID := c.Params("projectID")
@@ -257,28 +272,6 @@ func AddProjectChat(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Invalid Project ID."}
 	}
 
-	chatUsers := make([]models.User, len(chatUserIDs)+1)
-
-	for i, chatUserID := range chatUserIDs {
-		parsedChatUserID, err := uuid.Parse(chatUserID)
-		if err != nil {
-			return &fiber.Error{Code: 500, Message: "Invalid User ID."}
-		}
-		var chatUser models.User
-		err = initializers.DB.First(&chatUser, "creating_user_id = ?", parsedChatUserID).Error
-
-		if err != nil {
-			return &fiber.Error{Code: 400, Message: "No user of this id found."}
-		}
-
-		chatUsers[i] = chatUser
-	}
-
-	var user models.User
-	initializers.DB.First(&user, "id = ?", parsedUserID)
-
-	chatUsers = append(chatUsers, user)
-
 	var project models.Project
 	err = initializers.DB.First(&project, "id = ?", parsedProjectID).Error
 
@@ -287,11 +280,10 @@ func AddProjectChat(c *fiber.Ctx) error {
 	}
 
 	projectChat := models.ProjectChat{
-		CreatingUserID: parsedUserID,
+		CreatingUserID: parsedLoggedInUserID,
 		Title:          reqBody.Title,
 		Description:    reqBody.Description,
 		ProjectID:      project.ID,
-		Members:        chatUsers,
 	}
 
 	result := initializers.DB.Create(&projectChat)
@@ -300,7 +292,26 @@ func AddProjectChat(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error while creating chat"}
 	}
 
-	return c.Status(200).JSON(fiber.Map{
+	for _, chatUserID := range chatUserIDs {
+		parsedChatUserID, err := uuid.Parse(chatUserID)
+		if err != nil {
+			return &fiber.Error{Code: 500, Message: "Invalid User ID."}
+		}
+
+		ProjectChatMembership := models.ProjectChatMembership{
+			UserID:        parsedChatUserID,
+			ProjectChatID: projectChat.ID,
+			ProjectID:     projectChat.ProjectID,
+		}
+
+		result := initializers.DB.Create(&ProjectChatMembership)
+
+		if result.Error != nil {
+			return &fiber.Error{Code: 500, Message: "Internal Server Error while creating membership"}
+		}
+	}
+
+	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Chat Created",
 		"chat":    projectChat,
@@ -378,31 +389,31 @@ func EditGroupChat(c *fiber.Ctx) error { //* Adding new users here only
 
 func EditProjectChat(c *fiber.Ctx) error { //* Adding new users here only
 	var reqBody struct {
-		Title       string   `json:"title"`
-		Description string   `json:"description"`
-		UserIDs     []string `json:"userIDs"`
+		Title       string `json:"title"`
+		Description string `json:"description"`
+		// UserIDs     []string `json:"userIDs"`
 	}
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
 	}
 
-	newChatUserIDs := reqBody.UserIDs
-	newChatUsers := make([]models.User, len(newChatUserIDs))
+	// newChatUserIDs := reqBody.UserIDs
+	// newChatUsers := make([]models.User, len(newChatUserIDs))
 
-	for i, newChatUserID := range newChatUserIDs {
-		parsedNewChatUserID, err := uuid.Parse(newChatUserID)
-		if err != nil {
-			return &fiber.Error{Code: 500, Message: "Invalid User ID."}
-		}
-		var chatUser models.User
-		err = initializers.DB.First(&chatUser, "id = ?", parsedNewChatUserID).Error
+	// for i, newChatUserID := range newChatUserIDs {
+	// 	parsedNewChatUserID, err := uuid.Parse(newChatUserID)
+	// 	if err != nil {
+	// 		return &fiber.Error{Code: 500, Message: "Invalid User ID."}
+	// 	}
+	// 	var chatUser models.User
+	// 	err = initializers.DB.First(&chatUser, "id = ?", parsedNewChatUserID).Error
 
-		if err != nil {
-			return &fiber.Error{Code: 400, Message: "No user of this id found."}
-		}
+	// 	if err != nil {
+	// 		return &fiber.Error{Code: 400, Message: "No user of this id found."}
+	// 	}
 
-		newChatUsers[i] = chatUser
-	}
+	// 	newChatUsers[i] = chatUser
+	// }
 
 	projectChatID := c.Params("projectChatID")
 
@@ -419,9 +430,9 @@ func EditProjectChat(c *fiber.Ctx) error { //* Adding new users here only
 	if reqBody.Description != "" {
 		projectChat.Description = reqBody.Description
 	}
-	if reqBody.UserIDs != nil {
-		projectChat.Members = append(projectChat.Members, newChatUsers...)
-	}
+	// if reqBody.UserIDs != nil {
+	// 	projectChat.Members = append(projectChat.Members, newChatUsers...)
+	// }
 
 	result := initializers.DB.Save(&projectChat)
 

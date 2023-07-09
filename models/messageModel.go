@@ -33,10 +33,10 @@ type ProjectChatMessage struct {
 	ID            uuid.UUID   `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	ProjectChatID uuid.UUID   `gorm:"type:uuid;not null" json:"projectChatID"`
 	ProjectChat   ProjectChat `gorm:"" json:"projectChat"`
-	UserID        uuid.UUID   `gorm:"type:uuid;not null" json:"senderID"`
-	User          User        `gorm:"" json:"sentBy"`
+	UserID        uuid.UUID   `gorm:"type:uuid;not null" json:"userID"`
+	User          User        `gorm:"" json:"user"`
 	Content       string      `gorm:"type:text;not null" json:"content"`
-	CreatedAt     time.Time   `gorm:"default:current_timestamp" json:"sentAt"`
+	CreatedAt     time.Time   `gorm:"default:current_timestamp" json:"createdAt"`
 	Read          bool        `gorm:"default:false" json:"read"`
 	ReadBy        []User      `gorm:"many2many:message_read_by;constraint:OnDelete:CASCADE" json:"readBy"`
 }

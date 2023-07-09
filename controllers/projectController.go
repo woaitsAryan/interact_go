@@ -76,6 +76,11 @@ func GetWorkSpaceProject(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
+	var chats []models.ProjectChat
+	if err := initializers.DB.Find(&chats, "project_id = ? ", parsedProjectID).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
+
 	_, count, err := utils.GetProjectViews(parsedProjectID)
 	if err != nil {
 		return err
@@ -83,6 +88,7 @@ func GetWorkSpaceProject(c *fiber.Ctx) error {
 	project.Views = count
 	project.Memberships = memberships
 	project.Invitations = invitations
+	project.Chats = chats
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",

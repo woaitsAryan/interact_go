@@ -8,7 +8,7 @@ import (
 
 func InvitationRouter(app *fiber.App) {
 	exploreRoutes := app.Group("/invitations", middlewares.Protect)
-	exploreRoutes.Get("/", controllers.GetInvitations)
+	exploreRoutes.Get("/me", controllers.GetInvitations)
 
 	exploreRoutes.Get("/accept/chat/:invitationID", controllers.AcceptChatInvitation)
 	exploreRoutes.Get("/accept/project/:invitationID", controllers.AcceptProjectInvitation)
@@ -16,6 +16,6 @@ func InvitationRouter(app *fiber.App) {
 	exploreRoutes.Get("/reject/chat/:invitationID", controllers.RejectChatInvitation)
 	exploreRoutes.Get("/reject/project/:invitationID", controllers.RejectProjectInvitation)
 
-	exploreRoutes.Get("/withdraw/chat/:invitationID", controllers.WithdrawChatInvitation)
-	exploreRoutes.Get("/withdraw/project/:invitationID", controllers.WithdrawProjectInvitation)
+	exploreRoutes.Delete("/withdraw/chat/:invitationID", controllers.WithdrawChatInvitation)
+	exploreRoutes.Delete("/withdraw/project/:invitationID", controllers.WithdrawProjectInvitation)
 }
