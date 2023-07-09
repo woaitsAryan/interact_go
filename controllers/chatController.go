@@ -359,8 +359,8 @@ func EditGroupChat(c *fiber.Ctx) error { //* Adding new users here only
 
 	for _, chatUser := range newChatUsers {
 		invitation := models.ChatInvitation{
-			UserID: chatUser.ID,
-			ChatID: chat.ID,
+			UserID:      chatUser.ID,
+			GroupChatID: chat.ID,
 		}
 		result := initializers.DB.Create(&invitation)
 

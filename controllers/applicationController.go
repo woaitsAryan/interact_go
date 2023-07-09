@@ -84,7 +84,7 @@ func AddApplication(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "No Opening of this ID found."}
 	}
 
-	resumePath, err := utils.SaveFile(c, "resume", "projects/openings/applications", false, 0, 0)
+	resumePath, err := utils.SaveFile(c, "resume", "project/openings/applications", false, 0, 0)
 	if err != nil {
 		return err
 	}

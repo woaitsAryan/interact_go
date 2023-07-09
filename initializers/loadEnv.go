@@ -10,8 +10,9 @@ import (
 
 type Config struct {
 	PORT       string `mapstructure:"PORT"`
-	DB_URL     string `mapstructtur:"DB_URL"`
+	DB_URL     string `mapstructure:"DB_URL"`
 	JWT_SECRET string `mapstructure:"JWT_SECRET"`
+	ENV        string `mapstructure:"ENV"`
 }
 
 var CONFIG Config

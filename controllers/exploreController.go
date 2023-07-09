@@ -60,10 +60,10 @@ func GetTrendingProjects(c *fiber.Ctx) error {
 
 func GetTrendingUsers(c *fiber.Ctx) error {
 	paginatedDB := API.Paginator(c)(initializers.DB)
-	var users []models.User
 
 	searchedDB := API.Search(c, 0)(paginatedDB)
 
+	var users []models.User
 	if err := searchedDB.Order("created_at DESC").Find(&users).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Failed to get the Trending Projects."}
 	}

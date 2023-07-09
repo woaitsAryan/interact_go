@@ -91,13 +91,13 @@ func UpdateMe(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid Request Body."}
 	}
 
-	picName, err := utils.SaveFile(c, "profilePic", "users/profilePics", true, 500, 500)
+	picName, err := utils.SaveFile(c, "profilePic", "user/profilePics", true, 500, 500)
 	if err != nil {
 		return err
 	}
 	reqBody.ProfilePic = picName
 
-	coverName, err := utils.SaveFile(c, "coverPic", "users/coverPics", true, 900, 400)
+	coverName, err := utils.SaveFile(c, "coverPic", "user/coverPics", true, 900, 400)
 	if err != nil {
 		return err
 	}
@@ -125,6 +125,7 @@ func UpdateMe(c *fiber.Ctx) error {
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "User updated successfully",
+		"user":    user,
 	})
 }
 

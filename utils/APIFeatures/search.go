@@ -33,14 +33,16 @@ func Search(c *fiber.Ctx, index int) func(db *gorm.DB) *gorm.DB {
 		var searchCondition interface{}
 		switch index {
 		case 0: //! users
-			searchCondition = []interface{}{
-				map[string]interface{}{
-					"username": gorm.Expr("IN (?)", interfaceArry),
-				},
-				map[string]interface{}{
-					"name": gorm.Expr("IN (?)", interfaceArry),
-				},
-			}
+			// searchCondition = []interface{}{
+			// 	map[string]interface{}{
+			// 		"username": gorm.Expr("IN (?)", interfaceArry),
+			// 	},
+			// 	map[string]interface{}{
+			// 		"name": gorm.Expr("IN (?)", interfaceArry),
+			// 	},
+			// }
+			db = db.Where("name LIKE ? OR username LIKE ?", searchStr+"%", searchStr+"%")
+			return db
 		case 1: //! projects
 			searchCondition = []interface{}{
 				map[string]interface{}{
@@ -55,6 +57,7 @@ func Search(c *fiber.Ctx, index int) func(db *gorm.DB) *gorm.DB {
 					"category": gorm.Expr("IN (?)", interfaceArry),
 				},
 			}
+			break
 		case 2: //! posts
 			searchCondition = []interface{}{
 				map[string]interface{}{
@@ -66,6 +69,7 @@ func Search(c *fiber.Ctx, index int) func(db *gorm.DB) *gorm.DB {
 					}),
 				},
 			}
+			break
 		case 3: //! openings
 			searchCondition = []interface{}{
 				map[string]interface{}{
@@ -80,6 +84,7 @@ func Search(c *fiber.Ctx, index int) func(db *gorm.DB) *gorm.DB {
 					}),
 				},
 			}
+			break
 		default:
 			searchCondition = nil
 		}

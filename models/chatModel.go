@@ -30,7 +30,7 @@ type GroupChat struct {
 	Messages        []GroupMessage   `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE" json:"messages"`
 	LatestMessageID uuid.UUID        `gorm:"type:uuid" json:"latestMessageID"`
 	LatestMessage   *GroupMessage    `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE" json:"latestMessage"`
-	Invitations     []ChatInvitation `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE" json:"invitations"`
+	Invitations     []ChatInvitation `gorm:"foreignKey:GroupChatID;constraint:OnDelete:CASCADE" json:"invitations"`
 }
 
 type ProjectChat struct {

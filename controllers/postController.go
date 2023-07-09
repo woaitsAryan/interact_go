@@ -105,7 +105,7 @@ func AddPost(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Error Parsing the Loggedin User ID."}
 	}
 
-	images, err := utils.SaveMultipleFiles(c, "images", "posts", true, 1280, 720)
+	images, err := utils.SaveMultipleFiles(c, "images", "post", true, 1280, 720)
 	if err != nil {
 		return err
 	}

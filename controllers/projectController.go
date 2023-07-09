@@ -71,12 +71,18 @@ func GetWorkSpaceProject(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
+	var invitations []models.ProjectInvitation
+	if err := initializers.DB.Preload("User").Find(&invitations, "project_id = ? AND (status = 0 OR status = -1)", parsedProjectID).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
+
 	_, count, err := utils.GetProjectViews(parsedProjectID)
 	if err != nil {
 		return err
 	}
 	project.Views = count
 	project.Memberships = memberships
+	project.Invitations = invitations
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
@@ -180,7 +186,7 @@ func AddProject(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Error Parsing the Loggedin User ID."}
 	}
 
-	picName, err := utils.SaveFile(c, "coverPic", "projects/coverPics", true, 900, 400)
+	picName, err := utils.SaveFile(c, "coverPic", "project/coverPics", true, 900, 400)
 	if err != nil {
 		return err
 	}
@@ -230,7 +236,7 @@ func UpdateProject(c *fiber.Ctx) error {
 	var reqBody schemas.ProjectUpdateSchema
 	c.BodyParser(&reqBody)
 
-	picName, err := utils.SaveFile(c, "coverPic", "projects/coverPics", true, 900, 400)
+	picName, err := utils.SaveFile(c, "coverPic", "project/coverPics", true, 900, 400)
 	if err != nil {
 		return err
 	}

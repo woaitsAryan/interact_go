@@ -10,7 +10,7 @@ import (
 
 func LikePost(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
-	userID, _ := uuid.Parse(loggedInUserID)
+	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
 	postID := c.Params("postID")
 	parsedPostID, err := uuid.Parse(postID)
@@ -28,13 +28,13 @@ func LikePost(c *fiber.Ctx) error {
 	}
 
 	var like models.UserPostLike
-	err = initializers.DB.Where("user_id=? AND post_id=?", userID, parsedPostID).First(&like).Error
+	err = initializers.DB.Where("user_id=? AND post_id=?", parsedLoggedInUserID, parsedPostID).First(&like).Error
 
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			likeModel := models.UserPostLike{
 				PostID: parsedPostID,
-				UserID: userID,
+				UserID: parsedLoggedInUserID,
 			}
 
 			result := initializers.DB.Create(&likeModel)
@@ -45,16 +45,19 @@ func LikePost(c *fiber.Ctx) error {
 
 			post.NoLikes++
 
-			// notification := models.Notification{
-			// 	NotificationType: 1,
-			// 	UserID:           post.UserID,
-			// 	SenderID:         userID,
-			// 	PostID:           post.ID,
+			// if parsedLoggedInUserID != post.UserID {
+			// 	notification := models.Notification{
+			// 		NotificationType: 1,
+			// 		UserID:           post.UserID,
+			// 		SenderID:         parsedLoggedInUserID,
+			// 		PostID:           post.ID,
+			// 	}
+
+			// 	if err := initializers.DB.Create(&notification).Error; err != nil {
+			// 		return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
+			// 	}
 			// }
 
-			// if err := initializers.DB.Create(&notification).Error; err != nil {
-			// 	return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
-			// }
 		} else {
 			return &fiber.Error{Code: 500, Message: "Database Error."}
 		}

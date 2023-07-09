@@ -33,23 +33,51 @@ func AddMember(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
-	membership := models.Membership{
-		ProjectID: parsedProjectID,
-		UserID:    user.ID,
-		Role:      "",
-		Title:     reqBody.Title,
+	var project models.Project
+	if err := initializers.DB.First(&project, "id = ?", parsedProjectID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
+		}
+		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
-	result := initializers.DB.Create(&membership)
-
-	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while creating membership."}
+	if reqBody.UserID == project.UserID.String() {
+		return &fiber.Error{Code: 400, Message: "User is a already a collaborator of this project."}
 	}
 
-	return c.Status(200).JSON(fiber.Map{
-		"status":  "success",
-		"message": "User added to the project.",
-	})
+	var membership models.Membership
+	if err := initializers.DB.Where("user_id=? AND project_id=?", user.ID, parsedProjectID).First(&membership).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+
+			var existingInvitation models.ProjectInvitation
+			err := initializers.DB.Where("user_id=? AND project_id=?", user.ID, parsedProjectID).First(&existingInvitation).Error
+			if err == nil {
+				return &fiber.Error{Code: 400, Message: "Have already invited this User."}
+			}
+
+			var invitation models.ProjectInvitation
+			invitation.ProjectID = parsedProjectID
+			invitation.UserID = user.ID
+			invitation.Title = reqBody.Title
+
+			result := initializers.DB.Create(&invitation)
+
+			if result.Error != nil {
+				return &fiber.Error{Code: 500, Message: "Internal Server Error while creating Invitation."}
+			}
+
+			invitation.User = user
+
+			return c.Status(201).JSON(fiber.Map{
+				"status":     "success",
+				"message":    "Invitation sent to the user.",
+				"invitation": invitation,
+			})
+		}
+		return &fiber.Error{Code: 500, Message: "Database Error."}
+	} else {
+		return &fiber.Error{Code: 400, Message: "User is a already a collaborator of this project."}
+	}
 }
 
 func RemoveMember(c *fiber.Ctx) error {
