@@ -20,4 +20,5 @@ func Config(app *fiber.App) {
 	OpeningRouter(app)
 	WorkspaceRouter(app)
 	MembershipRouter(app)
+	ShareRouter(app)
 }

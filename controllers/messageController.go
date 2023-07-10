@@ -15,7 +15,7 @@ func GetMessages(c *fiber.Ctx) error {
 	paginatedDB := API.Paginator(c)(initializers.DB)
 
 	var messages []models.Message
-	if err := paginatedDB.Preload("User").Where("chat_id = ? ", chatID).Order("created_at DESC").Find(&messages).Error; err != nil {
+	if err := paginatedDB.Preload("User").Preload("Post").Preload("Project").Where("chat_id = ? ", chatID).Order("created_at DESC").Find(&messages).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Failed to get the Messages."}
 	}
 	return c.Status(200).JSON(fiber.Map{
@@ -46,8 +46,10 @@ func AddMessage(c *fiber.Ctx) error {
 	parsedUserID, _ := uuid.Parse(loggedInUserID)
 
 	var reqBody struct {
-		Content string `json:"content"`
-		ChatID  string `json:"chatID"`
+		Content   string `json:"content"`
+		ChatID    string `json:"chatID"`
+		PostID    string `json:"postID"`
+		ProjectID string `json:"projectID"`
 	}
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
