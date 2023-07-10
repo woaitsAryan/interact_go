@@ -23,8 +23,9 @@ func UpdateLastViewed(userID uuid.UUID, projectID uuid.UUID) error {
 			if result.Error != nil {
 				return &fiber.Error{Code: 500, Message: "Database Error whiling creating last viewed."}
 			}
+		} else {
+			return &fiber.Error{Code: 500, Message: "Database Error."}
 		}
-		return &fiber.Error{Code: 500, Message: "Database Error."}
 	} else {
 		projectView.Timestamp = time.Now()
 

@@ -3,7 +3,6 @@ package controllers
 import (
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
-	"github.com/Pratham-Mishra04/interact/utils"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -26,9 +25,9 @@ func GetFeed(c *fiber.Ctx) error {
 
 	var posts []models.Post
 
-	postUserSelectedDB := utils.PostSelectConfig(paginatedDB.Preload("User"))
+	// postUserSelectedDB := utils.PostSelectConfig(paginatedDB.Preload("User"))
 
-	if err := postUserSelectedDB.Where("user_id = ? OR user_id IN (?)", loggedInUserID, followingIDs).Order("created_at DESC").Find(&posts).Error; err != nil {
+	if err := paginatedDB.Preload("User").Where("user_id = ? OR user_id IN (?)", loggedInUserID, followingIDs).Order("created_at DESC").Find(&posts).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Failed to get the User Feed."}
 	}
 

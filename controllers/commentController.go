@@ -76,20 +76,12 @@ func AddPostComment(c *fiber.Ctx) error {
 		Content: reqBody.Content,
 	}
 
-	notification := models.Notification{
-		SenderID: parsedUserID,
-	}
-
 	var post models.Post
 	if err := initializers.DB.First(&post, "id=?", parsedPostID).Error; err != nil {
 		return &fiber.Error{Code: 400, Message: "No Post of this ID found."}
 	}
 
 	comment.PostID = parsedPostID
-	notification.NotificationType = 2
-	notification.UserID = post.UserID
-	notification.PostID = &post.ID
-
 	result := initializers.DB.Create(&comment)
 
 	if result.Error != nil {
@@ -103,9 +95,18 @@ func AddPostComment(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error while saving the post."}
 	}
 
-	// if err := initializers.DB.Create(&notification).Error; err != nil {
-	// 	return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
-	// }
+	if parsedUserID != post.UserID {
+		notification := models.Notification{
+			SenderID:         parsedUserID,
+			NotificationType: 2,
+			UserID:           post.UserID,
+			PostID:           &post.ID,
+		}
+
+		if err := initializers.DB.Create(&notification).Error; err != nil {
+			return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
+		}
+	}
 
 	if err := initializers.DB.Preload("User").First(&comment).Error; err != nil {
 		// Handle the error if the preload fails

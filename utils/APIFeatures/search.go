@@ -30,7 +30,7 @@ func Search(c *fiber.Ctx, index int) func(db *gorm.DB) *gorm.DB {
 			interfaceArry[i] = v
 		}
 
-		var searchCondition interface{}
+		// var searchCondition interface{}
 		switch index {
 		case 0: //! users
 			// searchCondition = []interface{}{
@@ -41,78 +41,60 @@ func Search(c *fiber.Ctx, index int) func(db *gorm.DB) *gorm.DB {
 			// 		"name": gorm.Expr("IN (?)", interfaceArry),
 			// 	},
 			// }
-			db = db.Where("name LIKE ? OR username LIKE ?", searchStr+"%", searchStr+"%")
+			db = db.Where("name LIKE ? OR username LIKE ? OR ? = ANY (tags)", "%"+searchStr+"%", "%"+searchStr+"%", searchStr)
 			return db
 		case 1: //! projects
-			searchCondition = []interface{}{
-				map[string]interface{}{
-					"title": gorm.Expr("IN (?)", interfaceArry),
-				},
-				map[string]interface{}{
-					"tags": gorm.Expr("$elemMatch", map[string]interface{}{
-						"$in": interfaceArry,
-					}),
-				},
-				map[string]interface{}{
-					"category": gorm.Expr("IN (?)", interfaceArry),
-				},
-			}
-			break
-		case 2: //! posts
-			searchCondition = []interface{}{
-				map[string]interface{}{
-					"content": gorm.Expr("content IN (?)", interfaceArry),
-				},
-				map[string]interface{}{
-					"tags": gorm.Expr("$elemMatch", map[string]interface{}{
-						"$in": interfaceArry,
-					}),
-				},
-			}
-			break
-		case 3: //! openings
-			searchCondition = []interface{}{
-				map[string]interface{}{
-					"title": gorm.Expr("IN (?)", interfaceArry),
-				},
-				map[string]interface{}{
-					"description": gorm.Expr("IN (?)", interfaceArry),
-				},
-				map[string]interface{}{
-					"tags": gorm.Expr("$elemMatch", map[string]interface{}{
-						"$in": interfaceArry,
-					}),
-				},
-			}
-			break
-		default:
-			searchCondition = nil
-		}
-
-		if searchCondition != nil {
-			db = db.Where(searchCondition)
-		}
-
-		return db
-	}
-}
-
-func SearchPosts(c *fiber.Ctx) func(db *gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		searchStr := c.Query("search", "")
-		if searchStr == "" {
+			// searchCondition = []interface{}{
+			// 	map[string]interface{}{
+			// 		"title": gorm.Expr("IN (?)", interfaceArry),
+			// 	},
+			// 	map[string]interface{}{
+			// 		"tags": gorm.Expr("$elemMatch", map[string]interface{}{
+			// 			"$in": interfaceArry,
+			// 		}),
+			// 	},
+			// 	map[string]interface{}{
+			// 		"category": gorm.Expr("IN (?)", interfaceArry),
+			// 	},
+			// }
+			db = db.Where("title LIKE ? OR ? = ANY (tags)", "%"+searchStr+"%", searchStr)
 			return db
+		case 2: //! posts
+			// searchCondition = []interface{}{
+			// 	map[string]interface{}{
+			// 		"content": gorm.Expr("content IN (?)", interfaceArry),
+			// 	},
+			// 	map[string]interface{}{
+			// 		"tags": gorm.Expr("$elemMatch", map[string]interface{}{
+			// 			"$in": interfaceArry,
+			// 		}),
+			// 	},
+			// }
+			db = db.Where("content LIKE ? OR ? = ANY (tags) ", "%"+searchStr+"%", searchStr)
+			return db
+		case 3: //! openings
+			// searchCondition = []interface{}{
+			// 	map[string]interface{}{
+			// 		"title": gorm.Expr("IN (?)", interfaceArry),
+			// 	},
+			// 	map[string]interface{}{
+			// 		"description": gorm.Expr("IN (?)", interfaceArry),
+			// 	},
+			// 	map[string]interface{}{
+			// 		"tags": gorm.Expr("$elemMatch", map[string]interface{}{
+			// 			"$in": interfaceArry,
+			// 		}),
+			// 	},
+			// }
+			db = db.Where("title LIKE ? OR ? = ANY (tags)  ", "%"+searchStr+"%", searchStr)
+			return db
+		default:
+			return db
+			// searchCondition = nil
 		}
-		// patterns := strings.Fields(searchStr)
-		// for i, pattern := range patterns {
-		// 	db = db.Where("content LIKE ? OR tags LIKE ?", "%"+pattern+"%", "%"+pattern+"%")
-		// 	if i != 0 {
-		// 		db = db.Or("content LIKE ? OR tags LIKE ?", "%"+pattern+"%", "%"+pattern+"%")
-		// 	}
-		// }
 
-		// for _, pattern := range patterns {
-		db = db.Where("content LIKE ?", "%"+searchStr+"%")
+		// if searchCondition != nil {
+		// 	db = db.Where(searchCondition)
 		// }
 
 		return db

@@ -24,7 +24,8 @@ func GetNotifications(c *fiber.Ctx) error {
 		Preload("Opening").
 		Preload("Application").
 		Where("user_id=?", userID).
-		Find(&notifications).Error; err != nil {
+		Find(&notifications).
+		Order("created_at DESC").Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
