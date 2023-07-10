@@ -22,23 +22,27 @@ type User struct {
 	Tags                      pq.StringArray    `gorm:"type:text[]" json:"tags"`
 	PasswordResetToken        string            `json:"-"`
 	PasswordResetTokenExpires time.Time         `json:"-"`
-	Views                     int               `json:"views"` //! Show No of Views
+	Views                     int               `json:"views"`
 	NoFollowing               int               `gorm:"default:0" json:"noFollowing"`
 	NoFollowers               int               `gorm:"default:0" json:"noFollowers"`
 	PasswordChangedAt         time.Time         `gorm:"default:current_timestamp" json:"-"`
 	Admin                     bool              `gorm:"default:false" json:"-"`
 	Active                    bool              `gorm:"default:true" json:"-"` //! add a functionality that on delete the acc goes inActive and if the user logs in within 30 days, it goes active again
 	CreatedAt                 time.Time         `gorm:"default:current_timestamp" json:"-"`
-	Achievements              []Achievement     `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"achievements,omitempty"`
-	Applications              []Application     `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"applications,omitempty"`
-	PostBookmarks             []PostBookmark    `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"postBookmarks,omitempty"`
-	ProjectBookmarks          []ProjectBookmark `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"projectBookmarks,omitempty"`
-	Notifications             []Notification    `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"notifications,omitempty"`
-	SendNotifications         []Notification    `gorm:"foreignKey:SenderID;constraint:OnDelete:CASCADE" json:"sendNotifications,omitempty"`
-} //! add last viewed projects
+	Projects                  []Project         `gorm:"foreignKey:UserID" json:"projects"`
+	Posts                     []Post            `gorm:"foreignKey:UserID" json:"posts"`
+	Memberships               []Membership      `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"memberships"`
+	Achievements              []Achievement     `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"achievements"`
+	Applications              []Application     `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"applications"`
+	PostBookmarks             []PostBookmark    `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"postBookmarks"`
+	ProjectBookmarks          []ProjectBookmark `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"projectBookmarks"`
+	Notifications             []Notification    `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"notifications"`
+	SendNotifications         []Notification    `gorm:"foreignKey:SenderID;constraint:OnDelete:CASCADE" json:"sendNotifications"`
+	LastViewed                []LastViewed      `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"lastViewed"`
+}
 
 type ProfileView struct {
-	ID     uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id,omitempty"`
+	ID     uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	UserID uuid.UUID `gorm:"type:uuid;not null" json:"userID"`
 	Date   time.Time `gorm:"type:date" json:"date"`
 	Count  int       `json:"count"`
@@ -64,4 +68,13 @@ type Achievement struct {
 	User   User           `json:"user"`
 	Title  string         `gorm:"type:text;not null" json:"title"`
 	Skills pq.StringArray `gorm:"type:text[];not null" json:"skills"`
+}
+
+type LastViewed struct {
+	ID        uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	UserID    uuid.UUID `gorm:"type:uuid;not null" json:"userID"`
+	User      User      `json:"user"`
+	ProjectID uuid.UUID `gorm:"type:uuid;not null" json:"projectID"`
+	Project   Project   `json:"project"`
+	Timestamp time.Time `gorm:"default:current_timestamp" json:"timestamp"`
 }

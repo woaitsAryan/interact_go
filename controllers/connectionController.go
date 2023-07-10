@@ -55,15 +55,15 @@ func FollowUser(c *fiber.Ctx) error {
 				return &fiber.Error{Code: 500, Message: "Database Error while incrementing number following."}
 			}
 
-			// notification := models.Notification{
-			// 	NotificationType: 0,
-			// 	UserID:           toFollowUser.ID,
-			// 	SenderID:         loggedInUserID,
-			// }
+			notification := models.Notification{
+				NotificationType: 0,
+				UserID:           toFollowUser.ID,
+				SenderID:         loggedInUserID,
+			}
 
-			// if err := initializers.DB.Create(&notification).Error; err != nil {
-			// 	return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
-			// }
+			if err := initializers.DB.Create(&notification).Error; err != nil {
+				return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
+			}
 
 			return c.Status(200).JSON(fiber.Map{
 				"status":  "success",
@@ -164,7 +164,10 @@ func RemoveFollow(c *fiber.Ctx) error {
 
 func GetFollowers(c *fiber.Ctx) error { //! Add search here
 	userIDStr := c.Params("userID")
-	userID := uuid.MustParse(userIDStr)
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid ID."}
+	}
 
 	paginatedDB := API.Paginator(c)(initializers.DB)
 
@@ -187,7 +190,10 @@ func GetFollowers(c *fiber.Ctx) error { //! Add search here
 
 func GetFollowing(c *fiber.Ctx) error { //! Add search here
 	userIDStr := c.Params("userID")
-	userID := uuid.MustParse(userIDStr)
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid ID."}
+	}
 
 	paginatedDB := API.Paginator(c)(initializers.DB)
 
@@ -196,9 +202,14 @@ func GetFollowing(c *fiber.Ctx) error { //! Add search here
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
+	var followingUsers []models.User
+	for _, followModel := range following {
+		followingUsers = append(followingUsers, followModel.Followed)
+	}
+
 	return c.Status(200).JSON(fiber.Map{
 		"status":    "success",
 		"message":   "",
-		"following": following,
+		"following": followingUsers,
 	})
 }

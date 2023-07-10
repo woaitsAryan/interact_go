@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func GetProject(c *fiber.Ctx) error { //! Add project view history
+func GetProject(c *fiber.Ctx) error {
 	projectID := c.Params("projectID")
 
 	parsedProjectID, err := uuid.Parse(projectID)
@@ -22,7 +22,7 @@ func GetProject(c *fiber.Ctx) error { //! Add project view history
 	}
 
 	var project models.Project
-	if err := initializers.DB.Preload("User").First(&project, "id = ?", parsedProjectID).Error; err != nil {
+	if err := initializers.DB.Preload("User").Preload("Openings").First(&project, "id = ?", parsedProjectID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
 		}
@@ -35,6 +35,16 @@ func GetProject(c *fiber.Ctx) error { //! Add project view history
 	}
 
 	utils.UpdateProjectViews(&project)
+
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	parsedLoggedInUserID, err := uuid.Parse(loggedInUserID)
+
+	if err == nil {
+		err = utils.UpdateLastViewed(parsedLoggedInUserID, project.ID)
+		if err != nil {
+			return err
+		}
+	}
 
 	_, count, err := utils.GetProjectViews(parsedProjectID)
 	if err != nil {

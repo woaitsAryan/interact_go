@@ -88,7 +88,7 @@ func AddPostComment(c *fiber.Ctx) error {
 	comment.PostID = parsedPostID
 	notification.NotificationType = 2
 	notification.UserID = post.UserID
-	notification.PostID = post.ID
+	notification.PostID = &post.ID
 
 	result := initializers.DB.Create(&comment)
 
@@ -155,7 +155,7 @@ func AddProjectComment(c *fiber.Ctx) error {
 	comment.ProjectID = parsedProjectID
 	notification.NotificationType = 4
 	notification.UserID = project.UserID
-	notification.PostID = project.ID
+	notification.PostID = &project.ID
 
 	result := initializers.DB.Create(&comment)
 

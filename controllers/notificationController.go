@@ -16,7 +16,15 @@ func GetNotifications(c *fiber.Ctx) error {
 	paginatedDB := API.Paginator(c)(initializers.DB)
 
 	var notifications []models.Notification
-	if err := paginatedDB.Where("user_id=?", userID).First(&notifications).Error; err != nil {
+	if err := paginatedDB.
+		Preload("User").
+		Preload("Sender").
+		Preload("Post").
+		Preload("Project").
+		Preload("Opening").
+		Preload("Application").
+		Where("user_id=?", userID).
+		Find(&notifications).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 

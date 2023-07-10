@@ -58,6 +58,28 @@ func GetTrendingProjects(c *fiber.Ctx) error {
 	})
 }
 
+func GetLastViewedProjects(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	var projectViewed []models.LastViewed
+
+	paginatedDB := API.Paginator(c)(initializers.DB)
+	if err := paginatedDB.Order("timestamp DESC").Preload("Project").Where("user_id=?", loggedInUserID).Find(&projectViewed).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Failed to get the Last Viewed Projects."}
+	}
+
+	var projects []models.Project
+
+	for _, projectView := range projectViewed {
+		projects = append(projects, projectView.Project)
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":   "success",
+		"projects": projects,
+	})
+}
+
 func GetTrendingUsers(c *fiber.Ctx) error {
 	paginatedDB := API.Paginator(c)(initializers.DB)
 

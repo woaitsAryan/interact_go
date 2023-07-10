@@ -18,5 +18,5 @@ type Application struct {
 	Content       string         `gorm:"type:text;not null" json:"content"`
 	Resume        string         `gorm:"type:varchar(255)" json:"resume"`
 	Links         pq.StringArray `gorm:"type:text[]" json:"links"`
-	Notifications []Notification `gorm:"foreignKey:ApplicationID;constraint:OnDelete:CASCADE" json:"notifications,omitempty"`
+	Notifications []Notification `gorm:"foreignKey:ApplicationID;constraint:OnDelete:CASCADE" json:"notifications"`
 }

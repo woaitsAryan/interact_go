@@ -47,7 +47,14 @@ func GetMe(c *fiber.Ctx) error {
 	userID := c.GetRespHeader("loggedInUserID")
 
 	var user models.User
-	initializers.DB.Preload("Achievements").First(&user, "id = ?", userID)
+	initializers.DB.
+		Preload("Achievements").
+		Preload("Projects").
+		Preload("Posts").
+		Preload("Memberships").
+		Preload("Memberships.Project").
+		First(&user, "id = ?", userID)
+
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "",
@@ -57,8 +64,16 @@ func GetMe(c *fiber.Ctx) error {
 
 func GetUser(c *fiber.Ctx) error {
 	userID := c.Params("userID")
+
 	var user models.User
-	initializers.DB.Preload("Achievements").First(&user, "id = ?", userID)
+	initializers.DB.
+		Preload("Achievements").
+		Preload("Projects").
+		Preload("Posts").
+		Preload("Memberships").
+		Preload("Memberships.Project").
+		First(&user, "id = ?", userID)
+
 	if user.ID == uuid.Nil {
 		return &fiber.Error{Code: 400, Message: "No user of this ID found."}
 	}

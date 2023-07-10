@@ -25,22 +25,33 @@ func AddAchievement(c *fiber.Ctx) error {
 		var achievementModel models.Achievement
 		achievementModel.UserID = parsedUserID
 
-		err := initializers.DB.First(&achievementModel, "id = ?", achievement.ID).Error
-		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				initializers.DB.Create(&achievement)
-			}
-			return &fiber.Error{Code: 500, Message: "Database Error."}
-		} else {
-			achievementModel.Skills = achievement.Skills
+		if achievement.ID == "" {
 			achievementModel.Title = achievement.Title
-			if err := initializers.DB.Save(&achievementModel).Error; err != nil {
+			achievementModel.Skills = achievement.Skills
+			err := initializers.DB.Create(&achievementModel).Error
+
+			if err != nil {
+				return &fiber.Error{Code: 500, Message: "Database Error While creating achievement."}
+			}
+		} else {
+			err := initializers.DB.First(&achievementModel, "id = ?", achievement.ID).Error
+			if err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					return &fiber.Error{Code: 400, Message: "Invalid ID."}
+				}
 				return &fiber.Error{Code: 500, Message: "Database Error."}
+			} else {
+				achievementModel.Skills = achievement.Skills
+				achievementModel.Title = achievement.Title
+				if err := initializers.DB.Save(&achievementModel).Error; err != nil {
+					return &fiber.Error{Code: 500, Message: "Database Error."}
+				}
 			}
 		}
+
 	}
 
-	return c.Status(201).JSON(fiber.Map{
+	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Achievement added successfully",
 	})

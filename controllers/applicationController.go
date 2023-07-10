@@ -110,18 +110,18 @@ func AddApplication(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error while saving the opening."}
 	}
 
-	// notification := models.Notification{
-	// 	NotificationType:       5,
-	// 	ReceiverID:             opening.UserID,
-	// 	SenderID:               parsedUserID,
-	// 	ConcernedOpeningID:     opening.ID,
-	// 	ConcernedApplicationID: newApplication.ID,
-	// 	ConcernedProjectID:     opening.ProjectID,
-	// }
+	notification := models.Notification{
+		NotificationType: 5,
+		UserID:           opening.UserID,
+		SenderID:         parsedUserID,
+		OpeningID:        &opening.ID,
+		ApplicationID:    &newApplication.ID,
+		ProjectID:        &opening.ProjectID,
+	}
 
-	// if err := initializers.DB.Create(&notification).Error; err != nil {
-	// 	return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
-	// }
+	if err := initializers.DB.Create(&notification).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
+	}
 
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",

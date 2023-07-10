@@ -21,8 +21,8 @@ type Post struct {
 	NoComments    int            `gorm:"default:0" json:"noComments"`
 	Tags          pq.StringArray `gorm:"type:text[]" json:"tags"`
 	Edited        bool           `gorm:"default:false" json:"edited"`
-	Comments      []PostComment  `gorm:"foreignKey:PostID;constraint:OnDelete:CASCADE" json:"comments,omitempty"`
-	Notifications []Notification `gorm:"foreignKey:PostID;constraint:OnDelete:CASCADE" json:"notifications,omitempty"`
+	Comments      []PostComment  `gorm:"foreignKey:PostID;constraint:OnDelete:CASCADE" json:"comments"`
+	Notifications []Notification `gorm:"foreignKey:PostID;constraint:OnDelete:CASCADE" json:"notifications"`
 }
 
 type UserPostLike struct {

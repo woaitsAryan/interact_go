@@ -28,12 +28,12 @@ type Project struct {
 	Views         int                 `json:"views"`
 	Links         pq.StringArray      `gorm:"type:text[]" json:"links"`
 	PrivateLinks  pq.StringArray      `gorm:"type:text[]" json:"privateLinks"`
-	Comments      []ProjectComment    `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"comments,omitempty"`
-	Openings      []Opening           `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"openings,omitempty"`
-	Chats         []ProjectChat       `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"chats,omitempty"`
+	Comments      []ProjectComment    `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"comments"`
+	Openings      []Opening           `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"openings"`
+	Chats         []ProjectChat       `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"chats"`
 	Invitations   []ProjectInvitation `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"invitations"`
 	Memberships   []Membership        `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"memberships"`
-	Notifications []Notification      `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"notifications,omitempty"`
+	Notifications []Notification      `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"notifications"`
 }
 
 type ProjectView struct {
