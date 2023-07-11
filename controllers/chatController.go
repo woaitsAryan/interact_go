@@ -101,7 +101,6 @@ func GetUserChats(c *fiber.Ctx) error {
 }
 
 func AcceptChat(c *fiber.Ctx) error {
-
 	chatID := c.Params("chatID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 

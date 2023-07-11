@@ -1,11 +1,10 @@
 package controllers
 
 import (
-	"log"
-
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/schemas"
 	"github.com/Pratham-Mishra04/interact/utils"
 	"github.com/gofiber/fiber/v2"
@@ -100,7 +99,7 @@ func AddApplication(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error while creating the application."}
 	}
 
-	go incrementOpeningApplicationsAndSendNotification(parsedOpeningID, application.ID, parsedUserID)
+	go routines.IncrementOpeningApplicationsAndSendNotification(parsedOpeningID, newApplication.ID, parsedUserID)
 
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",
@@ -132,55 +131,10 @@ func DeleteApplication(c *fiber.Ctx) error {
 	}
 
 	parsedOpeningID := application.OpeningID
-	go decrementOpeningApplications(parsedOpeningID)
+	go routines.DecrementOpeningApplications(parsedOpeningID)
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Application Deleted",
 	})
-}
-
-func incrementOpeningApplicationsAndSendNotification(openingID uuid.UUID, applicationID uuid.UUID, userID uuid.UUID) {
-
-	var opening models.Opening
-	if err := initializers.DB.First(&opening, "id=?", openingID).Error; err != nil {
-		log.Println("No Opening of this ID found.")
-	} else {
-		opening.NoOfApplications++
-		result := initializers.DB.Save(&opening)
-
-		if result.Error != nil {
-			log.Println("Internal Server Error while saving the opening.")
-		}
-
-		notification := models.Notification{
-			NotificationType: 5,
-			UserID:           opening.UserID,
-			SenderID:         userID,
-			OpeningID:        &opening.ID,
-			ApplicationID:    &applicationID,
-			ProjectID:        &opening.ProjectID,
-		}
-
-		if err := initializers.DB.Create(&notification).Error; err != nil {
-			log.Println("Database Error while creating notification.")
-		}
-	}
-
-}
-
-func decrementOpeningApplications(openingID uuid.UUID) {
-
-	var opening models.Opening
-	if err := initializers.DB.First(&opening, "id=?", openingID).Error; err != nil {
-		log.Println("No Opening of this ID found.")
-	} else {
-		opening.NoOfApplications--
-		result := initializers.DB.Save(&opening)
-
-		if result.Error != nil {
-			log.Println("Internal Server Error while saving the opening.")
-		}
-	}
-
 }

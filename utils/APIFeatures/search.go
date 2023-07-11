@@ -86,7 +86,7 @@ func Search(c *fiber.Ctx, index int) func(db *gorm.DB) *gorm.DB {
 			// 		}),
 			// 	},
 			// }
-			db = db.Where("title LIKE ? OR ? = ANY (tags)  ", "%"+searchStr+"%", searchStr)
+			db = db.Where("title LIKE ? OR ? = ANY (tags)  ", "%"+searchStr+"%", searchStr) //! Cases are not matching
 			return db
 		default:
 			return db

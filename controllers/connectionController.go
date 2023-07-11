@@ -2,10 +2,10 @@ package controllers
 
 import (
 	"errors"
-	"log"
 
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/Pratham-Mishra04/interact/routines"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -37,7 +37,7 @@ func FollowUser(c *fiber.Ctx) error {
 				return &fiber.Error{Code: 500, Message: "Database Error while creating follow."}
 			}
 
-			go incrementCountsAndSendNotification(loggedInUserID, toFollowID)
+			go routines.IncrementCountsAndSendNotification(loggedInUserID, toFollowID)
 
 			return c.Status(200).JSON(fiber.Map{
 				"status":  "success",
@@ -73,7 +73,7 @@ func UnfollowUser(c *fiber.Ctx) error {
 			return &fiber.Error{Code: 500, Message: "Database Error."}
 		}
 
-		go decrementCounts(loggedInUserID, toUnFollowID)
+		go routines.DecrementCounts(loggedInUserID, toUnFollowID)
 
 		return c.Status(200).JSON(fiber.Map{
 			"status":  "success",
@@ -104,7 +104,7 @@ func RemoveFollow(c *fiber.Ctx) error {
 			return &fiber.Error{Code: 500, Message: "Database Error."}
 		}
 
-		go decrementCounts(followerToRemoveID, loggedInUserID)
+		go routines.DecrementCounts(followerToRemoveID, loggedInUserID)
 
 		return c.Status(200).JSON(fiber.Map{
 			"status":  "success",
@@ -165,64 +165,4 @@ func GetFollowing(c *fiber.Ctx) error {
 		"message":   "",
 		"following": followingUsers,
 	})
-}
-
-func incrementCountsAndSendNotification(loggedInUserID uuid.UUID, toFollowID uuid.UUID) {
-	var toFollowUser models.User
-	err := initializers.DB.First(&toFollowUser, "id=?", toFollowID).Error
-	if err != nil {
-		log.Println("No User with this ID exists.")
-	} else {
-		var loggedInUser models.User
-		err := initializers.DB.First(&loggedInUser, "id=?", loggedInUserID).Error
-
-		if err != nil {
-			log.Println("Error Retrieving User.")
-		} else {
-			toFollowUser.NoFollowers++
-			if err := initializers.DB.Save(&toFollowUser).Error; err != nil {
-				log.Println("Database Error while incrementing number followers.")
-			}
-
-			loggedInUser.NoFollowing++
-			if err := initializers.DB.Save(&loggedInUser).Error; err != nil {
-				log.Println("Database Error while incrementing number following.")
-			}
-
-			notification := models.Notification{
-				NotificationType: 0,
-				UserID:           toFollowUser.ID,
-				SenderID:         loggedInUserID,
-			}
-
-			if err := initializers.DB.Create(&notification).Error; err != nil {
-				log.Println("Database Error while creating notification.")
-			}
-		}
-	}
-}
-
-func decrementCounts(loggedInUserID uuid.UUID, toUnFollowID uuid.UUID) {
-	var toUnFollowUser models.User
-	err := initializers.DB.First(&toUnFollowUser, "id=?", toUnFollowID).Error
-	if err != nil {
-		log.Println("No User with this ID exists.")
-	} else {
-		var loggedInUser models.User
-		err := initializers.DB.First(&loggedInUser, "id=?", loggedInUserID).Error
-
-		if err != nil {
-			log.Println("Error Retrieving User.")
-		} else {
-			toUnFollowUser.NoFollowers--
-			if err := initializers.DB.Save(&toUnFollowUser).Error; err != nil {
-				log.Println("Database Error while decrementing number followers.")
-			}
-
-			loggedInUser.NoFollowing--
-			if err := initializers.DB.Save(&loggedInUser).Error; err != nil {
-				log.Println("Database Error while decrementing number following.")
-			}
-		}
-	}
 }

@@ -1,10 +1,9 @@
 package controllers
 
 import (
-	"log"
-
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/Pratham-Mishra04/interact/routines"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -89,7 +88,7 @@ func AddPostComment(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error while loading the user."}
 	}
 
-	go incrementPostCommentsAndSendNotification(parsedPostID, parsedUserID)
+	go routines.IncrementPostCommentsAndSendNotification(parsedPostID, parsedUserID)
 
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",
@@ -134,7 +133,7 @@ func AddProjectComment(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error while loading the user."}
 	}
 
-	go incrementProjectCommentsAndSendNotification(parsedProjectID, parsedUserID)
+	go routines.IncrementProjectCommentsAndSendNotification(parsedProjectID, parsedUserID)
 
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",
@@ -204,7 +203,7 @@ func DeletePostComment(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
-	go decrementPostComments(comment.PostID)
+	go routines.DecrementPostComments(comment.PostID)
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",
@@ -233,7 +232,7 @@ func DeleteProjectComment(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
-	go decrementProjectComments(comment.ProjectID)
+	go routines.DecrementProjectComments(comment.ProjectID)
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",
@@ -279,86 +278,4 @@ func GetMyLikedProjectsComments(c *fiber.Ctx) error {
 		"message":  "",
 		"comments": projectCommentIDs,
 	})
-}
-
-func incrementPostCommentsAndSendNotification(postID uuid.UUID, loggedInUserID uuid.UUID) {
-	var post models.Post
-	if err := initializers.DB.First(&post, "id=?", postID).Error; err != nil {
-		log.Println("No Post of this ID found.")
-	} else {
-		post.NoComments++
-		result := initializers.DB.Save(&post)
-
-		if result.Error != nil {
-			log.Println("Internal Server Error while saving the post.")
-		}
-
-		if loggedInUserID != post.UserID {
-			notification := models.Notification{
-				SenderID:         loggedInUserID,
-				NotificationType: 2,
-				UserID:           post.UserID,
-				PostID:           &post.ID,
-			}
-
-			if err := initializers.DB.Create(&notification).Error; err != nil {
-				log.Println("Database Error while creating notification.")
-			}
-		}
-	}
-}
-
-func incrementProjectCommentsAndSendNotification(projectID uuid.UUID, loggedInUserID uuid.UUID) {
-	var project models.Project
-	if err := initializers.DB.First(&project, "id=?", projectID).Error; err != nil {
-		log.Println("No Project of this ID found.")
-	} else {
-		project.NoComments++
-		result := initializers.DB.Save(&project)
-
-		if result.Error != nil {
-			log.Println("Internal Server Error while saving the project.")
-		}
-
-		if loggedInUserID != project.UserID {
-			notification := models.Notification{
-				SenderID:         loggedInUserID,
-				NotificationType: 4,
-				UserID:           project.UserID,
-				ProjectID:        &project.ID,
-			}
-
-			if err := initializers.DB.Create(&notification).Error; err != nil {
-				log.Println("Database Error while creating notification.")
-			}
-		}
-	}
-}
-
-func decrementPostComments(postID uuid.UUID) {
-	var post models.Post
-	if err := initializers.DB.First(&post, "id=?", postID).Error; err != nil {
-		log.Println("No Post of this ID found.")
-	} else {
-		post.NoComments--
-		result := initializers.DB.Save(&post)
-
-		if result.Error != nil {
-			log.Println("Internal Server Error while saving the post.")
-		}
-	}
-}
-
-func decrementProjectComments(projectID uuid.UUID) {
-	var project models.Project
-	if err := initializers.DB.First(&project, "id=?", projectID).Error; err != nil {
-		log.Println("No Project of this ID found.")
-	} else {
-		project.NoComments--
-		result := initializers.DB.Save(&project)
-
-		if result.Error != nil {
-			log.Println("Internal Server Error while saving the project.")
-		}
-	}
 }

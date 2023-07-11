@@ -1,10 +1,9 @@
 package controllers
 
 import (
-	"log"
-
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
@@ -48,7 +47,7 @@ func SharePost(c *fiber.Ctx) error {
 			return &fiber.Error{Code: 500, Message: "Internal Server Error while creating the message."}
 		}
 
-		go incrementPostShare(parsedPostID)
+		go routines.IncrementPostShare(parsedPostID)
 
 		return c.Status(200).JSON(fiber.Map{
 			"status":  "success",
@@ -99,7 +98,7 @@ func ShareProject(c *fiber.Ctx) error {
 			return &fiber.Error{Code: 500, Message: "Internal Server Error while creating the message."}
 		}
 
-		go incrementProjectShare(parsedProjectID)
+		go routines.IncrementProjectShare(parsedProjectID)
 
 		return c.Status(200).JSON(fiber.Map{
 			"status":  "success",
@@ -108,31 +107,5 @@ func ShareProject(c *fiber.Ctx) error {
 
 	} else {
 		return &fiber.Error{Code: 400, Message: "Invalid Project ID."}
-	}
-}
-
-func incrementPostShare(postID uuid.UUID) {
-	var post models.Post
-	if err := initializers.DB.First(&post, "id=?", postID).Error; err != nil {
-		log.Println("No Post of this ID found.")
-	} else {
-		post.NoShares++
-		result := initializers.DB.Save(post)
-		if result.Error != nil {
-			log.Println("Database Error while updating Post.")
-		}
-	}
-}
-
-func incrementProjectShare(projectID uuid.UUID) {
-	var project models.Project
-	if err := initializers.DB.First(&project, "id=?", projectID).Error; err != nil {
-		log.Println("No Project of this ID found.")
-	} else {
-		project.NoShares++
-		result := initializers.DB.Save(project)
-		if result.Error != nil {
-			log.Println("Database Error while updating Project.")
-		}
 	}
 }

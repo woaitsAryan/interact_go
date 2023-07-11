@@ -1,10 +1,9 @@
 package controllers
 
 import (
-	"log"
-
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -42,7 +41,7 @@ func AcceptApplication(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error while updating the application."}
 	}
 
-	go createMembershipAndSendNotification(&application)
+	go routines.CreateMembershipAndSendNotification(&application)
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
@@ -134,29 +133,4 @@ func SetApplicationUnderReview(c *fiber.Ctx) error {
 		"status":  "success",
 		"message": "Application Under Review.",
 	})
-}
-
-func createMembershipAndSendNotification(application *models.Application) {
-	membership := models.Membership{
-		ProjectID: application.Opening.ProjectID,
-		UserID:    application.UserID,
-		Role:      "",
-		Title:     application.Opening.Title,
-	}
-
-	result := initializers.DB.Create(&membership)
-
-	if result.Error != nil {
-		log.Println("Internal Server Error while creating membership.")
-	}
-
-	notification := models.Notification{
-		NotificationType: 6,
-		UserID:           application.UserID,
-		OpeningID:        &application.OpeningID,
-	}
-
-	if err := initializers.DB.Create(&notification).Error; err != nil {
-		log.Println("Internal Server Error while creating notification.")
-	}
 }
