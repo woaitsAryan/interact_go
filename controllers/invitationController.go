@@ -92,9 +92,10 @@ func AcceptChatInvitation(c *fiber.Ctx) error {
 
 func AcceptProjectInvitation(c *fiber.Ctx) error {
 	invitationID := c.Params("invitationID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var invitation models.ProjectInvitation
-	err := initializers.DB.First(&invitation, "id=?", invitationID).Error
+	err := initializers.DB.First(&invitation, "id=? AND user_id=?", invitationID, loggedInUserID).Error
 
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "No Invitation of this ID found."}
@@ -132,11 +133,11 @@ func AcceptProjectInvitation(c *fiber.Ctx) error {
 }
 
 func RejectChatInvitation(c *fiber.Ctx) error {
-
 	invitationID := c.Params("invitationID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var invitation models.ChatInvitation
-	err := initializers.DB.First(&invitation, "id=?", invitationID).Error
+	err := initializers.DB.First(&invitation, "id=? AND user_id=?", invitationID, loggedInUserID).Error
 
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "No Invitation of this ID found."}
@@ -157,11 +158,11 @@ func RejectChatInvitation(c *fiber.Ctx) error {
 }
 
 func RejectProjectInvitation(c *fiber.Ctx) error {
-
 	invitationID := c.Params("invitationID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var invitation models.ProjectInvitation
-	err := initializers.DB.First(&invitation, "id=?", invitationID).Error
+	err := initializers.DB.First(&invitation, "id=? AND user_id=?", invitationID, loggedInUserID).Error
 
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "No Invitation of this ID found."}
@@ -209,11 +210,11 @@ func WithdrawChatInvitation(c *fiber.Ctx) error {
 }
 
 func WithdrawProjectInvitation(c *fiber.Ctx) error {
-
 	invitationID := c.Params("invitationID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var invitation models.ProjectInvitation
-	err := initializers.DB.First(&invitation, "id=?", invitationID).Error
+	err := initializers.DB.First(&invitation, "id=? AND user_id=?", invitationID, loggedInUserID).Error
 
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "No Invitation of this ID found."}

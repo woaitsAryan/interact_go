@@ -5,13 +5,11 @@ import (
 	"github.com/Pratham-Mishra04/interact/models"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 func GetNotifications(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
-	userID, _ := uuid.Parse(loggedInUserID)
 
 	paginatedDB := API.Paginator(c)(initializers.DB)
 
@@ -23,7 +21,7 @@ func GetNotifications(c *fiber.Ctx) error {
 		Preload("Project").
 		Preload("Opening").
 		Preload("Application").
-		Where("user_id=?", userID).
+		Where("user_id=?", loggedInUserID).
 		Find(&notifications).
 		Order("created_at DESC").Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
@@ -38,14 +36,10 @@ func GetNotifications(c *fiber.Ctx) error {
 
 func DeleteNotification(c *fiber.Ctx) error {
 	notificationID := c.Params("notificationID")
-
-	parsedNotificationID, err := uuid.Parse(notificationID)
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid ID"}
-	}
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var notification models.Notification
-	if err := initializers.DB.First(&notification, "id = ?", parsedNotificationID).Error; err != nil {
+	if err := initializers.DB.First(&notification, "id = ? AND user_id=?", notificationID, loggedInUserID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Notification of this ID found."}
 		}

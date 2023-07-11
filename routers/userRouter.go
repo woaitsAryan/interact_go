@@ -12,7 +12,6 @@ func UserRouter(app *fiber.App) {
 	app.Post("/login", controllers.LogIn)
 
 	userRoutes := app.Group("/users", middlewares.Protect)
-	userRoutes.Get("/", controllers.GetAllUsers)
 	userRoutes.Get("/me", controllers.GetMe)
 	userRoutes.Get("/views", controllers.GetViews)
 	userRoutes.Patch("/update_password", controllers.UpdatePassword)

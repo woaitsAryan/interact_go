@@ -38,7 +38,7 @@ func AddPostBookmark(c *fiber.Ctx) error {
 }
 
 func EditPostBookmark(c *fiber.Ctx) error {
-
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	bookmarkID := c.Params("bookmarkID")
 	parsedBookmarkID, err := uuid.Parse(bookmarkID)
 	if err != nil {
@@ -46,7 +46,7 @@ func EditPostBookmark(c *fiber.Ctx) error {
 	}
 
 	var bookmark models.PostBookmark
-	if err := initializers.DB.First(&bookmark, "id = ?", parsedBookmarkID).Error; err != nil {
+	if err := initializers.DB.First(&bookmark, "id = ? AND user_id=?", parsedBookmarkID, loggedInUserID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Bookmark of this ID found."}
 		}
@@ -77,7 +77,7 @@ func EditPostBookmark(c *fiber.Ctx) error {
 }
 
 func DeletePostBookmark(c *fiber.Ctx) error {
-
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	bookmarkID := c.Params("bookmarkID")
 	parsedBookmarkID, err := uuid.Parse(bookmarkID)
 	if err != nil {
@@ -85,7 +85,7 @@ func DeletePostBookmark(c *fiber.Ctx) error {
 	}
 
 	var bookmark models.PostBookmark
-	if err := initializers.DB.First(&bookmark, "id = ?", parsedBookmarkID).Error; err != nil {
+	if err := initializers.DB.First(&bookmark, "id = ? AND user_id=?", parsedBookmarkID, loggedInUserID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Bookmark of this ID found."}
 		}
@@ -111,14 +111,6 @@ func AddPostBookmarkItem(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Invalid bookmark ID."}
 	}
 
-	var bookmark models.PostBookmark
-	if err := initializers.DB.First(&bookmark, "id = ?", parsedBookmarkID).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return &fiber.Error{Code: 400, Message: "No Bookmark of this ID found."}
-		}
-		return &fiber.Error{Code: 500, Message: "Database Error."}
-	}
-
 	var reqBody struct {
 		PostID string `json:"postID"`
 	}
@@ -130,14 +122,6 @@ func AddPostBookmarkItem(c *fiber.Ctx) error {
 		parsedPostID, err := uuid.Parse(reqBody.PostID)
 		if err != nil {
 			return &fiber.Error{Code: 500, Message: "Invalid Post ID."}
-		}
-
-		var post models.Post
-		if err := initializers.DB.First(&post, "id = ?", parsedPostID).Error; err != nil {
-			if err == gorm.ErrRecordNotFound {
-				return &fiber.Error{Code: 400, Message: "No Post of this ID found."}
-			}
-			return &fiber.Error{Code: 500, Message: "Database Error."}
 		}
 
 		item := models.PostBookmarkItem{

@@ -11,13 +11,22 @@ import (
 
 func GetMessages(c *fiber.Ctx) error {
 	chatID := c.Params("chatID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	paginatedDB := API.Paginator(c)(initializers.DB)
 
 	var messages []models.Message
-	if err := paginatedDB.Preload("User").Preload("Post").Preload("Project").Where("chat_id = ? ", chatID).Order("created_at DESC").Find(&messages).Error; err != nil {
+	if err := paginatedDB.
+		Preload("Chat").
+		Preload("User").
+		Preload("Post").
+		Preload("Project").
+		Where("chat_id = ? AND (chat.creating_user_id = ? OR chat.accepting_user_id = ?)", chatID, loggedInUserID, loggedInUserID).
+		Order("created_at DESC").
+		Find(&messages).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Failed to get the Messages."}
 	}
+
 	return c.Status(200).JSON(fiber.Map{
 		"status":   "success",
 		"message":  "",
@@ -25,7 +34,7 @@ func GetMessages(c *fiber.Ctx) error {
 	})
 }
 
-func GetProjectChatMessages(c *fiber.Ctx) error {
+func GetProjectChatMessages(c *fiber.Ctx) error { //! Only project chat members can get
 	chatID := c.Params("projectChatID")
 
 	paginatedDB := API.Paginator(c)(initializers.DB)
@@ -67,10 +76,11 @@ func AddMessage(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid ID."}
 	}
 
-	var chat models.Chat
-	if err := initializers.DB.First(&chat, "id=?", parsedChatID).Error; err != nil {
-		return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
-	}
+	// var chat models.Chat
+	// if err := initializers.DB.First(&chat, "id=? AND (chat.creating_user_id = ? OR chat.accepting_user_id = ?)", parsedChatID, loggedInUserID, loggedInUserID).Error; err != nil {
+	// 	return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
+	// }
+
 	message.ChatID = parsedChatID
 
 	result := initializers.DB.Create(&message)
@@ -113,10 +123,10 @@ func AddProjectChatMessage(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid ID."}
 	}
 
-	var chat models.ProjectChat
-	if err := initializers.DB.First(&chat, "id=?", parsedChatID).Error; err != nil {
-		return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
-	}
+	// var chat models.ProjectChat
+	// if err := initializers.DB.First(&chat, "id=?", parsedChatID).Error; err != nil {
+	// 	return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
+	// }
 	message.ProjectChatID = parsedChatID
 
 	result := initializers.DB.Create(&message)
@@ -137,6 +147,7 @@ func AddProjectChatMessage(c *fiber.Ctx) error {
 
 func DeleteMessage(c *fiber.Ctx) error {
 	messageID := c.Params("messageID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	parsedMessageID, err := uuid.Parse(messageID)
 	if err != nil {
@@ -144,7 +155,7 @@ func DeleteMessage(c *fiber.Ctx) error {
 	}
 
 	var message models.Message
-	if err := initializers.DB.First(&message, "id = ?", parsedMessageID).Error; err != nil {
+	if err := initializers.DB.First(&message, "id = ? AND user_id=?", parsedMessageID, loggedInUserID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Message of this ID found."}
 		}

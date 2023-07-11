@@ -24,7 +24,7 @@ func GetMyProjects(c *fiber.Ctx) error {
 	})
 }
 
-func GetMyContributingProjects(c *fiber.Ctx) error { //!Add search here
+func GetMyContributingProjects(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var memberships []models.Membership
@@ -44,7 +44,7 @@ func GetMyContributingProjects(c *fiber.Ctx) error { //!Add search here
 	})
 }
 
-func GetMyApplications(c *fiber.Ctx) error { //! Add search here
+func GetMyApplications(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var applications []models.Application

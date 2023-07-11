@@ -10,10 +10,11 @@ import (
 
 func GetChat(c *fiber.Ctx) error {
 	chatID := c.Params("chatID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var chat models.Chat
 
-	err := initializers.DB.Preload("Messages").First(&chat, "id=?", chatID).Error
+	err := initializers.DB.Preload("Messages").First(&chat, "id=? AND (creating_user_id = ? OR accepting_user_id = ?)", chatID, loggedInUserID, loggedInUserID).Error
 
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
@@ -28,10 +29,14 @@ func GetChat(c *fiber.Ctx) error {
 
 func GetProjectChat(c *fiber.Ctx) error {
 	chatID := c.Params("projectChatID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var chat models.ProjectChat
 
-	err := initializers.DB.First(&chat, "id=?", chatID).Error
+	err := initializers.DB.
+		Joins("JOIN project_chat_memberships ON project_chat_memberships.project_chat_id = project_chats.id").
+		Where("project_chat_memberships.user_id = ?", loggedInUserID).
+		First(&chat, "id=?", chatID).Error
 
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
@@ -44,7 +49,7 @@ func GetProjectChat(c *fiber.Ctx) error {
 	})
 }
 
-func GetUserNonPopulatedChats(c *fiber.Ctx) error { // ! GET USER CHATS
+func GetUserNonPopulatedChats(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var chats []models.Chat
@@ -59,7 +64,7 @@ func GetUserNonPopulatedChats(c *fiber.Ctx) error { // ! GET USER CHATS
 	})
 }
 
-func GetUserChats(c *fiber.Ctx) error { // ! GET USER CHATS
+func GetUserChats(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var chats []models.Chat
@@ -98,9 +103,10 @@ func GetUserChats(c *fiber.Ctx) error { // ! GET USER CHATS
 func AcceptChat(c *fiber.Ctx) error {
 
 	chatID := c.Params("chatID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var chat models.Chat
-	err := initializers.DB.First(&chat, "id = ?", chatID).Error
+	err := initializers.DB.First(&chat, "id = ? AND accepting_user_id=?", chatID, loggedInUserID).Error
 
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "No chat of this id found."}
@@ -272,18 +278,11 @@ func AddProjectChat(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Invalid Project ID."}
 	}
 
-	var project models.Project
-	err = initializers.DB.First(&project, "id = ?", parsedProjectID).Error
-
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "No project of this id found."}
-	}
-
 	projectChat := models.ProjectChat{
 		CreatingUserID: parsedLoggedInUserID,
 		Title:          reqBody.Title,
 		Description:    reqBody.Description,
-		ProjectID:      project.ID,
+		ProjectID:      parsedProjectID,
 	}
 
 	result := initializers.DB.Create(&projectChat)

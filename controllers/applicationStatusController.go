@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"log"
+
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/gofiber/fiber/v2"
@@ -10,6 +12,7 @@ import (
 
 func AcceptApplication(c *fiber.Ctx) error {
 	applicationID := c.Params("applicationID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	parsedApplicationID, err := uuid.Parse(applicationID)
 	if err != nil {
@@ -24,6 +27,10 @@ func AcceptApplication(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
+	if application.Opening.UserID.String() != loggedInUserID {
+		return &fiber.Error{Code: 403, Message: "Do not have the permission to perform this action."}
+	}
+
 	if application.Status == -1 {
 		return &fiber.Error{Code: 400, Message: "Application is already Rejected."}
 	}
@@ -35,28 +42,7 @@ func AcceptApplication(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error while updating the application."}
 	}
 
-	membership := models.Membership{
-		ProjectID: application.Opening.ProjectID,
-		UserID:    application.UserID,
-		Role:      "",
-		Title:     application.Opening.Title,
-	}
-
-	result = initializers.DB.Create(&membership)
-
-	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while creating membership."}
-	}
-
-	notification := models.Notification{
-		NotificationType: 6,
-		UserID:           application.UserID,
-		OpeningID:        &application.OpeningID,
-	}
-
-	if err := initializers.DB.Create(&notification).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
-	}
+	go createMembershipAndSendNotification(&application)
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
@@ -66,6 +52,7 @@ func AcceptApplication(c *fiber.Ctx) error {
 
 func RejectApplication(c *fiber.Ctx) error {
 	applicationID := c.Params("applicationID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	parsedApplicationID, err := uuid.Parse(applicationID)
 	if err != nil {
@@ -73,11 +60,15 @@ func RejectApplication(c *fiber.Ctx) error {
 	}
 
 	var application models.Application
-	if err := initializers.DB.First(&application, "id = ?", parsedApplicationID).Error; err != nil {
+	if err := initializers.DB.Preload("Opening").First(&application, "id = ?", parsedApplicationID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Application of this ID found."}
 		}
 		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
+
+	if application.Opening.UserID.String() != loggedInUserID {
+		return &fiber.Error{Code: 403, Message: "Do not have the permission to perform this action."}
 	}
 
 	if application.Status == 2 {
@@ -109,6 +100,7 @@ func RejectApplication(c *fiber.Ctx) error {
 
 func SetApplicationUnderReview(c *fiber.Ctx) error {
 	applicationID := c.Params("applicationID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	parsedApplicationID, err := uuid.Parse(applicationID)
 	if err != nil {
@@ -116,11 +108,15 @@ func SetApplicationUnderReview(c *fiber.Ctx) error {
 	}
 
 	var application models.Application
-	if err := initializers.DB.First(&application, "id = ?", parsedApplicationID).Error; err != nil {
+	if err := initializers.DB.Preload("Opening").First(&application, "id = ?", parsedApplicationID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Application of this ID found."}
 		}
 		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
+
+	if application.Opening.UserID.String() != loggedInUserID {
+		return &fiber.Error{Code: 403, Message: "Do not have the permission to perform this action."}
 	}
 
 	if application.Status != 0 {
@@ -138,4 +134,29 @@ func SetApplicationUnderReview(c *fiber.Ctx) error {
 		"status":  "success",
 		"message": "Application Under Review.",
 	})
+}
+
+func createMembershipAndSendNotification(application *models.Application) {
+	membership := models.Membership{
+		ProjectID: application.Opening.ProjectID,
+		UserID:    application.UserID,
+		Role:      "",
+		Title:     application.Opening.Title,
+	}
+
+	result := initializers.DB.Create(&membership)
+
+	if result.Error != nil {
+		log.Println("Internal Server Error while creating membership.")
+	}
+
+	notification := models.Notification{
+		NotificationType: 6,
+		UserID:           application.UserID,
+		OpeningID:        &application.OpeningID,
+	}
+
+	if err := initializers.DB.Create(&notification).Error; err != nil {
+		log.Println("Internal Server Error while creating notification.")
+	}
 }

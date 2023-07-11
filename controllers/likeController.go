@@ -8,6 +8,8 @@ import (
 	"gorm.io/gorm"
 )
 
+//! Use Go Routines here
+
 func LikePost(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)

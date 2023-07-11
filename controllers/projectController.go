@@ -34,16 +34,13 @@ func GetProject(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
-	utils.UpdateProjectViews(&project)
+	go utils.UpdateProjectViews(&project)
 
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedLoggedInUserID, err := uuid.Parse(loggedInUserID)
 
 	if err == nil {
-		err = utils.UpdateLastViewed(parsedLoggedInUserID, project.ID)
-		if err != nil {
-			return err
-		}
+		go utils.UpdateLastViewed(parsedLoggedInUserID, project.ID)
 	}
 
 	_, count, err := utils.GetProjectViews(parsedProjectID)
@@ -60,7 +57,7 @@ func GetProject(c *fiber.Ctx) error {
 	})
 }
 
-func GetWorkSpaceProject(c *fiber.Ctx) error {
+func GetWorkSpaceProject(c *fiber.Ctx) error { //! Only project members can access
 	projectID := c.Params("projectID")
 
 	parsedProjectID, err := uuid.Parse(projectID)
@@ -162,7 +159,7 @@ func GetUserContributingProjects(c *fiber.Ctx) error {
 	})
 }
 
-func GetProjectContributors(c *fiber.Ctx) error { //! Add search here
+func GetProjectContributors(c *fiber.Ctx) error {
 	projectID := c.Params("projectID")
 
 	parsedProjectID, err := uuid.Parse(projectID)
@@ -288,6 +285,7 @@ func UpdateProject(c *fiber.Ctx) error {
 
 func DeleteProject(c *fiber.Ctx) error {
 	projectID := c.Params("projectID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	parsedProjectID, err := uuid.Parse(projectID)
 	if err != nil {
@@ -295,7 +293,7 @@ func DeleteProject(c *fiber.Ctx) error {
 	}
 
 	var project models.Project
-	if err := initializers.DB.First(&project, "id = ?", parsedProjectID).Error; err != nil {
+	if err := initializers.DB.First(&project, "id = ? AND user_id=?", parsedProjectID, loggedInUserID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
 		}

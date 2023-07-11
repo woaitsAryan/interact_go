@@ -29,14 +29,6 @@ func AddPostBookMarkItem(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
 	}
 
-	var post models.Post
-	if err := initializers.DB.First(&post, "id = ?", parsedPostID).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return &fiber.Error{Code: 400, Message: "No Post of this ID found."}
-		}
-		return &fiber.Error{Code: 500, Message: "Database Error."}
-	}
-
 	var bookmark models.PostBookmark
 	if err := initializers.DB.First(&bookmark, "id = ?", parsedBookmarkID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -82,14 +74,6 @@ func AddProjectBookMarkItem(c *fiber.Ctx) error {
 	parsedProjectID, err := uuid.Parse(reqBody.ProjectID)
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
-	}
-
-	var project models.Project
-	if err := initializers.DB.First(&project, "id = ?", parsedProjectID).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
-		}
-		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
 	var bookmark models.ProjectBookmark

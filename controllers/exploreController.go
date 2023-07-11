@@ -13,8 +13,6 @@ func GetTrendingPosts(c *fiber.Ctx) error {
 	paginatedDB := API.Paginator(c)(initializers.DB)
 	var posts []models.Post
 
-	// postUserSelectedDB := utils.PostSelectConfig(paginatedDB.Preload("User"))
-
 	searchedDB := API.Search(c, 2)(paginatedDB)
 
 	if err := searchedDB.Preload("User").Find(&posts).Order("created_at DESC").Error; err != nil {

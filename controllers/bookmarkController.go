@@ -125,6 +125,7 @@ func AddProjectBookMark(c *fiber.Ctx) error {
 
 func DeletePostBookMark(c *fiber.Ctx) error {
 	bookmarkID := c.Params("bookmarkID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	parsedBookmarkID, err := uuid.Parse(bookmarkID)
 	if err != nil {
@@ -132,7 +133,7 @@ func DeletePostBookMark(c *fiber.Ctx) error {
 	}
 
 	var bookmark models.PostBookmark
-	err = initializers.DB.First(&bookmark, "id=?", parsedBookmarkID).Error
+	err = initializers.DB.First(&bookmark, "id=? AND user_id=?", parsedBookmarkID, loggedInUserID).Error
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "No Bookmark of this ID found."}
 	}
@@ -151,6 +152,7 @@ func DeletePostBookMark(c *fiber.Ctx) error {
 
 func DeleteProjectBookMark(c *fiber.Ctx) error {
 	bookmarkID := c.Params("bookmarkID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	parsedBookmarkID, err := uuid.Parse(bookmarkID)
 	if err != nil {
@@ -158,7 +160,7 @@ func DeleteProjectBookMark(c *fiber.Ctx) error {
 	}
 
 	var bookmark models.ProjectBookmark
-	err = initializers.DB.First(&bookmark, "id=?", parsedBookmarkID).Error
+	err = initializers.DB.First(&bookmark, "id=? AND user_id=?", parsedBookmarkID, loggedInUserID).Error
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "No Bookmark of this ID found."}
 	}

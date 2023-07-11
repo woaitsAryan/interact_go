@@ -9,7 +9,7 @@ import (
 )
 
 func AddMember(c *fiber.Ctx) error {
-
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	projectID := c.Params("projectID")
 
 	parsedProjectID, err := uuid.Parse(projectID)
@@ -34,7 +34,7 @@ func AddMember(c *fiber.Ctx) error {
 	}
 
 	var project models.Project
-	if err := initializers.DB.First(&project, "id = ?", parsedProjectID).Error; err != nil {
+	if err := initializers.DB.First(&project, "id = ? and user_id=?", parsedProjectID, loggedInUserID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
 		}
@@ -80,7 +80,7 @@ func AddMember(c *fiber.Ctx) error {
 	}
 }
 
-func RemoveMember(c *fiber.Ctx) error {
+func RemoveMember(c *fiber.Ctx) error { //! Only project creator can access
 
 	membershipID := c.Params("membershipID")
 
@@ -109,7 +109,7 @@ func RemoveMember(c *fiber.Ctx) error {
 	})
 }
 
-func ChangeMemberRole(c *fiber.Ctx) error {
+func ChangeMemberRole(c *fiber.Ctx) error { //! Only project creator can access
 
 	membershipID := c.Params("membershipID")
 

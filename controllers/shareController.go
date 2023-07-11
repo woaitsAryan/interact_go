@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"log"
+
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/gofiber/fiber/v2"
@@ -34,18 +36,6 @@ func SharePost(c *fiber.Ctx) error {
 		}
 		message.PostID = &parsedPostID
 
-		var post models.Post
-		if err := initializers.DB.First(&post, "id=?", parsedPostID).Error; err != nil {
-			return &fiber.Error{Code: 400, Message: "No Post of this ID found."}
-		}
-
-		post.NoShares++
-
-		result := initializers.DB.Save(post)
-		if result.Error != nil {
-			return &fiber.Error{Code: 500, Message: "Database Error while updating Post."}
-		}
-
 		parsedChatID, err := uuid.Parse(chatID)
 		if err != nil {
 			return &fiber.Error{Code: 400, Message: "Invalid ID."}
@@ -53,10 +43,12 @@ func SharePost(c *fiber.Ctx) error {
 
 		message.ChatID = parsedChatID
 
-		result = initializers.DB.Create(&message)
+		result := initializers.DB.Create(&message)
 		if result.Error != nil {
 			return &fiber.Error{Code: 500, Message: "Internal Server Error while creating the message."}
 		}
+
+		go incrementPostShare(parsedPostID)
 
 		return c.Status(200).JSON(fiber.Map{
 			"status":  "success",
@@ -95,18 +87,6 @@ func ShareProject(c *fiber.Ctx) error {
 		}
 		message.ProjectID = &parsedProjectID
 
-		var project models.Project
-		if err := initializers.DB.First(&project, "id=?", parsedProjectID).Error; err != nil {
-			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
-		}
-
-		project.NoShares++
-
-		result := initializers.DB.Save(project)
-		if result.Error != nil {
-			return &fiber.Error{Code: 500, Message: "Database Error while updating Project."}
-		}
-
 		parsedChatID, err := uuid.Parse(chatID)
 		if err != nil {
 			return &fiber.Error{Code: 400, Message: "Invalid ID."}
@@ -114,10 +94,12 @@ func ShareProject(c *fiber.Ctx) error {
 
 		message.ChatID = parsedChatID
 
-		result = initializers.DB.Create(&message)
+		result := initializers.DB.Create(&message)
 		if result.Error != nil {
 			return &fiber.Error{Code: 500, Message: "Internal Server Error while creating the message."}
 		}
+
+		go incrementProjectShare(parsedProjectID)
 
 		return c.Status(200).JSON(fiber.Map{
 			"status":  "success",
@@ -126,5 +108,31 @@ func ShareProject(c *fiber.Ctx) error {
 
 	} else {
 		return &fiber.Error{Code: 400, Message: "Invalid Project ID."}
+	}
+}
+
+func incrementPostShare(postID uuid.UUID) {
+	var post models.Post
+	if err := initializers.DB.First(&post, "id=?", postID).Error; err != nil {
+		log.Println("No Post of this ID found.")
+	} else {
+		post.NoShares++
+		result := initializers.DB.Save(post)
+		if result.Error != nil {
+			log.Println("Database Error while updating Post.")
+		}
+	}
+}
+
+func incrementProjectShare(projectID uuid.UUID) {
+	var project models.Project
+	if err := initializers.DB.First(&project, "id=?", projectID).Error; err != nil {
+		log.Println("No Project of this ID found.")
+	} else {
+		project.NoShares++
+		result := initializers.DB.Save(project)
+		if result.Error != nil {
+			log.Println("Database Error while updating Project.")
+		}
 	}
 }

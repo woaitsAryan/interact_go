@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"log"
+
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
@@ -76,11 +78,6 @@ func AddPostComment(c *fiber.Ctx) error {
 		Content: reqBody.Content,
 	}
 
-	var post models.Post
-	if err := initializers.DB.First(&post, "id=?", parsedPostID).Error; err != nil {
-		return &fiber.Error{Code: 400, Message: "No Post of this ID found."}
-	}
-
 	comment.PostID = parsedPostID
 	result := initializers.DB.Create(&comment)
 
@@ -88,35 +85,16 @@ func AddPostComment(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error while creating the comment."}
 	}
 
-	post.NoComments++
-	result = initializers.DB.Save(&post)
-
-	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while saving the post."}
-	}
-
-	if parsedUserID != post.UserID {
-		notification := models.Notification{
-			SenderID:         parsedUserID,
-			NotificationType: 2,
-			UserID:           post.UserID,
-			PostID:           &post.ID,
-		}
-
-		if err := initializers.DB.Create(&notification).Error; err != nil {
-			return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
-		}
-	}
-
 	if err := initializers.DB.Preload("User").First(&comment).Error; err != nil {
-		// Handle the error if the preload fails
 		return &fiber.Error{Code: 500, Message: "Internal Server Error while loading the user."}
 	}
+
+	go incrementPostCommentsAndSendNotification(parsedPostID, parsedUserID)
 
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Comment Added",
-		"comment": comment, // The comment is updated with ids n everything
+		"comment": comment,
 	})
 }
 
@@ -139,24 +117,12 @@ func AddProjectComment(c *fiber.Ctx) error {
 		Content: reqBody.Content,
 	}
 
-	notification := models.Notification{
-		SenderID: parsedUserID,
-	}
-
 	parsedProjectID, err := uuid.Parse(projectID)
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid ID."}
 	}
 
-	var project models.Project
-	if err := initializers.DB.First(&project, "id=?", parsedProjectID).Error; err != nil {
-		return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
-	}
-
 	comment.ProjectID = parsedProjectID
-	notification.NotificationType = 4
-	notification.UserID = project.UserID
-	notification.PostID = &project.ID
 
 	result := initializers.DB.Create(&comment)
 
@@ -164,21 +130,11 @@ func AddProjectComment(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error while creating the comment."}
 	}
 
-	project.NoComments++
-	result = initializers.DB.Save(&project)
-
-	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while saving the Project."}
-	}
-
-	// if err := initializers.DB.Create(&notification).Error; err != nil {
-	// 	return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
-	// }
-
 	if err := initializers.DB.Preload("User").First(&comment).Error; err != nil {
-		// Handle the error if the preload fails
 		return &fiber.Error{Code: 500, Message: "Internal Server Error while loading the user."}
 	}
+
+	go incrementProjectCommentsAndSendNotification(parsedProjectID, parsedUserID)
 
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",
@@ -244,21 +200,11 @@ func DeletePostComment(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
-	var post models.Post
-	if err := initializers.DB.First(&post, "id=?", comment.PostID).Error; err != nil {
-		return &fiber.Error{Code: 400, Message: "Database Error."}
-	}
-
 	if err := initializers.DB.Delete(&comment).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
-	post.NoComments--
-	result := initializers.DB.Save(&post)
-
-	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while saving the post."}
-	}
+	go decrementPostComments(comment.PostID)
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",
@@ -283,21 +229,11 @@ func DeleteProjectComment(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
-	var project models.Project
-	if err := initializers.DB.First(&project, "id=?", comment.ProjectID).Error; err != nil {
-		return &fiber.Error{Code: 400, Message: "Database Error."}
-	}
-
 	if err := initializers.DB.Delete(&comment).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
-	project.NoComments--
-	result := initializers.DB.Save(&project)
-
-	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while saving the project."}
-	}
+	go decrementProjectComments(comment.ProjectID)
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",
@@ -343,4 +279,86 @@ func GetMyLikedProjectsComments(c *fiber.Ctx) error {
 		"message":  "",
 		"comments": projectCommentIDs,
 	})
+}
+
+func incrementPostCommentsAndSendNotification(postID uuid.UUID, loggedInUserID uuid.UUID) {
+	var post models.Post
+	if err := initializers.DB.First(&post, "id=?", postID).Error; err != nil {
+		log.Println("No Post of this ID found.")
+	} else {
+		post.NoComments++
+		result := initializers.DB.Save(&post)
+
+		if result.Error != nil {
+			log.Println("Internal Server Error while saving the post.")
+		}
+
+		if loggedInUserID != post.UserID {
+			notification := models.Notification{
+				SenderID:         loggedInUserID,
+				NotificationType: 2,
+				UserID:           post.UserID,
+				PostID:           &post.ID,
+			}
+
+			if err := initializers.DB.Create(&notification).Error; err != nil {
+				log.Println("Database Error while creating notification.")
+			}
+		}
+	}
+}
+
+func incrementProjectCommentsAndSendNotification(projectID uuid.UUID, loggedInUserID uuid.UUID) {
+	var project models.Project
+	if err := initializers.DB.First(&project, "id=?", projectID).Error; err != nil {
+		log.Println("No Project of this ID found.")
+	} else {
+		project.NoComments++
+		result := initializers.DB.Save(&project)
+
+		if result.Error != nil {
+			log.Println("Internal Server Error while saving the project.")
+		}
+
+		if loggedInUserID != project.UserID {
+			notification := models.Notification{
+				SenderID:         loggedInUserID,
+				NotificationType: 4,
+				UserID:           project.UserID,
+				ProjectID:        &project.ID,
+			}
+
+			if err := initializers.DB.Create(&notification).Error; err != nil {
+				log.Println("Database Error while creating notification.")
+			}
+		}
+	}
+}
+
+func decrementPostComments(postID uuid.UUID) {
+	var post models.Post
+	if err := initializers.DB.First(&post, "id=?", postID).Error; err != nil {
+		log.Println("No Post of this ID found.")
+	} else {
+		post.NoComments--
+		result := initializers.DB.Save(&post)
+
+		if result.Error != nil {
+			log.Println("Internal Server Error while saving the post.")
+		}
+	}
+}
+
+func decrementProjectComments(projectID uuid.UUID) {
+	var project models.Project
+	if err := initializers.DB.First(&project, "id=?", projectID).Error; err != nil {
+		log.Println("No Project of this ID found.")
+	} else {
+		project.NoComments--
+		result := initializers.DB.Save(&project)
+
+		if result.Error != nil {
+			log.Println("Internal Server Error while saving the project.")
+		}
+	}
 }

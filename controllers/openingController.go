@@ -25,7 +25,6 @@ func GetOpening(c *fiber.Ctx) error {
 		}
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
-	//! Update no of applications on applications
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
@@ -54,7 +53,7 @@ func GetAllOpeningsOfProject(c *fiber.Ctx) error {
 	})
 }
 
-func AddOpening(c *fiber.Ctx) error {
+func AddOpening(c *fiber.Ctx) error { //! Only Project Creator can perform this action
 	projectID := c.Params("projectID")
 	userID := c.GetRespHeader("loggedInUserID")
 
@@ -98,7 +97,7 @@ func AddOpening(c *fiber.Ctx) error {
 	})
 }
 
-func EditOpening(c *fiber.Ctx) error {
+func EditOpening(c *fiber.Ctx) error { //! Only Project Creator can perform this action
 	openingID := c.Params("openingID")
 
 	parsedOpeningID, err := uuid.Parse(openingID)
@@ -145,7 +144,7 @@ func EditOpening(c *fiber.Ctx) error {
 	})
 }
 
-func DeleteOpening(c *fiber.Ctx) error {
+func DeleteOpening(c *fiber.Ctx) error { //! Only Project Creator can perform this action
 	openingID := c.Params("openingID")
 
 	parsedOpeningID, err := uuid.Parse(openingID)

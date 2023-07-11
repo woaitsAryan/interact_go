@@ -135,8 +135,9 @@ func AddPost(c *fiber.Ctx) error {
 	})
 }
 
-func UpdatePost(c *fiber.Ctx) error { //!gives db error instead of invalid ID
+func UpdatePost(c *fiber.Ctx) error {
 	postID := c.Params("postID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	parsedPostID, err := uuid.Parse(postID)
 	if err != nil {
@@ -144,7 +145,7 @@ func UpdatePost(c *fiber.Ctx) error { //!gives db error instead of invalid ID
 	}
 
 	var post models.Post
-	if err := initializers.DB.Preload("User").First(&post, "id = ?", parsedPostID).Error; err != nil {
+	if err := initializers.DB.Preload("User").First(&post, "id = ? and user_id=?", parsedPostID, loggedInUserID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Post of this ID found."}
 		}
@@ -178,6 +179,7 @@ func UpdatePost(c *fiber.Ctx) error { //!gives db error instead of invalid ID
 
 func DeletePost(c *fiber.Ctx) error {
 	postID := c.Params("postID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	parsedPostID, err := uuid.Parse(postID)
 	if err != nil {
@@ -185,7 +187,7 @@ func DeletePost(c *fiber.Ctx) error {
 	}
 
 	var post models.Post
-	if err := initializers.DB.Preload("User").First(&post, "id = ?", parsedPostID).Error; err != nil {
+	if err := initializers.DB.Preload("User").First(&post, "id = ? AND user_id=?", parsedPostID, loggedInUserID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Post of this ID found."}
 		}

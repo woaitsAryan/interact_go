@@ -38,7 +38,7 @@ func AddProjectBookmark(c *fiber.Ctx) error {
 }
 
 func EditProjectBookmark(c *fiber.Ctx) error {
-
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	bookmarkID := c.Params("bookmarkID")
 	parsedBookmarkID, err := uuid.Parse(bookmarkID)
 	if err != nil {
@@ -46,7 +46,7 @@ func EditProjectBookmark(c *fiber.Ctx) error {
 	}
 
 	var bookmark models.ProjectBookmark
-	if err := initializers.DB.First(&bookmark, "id = ?", parsedBookmarkID).Error; err != nil {
+	if err := initializers.DB.First(&bookmark, "id = ? AND user_id=?", parsedBookmarkID, loggedInUserID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Bookmark of this ID found."}
 		}
@@ -77,7 +77,7 @@ func EditProjectBookmark(c *fiber.Ctx) error {
 }
 
 func DeleteProjectBookmark(c *fiber.Ctx) error {
-
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	bookmarkID := c.Params("bookmarkID")
 	parsedBookmarkID, err := uuid.Parse(bookmarkID)
 	if err != nil {
@@ -85,7 +85,7 @@ func DeleteProjectBookmark(c *fiber.Ctx) error {
 	}
 
 	var bookmark models.ProjectBookmark
-	if err := initializers.DB.First(&bookmark, "id = ?", parsedBookmarkID).Error; err != nil {
+	if err := initializers.DB.First(&bookmark, "id = ? AND user_id=?", parsedBookmarkID, loggedInUserID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Bookmark of this ID found."}
 		}
@@ -111,14 +111,6 @@ func AddProjectBookmarkItem(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Invalid bookmark ID."}
 	}
 
-	var bookmark models.ProjectBookmark
-	if err := initializers.DB.First(&bookmark, "id = ?", parsedBookmarkID).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return &fiber.Error{Code: 400, Message: "No Bookmark of this ID found."}
-		}
-		return &fiber.Error{Code: 500, Message: "Database Error."}
-	}
-
 	var reqBody struct {
 		ProjectID string `json:"projectID"`
 	}
@@ -130,14 +122,6 @@ func AddProjectBookmarkItem(c *fiber.Ctx) error {
 		parsedProjectID, err := uuid.Parse(reqBody.ProjectID)
 		if err != nil {
 			return &fiber.Error{Code: 500, Message: "Invalid Project ID."}
-		}
-
-		var project models.Project
-		if err := initializers.DB.First(&project, "id = ?", parsedProjectID).Error; err != nil {
-			if err == gorm.ErrRecordNotFound {
-				return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
-			}
-			return &fiber.Error{Code: 500, Message: "Database Error."}
 		}
 
 		item := models.ProjectBookmarkItem{

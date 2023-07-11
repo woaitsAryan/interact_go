@@ -32,17 +32,6 @@ func GetViews(c *fiber.Ctx) error {
 	})
 }
 
-func GetAllUsers(c *fiber.Ctx) error {
-	var users []models.User
-	initializers.DB.Find(&users)
-
-	return c.Status(200).JSON(fiber.Map{
-		"status":  "success",
-		"message": "",
-		"users":   users,
-	})
-}
-
 func GetMe(c *fiber.Ctx) error {
 	userID := c.GetRespHeader("loggedInUserID")
 
