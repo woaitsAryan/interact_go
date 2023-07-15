@@ -13,9 +13,7 @@ import (
 func init() {
 	initializers.LoadEnv()
 	initializers.ConnectToDB()
-	// initializers.ConnectToCache()
-	// scripts.SeedDummyData()
-	// initializers.AutoMigrate()
+	initializers.AutoMigrate()
 }
 
 func main() {
