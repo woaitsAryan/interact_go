@@ -35,7 +35,7 @@ func GetApplication(c *fiber.Ctx) error { //! Only user and project applied memb
 	})
 }
 
-func GetAllApplicationsOfOpening(c *fiber.Ctx) error { //! Only project members can get
+func GetAllApplicationsOfOpening(c *fiber.Ctx) error { //! Only project members can get, Save a memberships in redux for frontend security
 	openingID := c.Params("openingID")
 
 	parsedOpeningID, err := uuid.Parse(openingID)

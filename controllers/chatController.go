@@ -182,7 +182,7 @@ func AddChat(c *fiber.Ctx) error {
 	})
 }
 
-func AddGroupChat(c *fiber.Ctx) error { //! ADD VALIDATORS
+func AddGroupChat(c *fiber.Ctx) error {
 	var reqBody struct {
 		Title       string   `json:"title"`
 		Description string   `json:"description"`

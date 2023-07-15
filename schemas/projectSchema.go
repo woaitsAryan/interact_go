@@ -1,7 +1,7 @@
 package schemas
 
 type ProjectCreateSchema struct {
-	Title       string   `json:"title" validate:"required,max=20"` //! want alphanum with space
+	Title       string   `json:"title" validate:"required,max=20"`
 	Tagline     string   `json:"tagline" validate:"required"`
 	Description string   `json:"description" validate:"required,max=500"`
 	Tags        []string `json:"tags" validate:"dive,alpha"`

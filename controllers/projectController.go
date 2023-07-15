@@ -59,8 +59,14 @@ func GetProject(c *fiber.Ctx) error {
 
 func GetWorkSpaceProject(c *fiber.Ctx) error { //! Only project members can access
 	projectID := c.Params("projectID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	parsedProjectID, err := uuid.Parse(projectID)
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid ID"}
+	}
+
+	parsedLoggedInUserID, err := uuid.Parse(loggedInUserID)
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
 	}
@@ -76,6 +82,16 @@ func GetWorkSpaceProject(c *fiber.Ctx) error { //! Only project members can acce
 	var memberships []models.Membership
 	if err := initializers.DB.Preload("User").Find(&memberships, "project_id = ?", parsedProjectID).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
+
+	var membershipCheck bool
+	for _, membership := range memberships {
+		if (membership.UserID) == parsedLoggedInUserID {
+			membershipCheck = true
+		}
+	}
+	if !membershipCheck && project.UserID != parsedLoggedInUserID {
+		return &fiber.Error{Code: 403, Message: "Cannot perform this action."}
 	}
 
 	var invitations []models.ProjectInvitation

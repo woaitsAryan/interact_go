@@ -21,10 +21,14 @@ func GetMessages(c *fiber.Ctx) error {
 		Preload("User").
 		Preload("Post").
 		Preload("Project").
-		Where("chat_id = ? AND (chat.creating_user_id = ? OR chat.accepting_user_id = ?)", chatID, loggedInUserID, loggedInUserID).
+		Where("chat_id = ?", chatID).
 		Order("created_at DESC").
 		Find(&messages).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Failed to get the Messages."}
+	}
+
+	if messages[0].Chat.AcceptingUserID.String() != loggedInUserID && messages[0].Chat.CreatingUserID.String() != loggedInUserID {
+		return &fiber.Error{Code: 403, Message: "Cannot perform this action."}
 	}
 
 	return c.Status(200).JSON(fiber.Map{

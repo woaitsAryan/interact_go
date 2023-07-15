@@ -99,8 +99,14 @@ func AddOpening(c *fiber.Ctx) error { //! Only Project Creator can perform this 
 
 func EditOpening(c *fiber.Ctx) error { //! Only Project Creator can perform this action
 	openingID := c.Params("openingID")
+	userID := c.GetRespHeader("loggedInUserID")
 
 	parsedOpeningID, err := uuid.Parse(openingID)
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid ID"}
+	}
+
+	parsedUserID, err := uuid.Parse(userID)
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
 	}
@@ -115,7 +121,7 @@ func EditOpening(c *fiber.Ctx) error { //! Only Project Creator can perform this
 	}
 
 	var opening models.Opening
-	if err := initializers.DB.First(&opening, "id = ?", parsedOpeningID).Error; err != nil {
+	if err := initializers.DB.First(&opening, "id = ? AND user_id=?", parsedOpeningID, parsedUserID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Opening of this ID found."}
 		}
@@ -146,14 +152,20 @@ func EditOpening(c *fiber.Ctx) error { //! Only Project Creator can perform this
 
 func DeleteOpening(c *fiber.Ctx) error { //! Only Project Creator can perform this action
 	openingID := c.Params("openingID")
+	userID := c.GetRespHeader("loggedInUserID")
 
 	parsedOpeningID, err := uuid.Parse(openingID)
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
 	}
 
+	parsedUserID, err := uuid.Parse(userID)
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid ID"}
+	}
+
 	var opening models.Opening
-	if err := initializers.DB.First(&opening, "id = ?", parsedOpeningID).Error; err != nil {
+	if err := initializers.DB.First(&opening, "id = ? AND user_id=?", parsedOpeningID, parsedUserID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Opening of this ID found."}
 		}

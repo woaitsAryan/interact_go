@@ -21,13 +21,14 @@ func GetProfileViews(userID uuid.UUID) ([]ViewResponse, int, error) {
 
 	// Initialize the map with all past 7 dates and count as 0
 	for i := 6; i >= 0; i-- {
-		date := time.Now().AddDate(0, 0, -i).Truncate(24 * time.Hour)
+		date := time.Now().AddDate(0, 0, -i).UTC().Truncate(24 * time.Hour)
 		viewsMap[date] = 0
 	}
 
-	// Retrieve the profile views from the database
+	// Retrieve the profile views from the database for the past 7 days
+	sevenDaysAgo := time.Now().AddDate(0, 0, -6).UTC().Truncate(24 * time.Hour) // Get the date 7 days ago
 	var profileViews []models.ProfileView
-	if err := initializers.DB.Where("user_id = ? AND date >= ?", userID, time.Now().AddDate(0, 0, -7).Format("2006-01-02")).Find(&profileViews).Error; err != nil {
+	if err := initializers.DB.Where("user_id = ? AND date >= ?", userID, sevenDaysAgo).Find(&profileViews).Error; err != nil {
 		return nil, 0, &fiber.Error{Code: 500, Message: "Failed to get profile views."}
 	}
 
@@ -40,12 +41,12 @@ func GetProfileViews(userID uuid.UUID) ([]ViewResponse, int, error) {
 	// Convert the map entries to ViewResponse objects
 	var response []ViewResponse
 	var totalViews int
-	for date, count := range viewsMap {
+	for date := range viewsMap {
 		response = append(response, ViewResponse{
 			Date:  date,
-			Count: count,
+			Count: viewsMap[date],
 		})
-		totalViews += count
+		totalViews += viewsMap[date]
 	}
 
 	sort.Slice(response, func(i, j int) bool {
