@@ -238,7 +238,7 @@ func AddProject(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error while creating project"}
 	}
 
-	return c.Status(200).JSON(fiber.Map{
+	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Project Added",
 		"project": newProject,
