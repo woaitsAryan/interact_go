@@ -12,6 +12,8 @@ services:
       - redis
     env_file:
       - .env
+    volumes:
+      - pics:/app/public/
 
   postgres:
     image: postgres
@@ -41,4 +43,7 @@ volumes:
     driver: local
   redis:
     name: redis-db
+    driver: local
+  pics:
+    name: storage-db
     driver: local

@@ -27,8 +27,10 @@ func GetMessages(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Failed to get the Messages."}
 	}
 
-	if messages[0].Chat.AcceptingUserID.String() != loggedInUserID && messages[0].Chat.CreatingUserID.String() != loggedInUserID {
-		return &fiber.Error{Code: 403, Message: "Cannot perform this action."}
+	if len(messages) > 0 {
+		if messages[0].Chat.AcceptingUserID.String() != loggedInUserID && messages[0].Chat.CreatingUserID.String() != loggedInUserID {
+			return &fiber.Error{Code: 403, Message: "Cannot perform this action."}
+		}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
