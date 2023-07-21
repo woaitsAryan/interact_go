@@ -34,7 +34,8 @@ func SaveMultipleFiles(c *fiber.Ctx, fieldName string, path string, resize bool,
 			}
 			savedImages = append(savedImages, picName)
 		} else {
-			savedImages = append(savedImages, filePath)
+			picName := c.GetRespHeader("loggedInUserID") + "-" + file.Filename
+			savedImages = append(savedImages, picName)
 		}
 	}
 

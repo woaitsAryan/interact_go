@@ -265,7 +265,7 @@ func UpdateProject(c *fiber.Ctx) error {
 	var reqBody schemas.ProjectUpdateSchema
 	c.BodyParser(&reqBody)
 
-	picName, err := utils.SaveFile(c, "coverPic", "project/coverPics", true, 900, 400)
+	picName, err := utils.SaveFile(c, "coverPic", "project/coverPics", false, 900, 400)
 	if err != nil {
 		return err
 	}

@@ -95,13 +95,13 @@ func UpdateMe(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid Request Body."}
 	}
 
-	picName, err := utils.SaveFile(c, "profilePic", "user/profilePics", true, 500, 500)
+	picName, err := utils.SaveFile(c, "profilePic", "user/profilePics", false, 500, 500)
 	if err != nil {
 		return err
 	}
 	reqBody.ProfilePic = picName
 
-	coverName, err := utils.SaveFile(c, "coverPic", "user/coverPics", true, 900, 400)
+	coverName, err := utils.SaveFile(c, "coverPic", "user/coverPics", false, 900, 400)
 	if err != nil {
 		return err
 	}
@@ -178,7 +178,7 @@ func UpdatePassword(c *fiber.Ctx) error {
 	initializers.DB.First(&user, "id = ?", loggedInUserID)
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(reqBody.Password)); err != nil {
-		return &fiber.Error{Code: 400, Message: "Incorret Password."}
+		return &fiber.Error{Code: 400, Message: "Incorrect Password."}
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(reqBody.NewPassword), 10)
