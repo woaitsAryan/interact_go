@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"log"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -19,7 +21,11 @@ func SaveMultipleFiles(c *fiber.Ctx, fieldName string, path string, resize bool,
 	for _, file := range files {
 
 		filePath := "public/" + path + "/" + c.GetRespHeader("loggedInUserID") + "-" + file.Filename
-		c.SaveFile(file, filePath)
+
+		if err := c.SaveFile(file, filePath); err != nil {
+			log.Println("Error while saving the file:", err)
+			return nil, err
+		}
 
 		if resize {
 			picName, err := ResizeImage(filePath, d1, d2)

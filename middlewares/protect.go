@@ -36,7 +36,7 @@ func verifyToken(tokenString string, user *models.User) error {
 		// }
 		// return userID, nil
 
-		// initializers.DB.First(user, "id = ?", claims["sub"])
+		initializers.DB.First(user, "id = ?", claims["sub"])
 
 		if user.ID == uuid.Nil {
 			return &fiber.Error{Code: 401, Message: "User of this token no longer exists"}
