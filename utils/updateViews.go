@@ -26,7 +26,7 @@ func UpdateProfileViews(user *models.User) {
 	}
 }
 
-func UpdateProjectViews(project *models.Project) {
+func UpdateProjectViews(project *models.Project) { //! Creator and Member Check
 	today := time.Now().UTC().Truncate(24 * time.Hour)
 	var projectView models.ProjectView
 	initializers.DB.Where("project_id = ? AND date = ?", project.ID, today).First(&projectView)

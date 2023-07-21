@@ -69,7 +69,7 @@ func AddOpening(c *fiber.Ctx) error { //! Only Project Creator can perform this 
 
 	var reqBody schemas.OpeningCreateSchema
 	if err := c.BodyParser(&reqBody); err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
+		return &fiber.Error{Code: 400, Message: err.Error()}
 	}
 
 	if err := helpers.Validate[schemas.OpeningCreateSchema](reqBody); err != nil {

@@ -18,6 +18,7 @@ import (
 *7 - You got rejected for the opening
 *8 - You were removed from the project
 */
+//! Add a chat request notification
 
 type Notification struct { //! Add constraints for project delete etc
 	ID               uuid.UUID   `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`

@@ -194,8 +194,6 @@ func UpdatePassword(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Database Error."}
 	}
 
-	return c.Status(200).JSON(fiber.Map{
-		"status":  "success",
-		"message": "Password updated successfully",
-	})
+	return createSendToken(c, user, 200, "Password updated successfully")
+
 }
