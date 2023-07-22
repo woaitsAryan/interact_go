@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"log"
+
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
@@ -192,6 +194,13 @@ func DeletePost(c *fiber.Ctx) error {
 			return &fiber.Error{Code: 400, Message: "No Post of this ID found."}
 		}
 		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
+
+	for _, image := range post.Images {
+		err := utils.DeleteFile("post", image)
+		if err != nil {
+			log.Printf("Error while deleting post pic: %e", err)
+		}
 	}
 
 	if err := initializers.DB.Delete(&post).Error; err != nil {

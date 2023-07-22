@@ -274,7 +274,9 @@ func UpdateProject(c *fiber.Ctx) error {
 
 	if reqBody.CoverPic != "" {
 		err := utils.DeleteFile("project/coverPics", project.CoverPic)
-		log.Printf("Error while deleting project cover pic: %e", err)
+		if err != nil {
+			log.Printf("Error while deleting project cover pic: %e", err)
+		}
 	}
 
 	projectValue := reflect.ValueOf(&project).Elem()
@@ -320,6 +322,11 @@ func DeleteProject(c *fiber.Ctx) error {
 			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
 		}
 		return &fiber.Error{Code: 500, Message: "Database Error."}
+	}
+
+	err = utils.DeleteFile("project/coverPics", project.CoverPic)
+	if err != nil {
+		log.Printf("Error while deleting project cover pic: %e", err)
 	}
 
 	if err := initializers.DB.Delete(&project).Error; err != nil {

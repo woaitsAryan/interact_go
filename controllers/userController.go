@@ -110,11 +110,15 @@ func UpdateMe(c *fiber.Ctx) error {
 
 	if reqBody.ProfilePic != "" {
 		err := utils.DeleteFile("user/profilePics", user.ProfilePic)
-		log.Printf("Error while deleting user profile pic: %e", err)
+		if err != nil {
+			log.Printf("Error while deleting user profile pic: %e", err)
+		}
 	}
 	if reqBody.CoverPic != "" {
 		err := utils.DeleteFile("user/coverPics", user.CoverPic)
-		log.Printf("Error while deleting user cover pic: %e", err)
+		if err != nil {
+			log.Printf("Error while deleting user cover pic: %e", err)
+		}
 	}
 
 	updateUserValue := reflect.ValueOf(&reqBody).Elem()
