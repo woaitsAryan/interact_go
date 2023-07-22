@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"log"
 	"reflect"
 	"time"
 
@@ -95,17 +96,26 @@ func UpdateMe(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid Request Body."}
 	}
 
-	picName, err := utils.SaveFile(c, "profilePic", "user/profilePics", false, 500, 500)
+	picName, err := utils.SaveFile(c, "profilePic", "user/profilePics", true, 500, 500)
 	if err != nil {
 		return err
 	}
 	reqBody.ProfilePic = picName
 
-	coverName, err := utils.SaveFile(c, "coverPic", "user/coverPics", false, 900, 400)
+	coverName, err := utils.SaveFile(c, "coverPic", "user/coverPics", true, 900, 400)
 	if err != nil {
 		return err
 	}
 	reqBody.CoverPic = coverName
+
+	if reqBody.ProfilePic != "" {
+		err := utils.DeleteFile("user/profilePics", user.ProfilePic)
+		log.Printf("Error while deleting user profile pic: %e", err)
+	}
+	if reqBody.CoverPic != "" {
+		err := utils.DeleteFile("user/coverPics", user.CoverPic)
+		log.Printf("Error while deleting user cover pic: %e", err)
+	}
 
 	updateUserValue := reflect.ValueOf(&reqBody).Elem()
 	userValue := reflect.ValueOf(&user).Elem()

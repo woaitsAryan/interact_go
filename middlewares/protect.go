@@ -29,14 +29,14 @@ func verifyToken(tokenString string, user *models.User) error {
 			return &fiber.Error{Code: 401, Message: "Your token has expired, log in again."}
 		}
 
-		// userID, ok := claims["sub"].(string)
-		// if !ok {
-		// 	// return "", &fiber.Error{Code: 401, Message: "Invalid user ID in token claims."}
-		// 	return &fiber.Error{Code: 401, Message: "Invalid user ID in token claims."}
-		// }
+		userID, ok := claims["sub"].(string)
+		if !ok {
+			// return "", &fiber.Error{Code: 401, Message: "Invalid user ID in token claims."}
+			return &fiber.Error{Code: 401, Message: "Invalid user ID in token claims."}
+		}
 		// return userID, nil
 
-		initializers.DB.First(user, "id = ?", claims["sub"])
+		initializers.DB.First(user, "id = ?", userID)
 
 		if user.ID == uuid.Nil {
 			return &fiber.Error{Code: 401, Message: "User of this token no longer exists"}
@@ -46,9 +46,9 @@ func verifyToken(tokenString string, user *models.User) error {
 			return &fiber.Error{Code: 401, Message: "Token has expired, log in again."}
 		}
 
-		if user.PasswordChangedAt.After(time.Unix(int64(claims["crt"].(float64)), 0)) {
-			return &fiber.Error{Code: 401, Message: "Password was recently changed, log in again."}
-		}
+		// if user.PasswordChangedAt.After(time.Unix(int64(claims["crt"].(float64)), 0)) {
+		// 	return &fiber.Error{Code: 401, Message: "Password was recently changed, log in again."}
+		// }
 
 		return nil
 

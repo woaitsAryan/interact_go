@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"log"
 	"reflect"
 
 	"github.com/Pratham-Mishra04/interact/helpers"
@@ -265,11 +266,16 @@ func UpdateProject(c *fiber.Ctx) error {
 	var reqBody schemas.ProjectUpdateSchema
 	c.BodyParser(&reqBody)
 
-	picName, err := utils.SaveFile(c, "coverPic", "project/coverPics", false, 900, 400)
+	picName, err := utils.SaveFile(c, "coverPic", "project/coverPics", true, 900, 400)
 	if err != nil {
 		return err
 	}
 	reqBody.CoverPic = picName
+
+	if reqBody.CoverPic != "" {
+		err := utils.DeleteFile("project/coverPics", project.CoverPic)
+		log.Printf("Error while deleting project cover pic: %e", err)
+	}
 
 	projectValue := reflect.ValueOf(&project).Elem()
 	reqBodyValue := reflect.ValueOf(reqBody)

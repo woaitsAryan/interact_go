@@ -13,7 +13,7 @@ import (
 func init() {
 	initializers.LoadEnv()
 	initializers.ConnectToDB()
-	initializers.AutoMigrate()
+	// initializers.AutoMigrate()
 }
 
 func main() {
