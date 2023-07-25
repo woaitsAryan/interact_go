@@ -24,7 +24,7 @@ func GetFeed(c *fiber.Ctx) error {
 	paginatedDB := API.Paginator(c)(initializers.DB)
 
 	var posts []models.Post
-	if err := paginatedDB.Preload("User").Find(&posts).Order("created_at DESC").Error; err != nil {
+	if err := paginatedDB.Preload("User").Where("user_id = ? OR user_id IN (?)", loggedInUserID, followingIDs).Order("created_at DESC").Find(&posts).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Failed to get the User Feed."}
 	}
 

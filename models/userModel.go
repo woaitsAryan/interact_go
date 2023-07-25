@@ -37,7 +37,7 @@ type User struct {
 	PostBookmarks             []PostBookmark    `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"postBookmarks"`
 	ProjectBookmarks          []ProjectBookmark `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"projectBookmarks"`
 	Notifications             []Notification    `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"notifications"`
-	SendNotifications         []Notification    `gorm:"foreignKey:SenderID;constraint:OnDelete:CASCADE" json:"sendNotifications"`
+	SendNotifications         []Notification    `gorm:"foreignKey:SenderID;constraint:OnDelete:CASCADE" json:"-"`
 	LastViewed                []LastViewed      `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"lastViewed"`
 	Followers                 []FollowFollower  `gorm:"foreignKey:FollowerID;constraint:OnDelete:CASCADE" json:"-"`
 	Following                 []FollowFollower  `gorm:"foreignKey:FollowedID;constraint:OnDelete:CASCADE" json:"-"`

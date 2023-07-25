@@ -13,11 +13,12 @@ import (
 func init() {
 	initializers.LoadEnv()
 	initializers.ConnectToDB()
+	initializers.AddLogger()
 	// initializers.AutoMigrate()
 }
 
 func main() {
-
+	defer initializers.LoggerCleanUp()
 	app := fiber.New(fiber.Config{
 		ErrorHandler: helpers.ErrorHandler,
 		BodyLimit:    10 * 1024 * 1024,

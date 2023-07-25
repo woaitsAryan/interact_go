@@ -20,6 +20,8 @@ import (
 */
 //! Add a chat request notification
 
+// ! Problem in Go Routines
+// ! Add Logger
 type Notification struct { //! Add constraints for project delete etc
 	ID               uuid.UUID   `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	NotificationType int         `json:"notificationType"`

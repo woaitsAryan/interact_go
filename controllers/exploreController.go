@@ -48,7 +48,10 @@ func GetTrendingProjects(c *fiber.Ctx) error {
 
 	searchedDB := API.Search(c, 1)(paginatedDB)
 
-	if err := searchedDB.Order("no_shares DESC").Find(&projects).Error; err != nil {
+	if err := searchedDB.
+		Select("*, (2 * no_likes + no_comments + 5 * no_shares) AS weighted_average").
+		Order("weighted_average DESC").
+		Find(&projects).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Failed to get the Trending Projects."}
 	}
 	return c.Status(200).JSON(fiber.Map{
@@ -130,7 +133,10 @@ func GetTrendingUsers(c *fiber.Ctx) error {
 	searchedDB := API.Search(c, 0)(paginatedDB)
 
 	var users []models.User
-	if err := searchedDB.Order("no_followers DESC").Find(&users).Error; err != nil {
+	if err := searchedDB.
+		Select("*, (2 * no_followers - no_following) AS weighted_average").
+		Order("weighted_average DESC").
+		Find(&users).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Failed to get the Trending Projects."}
 	}
 	return c.Status(200).JSON(fiber.Map{
