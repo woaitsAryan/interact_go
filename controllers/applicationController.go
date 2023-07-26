@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
@@ -25,7 +26,7 @@ func GetApplication(c *fiber.Ctx) error { //! Only user and project applied memb
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Application of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -45,7 +46,7 @@ func GetAllApplicationsOfOpening(c *fiber.Ctx) error { //! Only project members 
 
 	var applications []models.Application
 	if err := initializers.DB.Preload("User").Where("opening_id=?", parsedOpeningID).Find(&applications).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -96,7 +97,7 @@ func AddApplication(c *fiber.Ctx) error {
 	result := initializers.DB.Create(&newApplication)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while creating the application."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	go routines.IncrementOpeningApplicationsAndSendNotification(parsedOpeningID, newApplication.ID, parsedUserID)
@@ -121,13 +122,13 @@ func DeleteApplication(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Application of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	result := initializers.DB.Delete(&application)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while deleting the application."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	parsedOpeningID := application.OpeningID

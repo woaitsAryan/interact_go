@@ -3,6 +3,7 @@ package routines
 import (
 	"log"
 
+	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/google/uuid"
@@ -15,7 +16,7 @@ func IncrementPostLikesAndSendNotification(postID uuid.UUID, loggedInUserID uuid
 		if err == gorm.ErrRecordNotFound {
 			log.Println("No Post of this ID found.")
 		} else {
-			log.Println("Database Error.")
+			log.Println(config.DATABASE_ERROR)
 		}
 	} else {
 		post.NoLikes++
@@ -47,7 +48,7 @@ func DecrementPostLikes(postID uuid.UUID) {
 		if err == gorm.ErrRecordNotFound {
 			log.Println("No Post of this ID found.")
 		} else {
-			log.Println("Database Error.")
+			log.Println(config.DATABASE_ERROR)
 		}
 	} else {
 		post.NoLikes--
@@ -65,7 +66,7 @@ func IncrementProjectLikesAndSendNotification(projectID uuid.UUID, loggedInUserI
 		if err == gorm.ErrRecordNotFound {
 			log.Println("No Project of this ID found.")
 		} else {
-			log.Println("Database Error.")
+			log.Println(config.DATABASE_ERROR)
 		}
 	} else {
 		project.NoLikes++
@@ -97,7 +98,7 @@ func DecrementProjectLikes(projectID uuid.UUID) {
 		if err == gorm.ErrRecordNotFound {
 			log.Println("No Project of this ID found.")
 		} else {
-			log.Println("Database Error.")
+			log.Println(config.DATABASE_ERROR)
 		}
 	} else {
 		project.NoLikes--
@@ -115,7 +116,7 @@ func IncrementPostCommentLikes(commentID uuid.UUID, loggedInUserID uuid.UUID) {
 		if err == gorm.ErrRecordNotFound {
 			log.Println("No Comment of this ID found.")
 		} else {
-			log.Println("Database Error.")
+			log.Println(config.DATABASE_ERROR)
 		}
 	} else {
 		comment.NoLikes++
@@ -133,7 +134,7 @@ func DecrementPostCommentLikes(commentID uuid.UUID) {
 		if err == gorm.ErrRecordNotFound {
 			log.Println("No Comment of this ID found.")
 		} else {
-			log.Println("Database Error.")
+			log.Println(config.DATABASE_ERROR)
 		}
 	} else {
 		comment.NoLikes--
@@ -151,7 +152,7 @@ func IncrementProjectCommentLikes(commentID uuid.UUID, loggedInUserID uuid.UUID)
 		if err == gorm.ErrRecordNotFound {
 			log.Println("No Comment of this ID found.")
 		} else {
-			log.Println("Database Error.")
+			log.Println(config.DATABASE_ERROR)
 		}
 	} else {
 		comment.NoLikes++
@@ -169,7 +170,7 @@ func DecrementProjectCommentLikes(commentID uuid.UUID) {
 		if err == gorm.ErrRecordNotFound {
 			log.Println("No Comment of this ID found.")
 		} else {
-			log.Println("Database Error.")
+			log.Println(config.DATABASE_ERROR)
 		}
 	} else {
 		comment.NoLikes--

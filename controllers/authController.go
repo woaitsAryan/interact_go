@@ -3,6 +3,7 @@ package controllers
 import (
 	"time"
 
+	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/schemas"
@@ -22,7 +23,7 @@ func createSendToken(c *fiber.Ctx, user models.User, statusCode int, message str
 	tokenString, err := token.SignedString([]byte(initializers.CONFIG.JWT_SECRET))
 
 	if err != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error"}
+		return &fiber.Error{Code: 500, Message: config.SERVER_ERROR}
 	}
 
 	//set cookie
@@ -45,7 +46,7 @@ func SignUp(c *fiber.Ctx) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(reqBody.Password), 10)
 
 	if err != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error"}
+		return &fiber.Error{Code: 500, Message: config.SERVER_ERROR}
 	}
 
 	newUser := models.User{
@@ -59,7 +60,7 @@ func SignUp(c *fiber.Ctx) error {
 	result := initializers.DB.Create(&newUser)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while creating user"}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return createSendToken(c, newUser, 201, "Account Created")

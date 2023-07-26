@@ -3,6 +3,7 @@ package middlewares
 import (
 	"errors"
 
+	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/gofiber/fiber/v2"
@@ -19,7 +20,7 @@ func PostUserProtect(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &fiber.Error{Code: 400, Message: "No post of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	if post.UserID.String() != userID {
@@ -38,7 +39,7 @@ func ProjectUserProtect(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &fiber.Error{Code: 400, Message: "No post of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	if project.UserID.String() != userID {

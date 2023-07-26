@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/gofiber/fiber/v2"
@@ -34,7 +35,7 @@ func AddPostBookMarkItem(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Bookmark of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	bookmarkItem := models.PostBookmarkItem{
@@ -45,7 +46,7 @@ func AddPostBookMarkItem(c *fiber.Ctx) error {
 	result := initializers.DB.Create(&bookmarkItem)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while creating the bookmark item."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(201).JSON(fiber.Map{
@@ -81,7 +82,7 @@ func AddProjectBookMarkItem(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Bookmark of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	bookmarkItem := models.ProjectBookmarkItem{
@@ -92,7 +93,7 @@ func AddProjectBookMarkItem(c *fiber.Ctx) error {
 	result := initializers.DB.Create(&bookmarkItem)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while creating the bookmark item."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(201).JSON(fiber.Map{
@@ -119,7 +120,7 @@ func DeletePostBookMarkItem(c *fiber.Ctx) error {
 	result := initializers.DB.Delete(&bookmarkItem)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while deleting the bookmark item."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(204).JSON(fiber.Map{
@@ -145,7 +146,7 @@ func DeleteProjectBookMarkItem(c *fiber.Ctx) error {
 	result := initializers.DB.Delete(&bookmarkItem)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while deleting the bookmark item."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(204).JSON(fiber.Map{

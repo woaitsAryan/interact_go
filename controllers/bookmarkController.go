@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/gofiber/fiber/v2"
@@ -14,13 +15,13 @@ func GetBookMarks(c *fiber.Ctx) error {
 	var postBookmarks []models.PostBookmark
 	err := initializers.DB.Preload("PostItems").Find(&postBookmarks, "user_id=?", parsedUserID).Error
 	if err != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	var projectBookmarks []models.ProjectBookmark
 	err = initializers.DB.Preload("ProjectItems").Find(&projectBookmarks, "user_id=?", parsedUserID).Error
 	if err != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -38,7 +39,7 @@ func GetPopulatedPostBookMarks(c *fiber.Ctx) error {
 	var postBookmarks []models.PostBookmark
 	err := initializers.DB.Preload("PostItems.Post").Preload("PostItems.Post.User").Find(&postBookmarks, "user_id=?", parsedUserID).Error
 	if err != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -55,7 +56,7 @@ func GetPopulatedProjectBookMarks(c *fiber.Ctx) error {
 	var projectBookmarks []models.ProjectBookmark
 	err := initializers.DB.Preload("ProjectItems.Project").Find(&projectBookmarks, "user_id=?", parsedUserID).Error
 	if err != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -84,7 +85,7 @@ func AddPostBookMark(c *fiber.Ctx) error {
 	result := initializers.DB.Create(&bookmark)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while creating the bookmark."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(201).JSON(fiber.Map{
@@ -113,7 +114,7 @@ func AddProjectBookMark(c *fiber.Ctx) error {
 	result := initializers.DB.Create(&bookmark)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while creating the bookmark."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(201).JSON(fiber.Map{
@@ -141,7 +142,7 @@ func DeletePostBookMark(c *fiber.Ctx) error {
 	result := initializers.DB.Delete(&bookmark)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while deleting the bookmark."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(204).JSON(fiber.Map{
@@ -168,7 +169,7 @@ func DeleteProjectBookMark(c *fiber.Ctx) error {
 	result := initializers.DB.Delete(&bookmark)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while deleting the bookmark."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(204).JSON(fiber.Map{

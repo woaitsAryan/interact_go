@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/schemas"
@@ -88,7 +89,7 @@ func UpdateMe(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &fiber.Error{Code: 400, Message: "No user of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	var reqBody schemas.UserUpdateSchema
@@ -137,7 +138,7 @@ func UpdateMe(c *fiber.Ctx) error {
 	}
 
 	if err := initializers.DB.Save(&user).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -155,13 +156,13 @@ func DeleteMe(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &fiber.Error{Code: 400, Message: "No user of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	user.Active = false
 
 	if err := initializers.DB.Save(&user).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(204).JSON(fiber.Map{
@@ -198,14 +199,14 @@ func UpdatePassword(c *fiber.Ctx) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(reqBody.NewPassword), 10)
 
 	if err != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error"}
+		return &fiber.Error{Code: 500, Message: config.SERVER_ERROR}
 	}
 
 	user.Password = string(hash)
 	user.PasswordChangedAt = time.Now()
 
 	if err := initializers.DB.Save(&user).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return createSendToken(c, user, 200, "Password updated successfully")

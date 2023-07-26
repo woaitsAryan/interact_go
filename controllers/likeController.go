@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
@@ -32,17 +33,17 @@ func LikePost(c *fiber.Ctx) error {
 
 			result := initializers.DB.Create(&likeModel)
 			if result.Error != nil {
-				return &fiber.Error{Code: 500, Message: "Internal Server Error while adding the like."}
+				return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 			}
 			go routines.IncrementPostLikesAndSendNotification(parsedPostID, parsedLoggedInUserID)
 
 		} else {
-			return &fiber.Error{Code: 500, Message: "Database Error."}
+			return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 		}
 	} else {
 		result := initializers.DB.Delete(&like)
 		if result.Error != nil {
-			return &fiber.Error{Code: 500, Message: "Internal Server Error while deleting the like."}
+			return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 		}
 		go routines.DecrementPostLikes(parsedPostID)
 
@@ -76,16 +77,16 @@ func LikeProject(c *fiber.Ctx) error {
 			result := initializers.DB.Create(&likeModel)
 
 			if result.Error != nil {
-				return &fiber.Error{Code: 500, Message: "Internal Server Error while adding the like."}
+				return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 			}
 			go routines.IncrementProjectLikesAndSendNotification(parsedProjectID, userID)
 		} else {
-			return &fiber.Error{Code: 500, Message: "Database Error."}
+			return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 		}
 	} else {
 		result := initializers.DB.Delete(&like)
 		if result.Error != nil {
-			return &fiber.Error{Code: 500, Message: "Internal Server Error while deleting the like."}
+			return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 		}
 		go routines.DecrementProjectLikes(parsedProjectID)
 	}
@@ -115,16 +116,16 @@ func LikePostComment(c *fiber.Ctx) error {
 			}
 			result := initializers.DB.Create(&likeModel)
 			if result.Error != nil {
-				return &fiber.Error{Code: 500, Message: "Internal Server Error while adding the like."}
+				return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 			}
 			go routines.IncrementPostCommentLikes(parsedCommentID, userID)
 		} else {
-			return &fiber.Error{Code: 500, Message: "Database Error."}
+			return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 		}
 	} else {
 		result := initializers.DB.Delete(&like)
 		if result.Error != nil {
-			return &fiber.Error{Code: 500, Message: "Internal Server Error while deleting the like."}
+			return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 		}
 		go routines.DecrementPostCommentLikes(parsedCommentID)
 	}
@@ -155,16 +156,16 @@ func LikeProjectComment(c *fiber.Ctx) error {
 			}
 			result := initializers.DB.Create(&likeModel)
 			if result.Error != nil {
-				return &fiber.Error{Code: 500, Message: "Internal Server Error while adding the like."}
+				return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 			}
 			go routines.IncrementProjectCommentLikes(parsedCommentID, userID)
 		} else {
-			return &fiber.Error{Code: 500, Message: "Database Error."}
+			return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 		}
 	} else {
 		result := initializers.DB.Delete(&like)
 		if result.Error != nil {
-			return &fiber.Error{Code: 500, Message: "Internal Server Error while deleting the like."}
+			return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 		}
 		go routines.DecrementProjectCommentLikes(parsedCommentID)
 	}

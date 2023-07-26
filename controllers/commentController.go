@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
@@ -22,7 +23,7 @@ func GetPostComments(c *fiber.Ctx) error {
 
 	var comments []models.PostComment
 	if err := paginatedDB.Preload("User").Where("post_id=?", parsedPostID).Order("created_at DESC").Find(&comments).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -44,7 +45,7 @@ func GetProjectComments(c *fiber.Ctx) error {
 
 	var comments []models.ProjectComment
 	if err := paginatedDB.Preload("User").Where("project_id=?", parsedProjectID).Order("created_at DESC").Find(&comments).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -81,11 +82,11 @@ func AddPostComment(c *fiber.Ctx) error {
 	result := initializers.DB.Create(&comment)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while creating the comment."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	if err := initializers.DB.Preload("User").First(&comment).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while loading the user."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	go routines.IncrementPostCommentsAndSendNotification(parsedPostID, parsedUserID)
@@ -126,11 +127,11 @@ func AddProjectComment(c *fiber.Ctx) error {
 	result := initializers.DB.Create(&comment)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while creating the comment."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	if err := initializers.DB.Preload("User").First(&comment).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while loading the user."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	go routines.IncrementProjectCommentsAndSendNotification(parsedProjectID, parsedUserID)
@@ -155,7 +156,7 @@ func UpdatePostComment(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	var reqBody struct {
@@ -172,7 +173,7 @@ func UpdatePostComment(c *fiber.Ctx) error {
 	comment.Edited = true
 
 	if err := initializers.DB.Save(&comment).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -196,11 +197,11 @@ func DeletePostComment(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	if err := initializers.DB.Delete(&comment).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	go routines.DecrementPostComments(comment.PostID)
@@ -225,11 +226,11 @@ func DeleteProjectComment(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	if err := initializers.DB.Delete(&comment).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	go routines.DecrementProjectComments(comment.ProjectID)
@@ -245,7 +246,7 @@ func GetMyLikedPostsComments(c *fiber.Ctx) error {
 
 	var postCommentLikes []models.UserPostCommentLike
 	if err := initializers.DB.Where("user_id = ?", loggedInUserID).Find(&postCommentLikes).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	var postCommentIDs []string
@@ -265,7 +266,7 @@ func GetMyLikedProjectsComments(c *fiber.Ctx) error {
 
 	var projectCommentLikes []models.UserProjectCommentLike
 	if err := initializers.DB.Where("user_id = ?", loggedInUserID).Find(&projectCommentLikes).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	var projectCommentIDs []string

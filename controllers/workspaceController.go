@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
@@ -14,7 +15,7 @@ func GetMyProjects(c *fiber.Ctx) error {
 
 	var projects []models.Project
 	if err := searchedDB.Where("user_id = ?", loggedInUserID).Find(&projects).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -29,7 +30,7 @@ func GetMyContributingProjects(c *fiber.Ctx) error {
 
 	var memberships []models.Membership
 	if err := initializers.DB.Preload("Project").Select("project_id").Where("user_id = ?", loggedInUserID).Find(&memberships).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	var projects []models.Project
@@ -49,7 +50,7 @@ func GetMyApplications(c *fiber.Ctx) error {
 
 	var applications []models.Application
 	if err := initializers.DB.Preload("Opening").Where("user_id=?", loggedInUserID).Find(&applications).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(200).JSON(fiber.Map{

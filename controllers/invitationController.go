@@ -4,6 +4,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/gofiber/fiber/v2"
@@ -42,7 +43,7 @@ func GetInvitations(c *fiber.Ctx) error {
 
 	var projectInvitations []models.ProjectInvitation
 	if err := initializers.DB.Preload("Project").Where("user_id = ? ", loggedInUserID).Order("created_at DESC").Find(&projectInvitations).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Failed to get the Project Invitations."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	// var combinedInvitations []interface{}
@@ -81,7 +82,7 @@ func AcceptChatInvitation(c *fiber.Ctx) error {
 	result := initializers.DB.Save(&invitation)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while updating the invitation."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -117,13 +118,13 @@ func AcceptProjectInvitation(c *fiber.Ctx) error {
 	result := initializers.DB.Create(&membership)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while creating Membership."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	result = initializers.DB.Save(&invitation)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while updating the invitation."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -148,7 +149,7 @@ func RejectChatInvitation(c *fiber.Ctx) error {
 	result := initializers.DB.Save(&invitation)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while updating the invitation."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -177,7 +178,7 @@ func RejectProjectInvitation(c *fiber.Ctx) error {
 	result := initializers.DB.Save(&invitation)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while updating the invitation."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -200,7 +201,7 @@ func WithdrawChatInvitation(c *fiber.Ctx) error {
 	result := initializers.DB.Delete(&invitation)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while deleting the invitation."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(204).JSON(fiber.Map{
@@ -227,7 +228,7 @@ func WithdrawProjectInvitation(c *fiber.Ctx) error {
 	result := initializers.DB.Delete(&invitation)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while deleting the invitation."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(204).JSON(fiber.Map{

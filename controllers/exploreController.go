@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
@@ -18,7 +19,7 @@ func GetTrendingPosts(c *fiber.Ctx) error {
 		Select("*, (2 * no_likes + no_comments + 5 * no_shares) AS weighted_average").
 		Order("weighted_average DESC").
 		Find(&posts).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Failed to get the Trending Posts."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -34,7 +35,7 @@ func GetTrendingOpenings(c *fiber.Ctx) error {
 	searchedDB := API.Search(c, 3)(paginatedDB)
 
 	if err := searchedDB.Preload("Project").Order("created_at DESC").Find(&openings).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Failed to get the Trending Openings."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 	return c.Status(200).JSON(fiber.Map{
 		"status":   "success",
@@ -52,7 +53,7 @@ func GetTrendingProjects(c *fiber.Ctx) error {
 		Select("*, (2 * no_likes + no_comments + 5 * no_shares) AS weighted_average").
 		Order("weighted_average DESC").
 		Find(&projects).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Failed to get the Trending Projects."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 	return c.Status(200).JSON(fiber.Map{
 		"status":   "success",
@@ -67,7 +68,7 @@ func GetRecommendedProjects(c *fiber.Ctx) error {
 	searchedDB := API.Search(c, 1)(paginatedDB)
 
 	if err := searchedDB.Find(&projects).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Failed to get the Trending Projects."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 	return c.Status(200).JSON(fiber.Map{
 		"status":   "success",
@@ -82,7 +83,7 @@ func GetMostLikedProjects(c *fiber.Ctx) error {
 	searchedDB := API.Search(c, 1)(paginatedDB)
 
 	if err := searchedDB.Order("no_likes DESC").Find(&projects).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Failed to get the Trending Projects."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 	return c.Status(200).JSON(fiber.Map{
 		"status":   "success",
@@ -97,7 +98,7 @@ func GetRecentlyAddedProjects(c *fiber.Ctx) error {
 	searchedDB := API.Search(c, 1)(paginatedDB)
 
 	if err := searchedDB.Order("created_at DESC").Find(&projects).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Failed to get the Trending Projects."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 	return c.Status(200).JSON(fiber.Map{
 		"status":   "success",
@@ -112,7 +113,7 @@ func GetLastViewedProjects(c *fiber.Ctx) error {
 
 	paginatedDB := API.Paginator(c)(initializers.DB)
 	if err := paginatedDB.Order("timestamp DESC").Preload("Project").Where("user_id=?", loggedInUserID).Find(&projectViewed).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Failed to get the Last Viewed Projects."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	var projects []models.Project
@@ -137,7 +138,7 @@ func GetTrendingUsers(c *fiber.Ctx) error {
 		Select("*, (2 * no_followers - no_following) AS weighted_average").
 		Order("weighted_average DESC").
 		Find(&users).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Failed to get the Trending Projects."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 	return c.Status(200).JSON(fiber.Map{
 		"status": "success",
@@ -152,7 +153,7 @@ func GetRecommendedUsers(c *fiber.Ctx) error {
 
 	var users []models.User
 	if err := searchedDB.Order("created_at DESC").Find(&users).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Failed to get the Trending Projects."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 	return c.Status(200).JSON(fiber.Map{
 		"status": "success",

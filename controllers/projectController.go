@@ -4,6 +4,7 @@ import (
 	"log"
 	"reflect"
 
+	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
@@ -27,12 +28,12 @@ func GetProject(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	var memberships []models.Membership
 	if err := initializers.DB.Preload("User").Find(&memberships, "project_id = ?", parsedProjectID).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	go utils.UpdateProjectViews(&project)
@@ -77,12 +78,12 @@ func GetWorkSpaceProject(c *fiber.Ctx) error { //! Only project members can acce
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	var memberships []models.Membership
 	if err := initializers.DB.Preload("User").Find(&memberships, "project_id = ?", parsedProjectID).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	var membershipCheck bool
@@ -97,12 +98,12 @@ func GetWorkSpaceProject(c *fiber.Ctx) error { //! Only project members can acce
 
 	var invitations []models.ProjectInvitation
 	if err := initializers.DB.Preload("User").Find(&invitations, "project_id = ? AND (status = 0 OR status = -1)", parsedProjectID).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	var chats []models.ProjectChat
 	if err := initializers.DB.Find(&chats, "project_id = ? ", parsedProjectID).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	_, count, err := utils.GetProjectViews(parsedProjectID)
@@ -126,7 +127,7 @@ func GetMyLikedProjects(c *fiber.Ctx) error {
 
 	var projectLikes []models.UserProjectLike
 	if err := initializers.DB.Where("user_id = ?", loggedInUserID).Find(&projectLikes).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	var projectIDs []string
@@ -146,7 +147,7 @@ func GetUserProjects(c *fiber.Ctx) error {
 
 	var projects []models.Project
 	if err := initializers.DB.Where("user_id = ? AND is_private = ?", userID, false).Find(&projects).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -161,7 +162,7 @@ func GetUserContributingProjects(c *fiber.Ctx) error {
 
 	var memberships []models.Membership
 	if err := initializers.DB.Preload("Project").Select("project_id").Where("user_id = ?", userID).Find(&memberships).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	var projects []models.Project
@@ -186,7 +187,7 @@ func GetProjectContributors(c *fiber.Ctx) error {
 
 	var memberships []models.Membership
 	if err := initializers.DB.Preload("User").Where("project_id = ?", parsedProjectID).Find(&memberships).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	var users []models.User
@@ -236,7 +237,7 @@ func AddProject(c *fiber.Ctx) error {
 	result := initializers.DB.Create(&newProject)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while creating project"}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(201).JSON(fiber.Map{
@@ -260,7 +261,7 @@ func UpdateProject(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	var reqBody schemas.ProjectUpdateSchema
@@ -297,7 +298,7 @@ func UpdateProject(c *fiber.Ctx) error {
 	}
 
 	if err := initializers.DB.Save(&project).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -321,7 +322,7 @@ func DeleteProject(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	err = utils.DeleteFile("project/coverPics", project.CoverPic)
@@ -330,7 +331,7 @@ func DeleteProject(c *fiber.Ctx) error {
 	}
 
 	if err := initializers.DB.Delete(&project).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(204).JSON(fiber.Map{

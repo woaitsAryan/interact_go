@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
@@ -23,7 +24,7 @@ func AcceptApplication(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Application of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	if application.Opening.UserID.String() != loggedInUserID {
@@ -38,7 +39,7 @@ func AcceptApplication(c *fiber.Ctx) error {
 	result := initializers.DB.Save(&application)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while updating the application."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	go routines.CreateMembershipAndSendNotification(&application)
@@ -63,7 +64,7 @@ func RejectApplication(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Application of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	if application.Opening.UserID.String() != loggedInUserID {
@@ -78,7 +79,7 @@ func RejectApplication(c *fiber.Ctx) error {
 	result := initializers.DB.Save(&application)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while updating the application."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	notification := models.Notification{
@@ -88,7 +89,7 @@ func RejectApplication(c *fiber.Ctx) error {
 	}
 
 	if err := initializers.DB.Create(&notification).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error while creating notification."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -111,7 +112,7 @@ func SetApplicationUnderReview(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Application of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	if application.Opening.UserID.String() != loggedInUserID {
@@ -126,7 +127,7 @@ func SetApplicationUnderReview(c *fiber.Ctx) error {
 	result := initializers.DB.Save(&application)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while updating the application."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(200).JSON(fiber.Map{

@@ -3,6 +3,7 @@ package controllers
 import (
 	"errors"
 
+	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
@@ -34,7 +35,7 @@ func FollowUser(c *fiber.Ctx) error {
 			newFollow.FollowedID = toFollowID
 
 			if err := initializers.DB.Create(&newFollow).Error; err != nil {
-				return &fiber.Error{Code: 500, Message: "Database Error while creating follow."}
+				return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 			}
 
 			go routines.IncrementCountsAndSendNotification(loggedInUserID, toFollowID)
@@ -44,7 +45,7 @@ func FollowUser(c *fiber.Ctx) error {
 				"message": "User followed successfully.",
 			})
 		} else {
-			return &fiber.Error{Code: 500, Message: "Database Error."}
+			return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 		}
 	} else {
 		return &fiber.Error{Code: 400, Message: "You are already following this user."}
@@ -66,11 +67,11 @@ func UnfollowUser(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &fiber.Error{Code: 400, Message: "You do not follow this user."}
 		} else {
-			return &fiber.Error{Code: 500, Message: "Database Error."}
+			return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 		}
 	} else {
 		if err := initializers.DB.Where(&follow).Delete(&follow).Error; err != nil {
-			return &fiber.Error{Code: 500, Message: "Database Error."}
+			return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 		}
 
 		go routines.DecrementCounts(loggedInUserID, toUnFollowID)
@@ -97,11 +98,11 @@ func RemoveFollow(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &fiber.Error{Code: 400, Message: "This user does not follow you."}
 		} else {
-			return &fiber.Error{Code: 500, Message: "Database Error."}
+			return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 		}
 	} else {
 		if err := initializers.DB.Where(&follow).Delete(&follow).Error; err != nil {
-			return &fiber.Error{Code: 500, Message: "Database Error."}
+			return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 		}
 
 		go routines.DecrementCounts(followerToRemoveID, loggedInUserID)
@@ -125,7 +126,7 @@ func GetFollowers(c *fiber.Ctx) error {
 
 	var followers []models.FollowFollower
 	if err := searchDB.Preload("Follower").Select("follower_id").Where("followed_id = ?", userID).Find(&followers).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	var followerUsers []models.User
@@ -152,7 +153,7 @@ func GetFollowing(c *fiber.Ctx) error {
 
 	var following []models.FollowFollower
 	if err := searchDB.Preload("Followed").Where("follower_id = ?", userID).Find(&following).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	var followingUsers []models.User

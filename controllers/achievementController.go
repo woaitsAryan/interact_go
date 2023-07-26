@@ -3,6 +3,7 @@ package controllers
 import (
 	"errors"
 
+	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/schemas"
@@ -31,7 +32,7 @@ func AddAchievement(c *fiber.Ctx) error {
 			err := initializers.DB.Create(&achievementModel).Error
 
 			if err != nil {
-				return &fiber.Error{Code: 500, Message: "Database Error While creating achievement."}
+				return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 			}
 		} else {
 			err := initializers.DB.First(&achievementModel, "id = ?", achievement.ID).Error
@@ -39,12 +40,12 @@ func AddAchievement(c *fiber.Ctx) error {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
 					return &fiber.Error{Code: 400, Message: "Invalid ID."}
 				}
-				return &fiber.Error{Code: 500, Message: "Database Error."}
+				return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 			} else {
 				achievementModel.Skills = achievement.Skills
 				achievementModel.Title = achievement.Title
 				if err := initializers.DB.Save(&achievementModel).Error; err != nil {
-					return &fiber.Error{Code: 500, Message: "Database Error."}
+					return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 				}
 			}
 		}
@@ -66,11 +67,11 @@ func DeleteAchievement(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Achievement of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	if err := initializers.DB.Delete(&achievement).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Database Error."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(204).JSON(fiber.Map{

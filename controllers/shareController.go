@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
@@ -44,7 +45,7 @@ func SharePost(c *fiber.Ctx) error {
 
 		result := initializers.DB.Create(&message)
 		if result.Error != nil {
-			return &fiber.Error{Code: 500, Message: "Internal Server Error while creating the message."}
+			return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 		}
 
 		go routines.IncrementPostShare(parsedPostID)
@@ -95,7 +96,7 @@ func ShareProject(c *fiber.Ctx) error {
 
 		result := initializers.DB.Create(&message)
 		if result.Error != nil {
-			return &fiber.Error{Code: 500, Message: "Internal Server Error while creating the message."}
+			return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 		}
 
 		go routines.IncrementProjectShare(parsedProjectID)
