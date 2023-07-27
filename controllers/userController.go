@@ -9,6 +9,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/schemas"
 	"github.com/Pratham-Mishra04/interact/utils"
 	"github.com/gofiber/fiber/v2"
@@ -72,7 +73,7 @@ func GetUser(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	if user.ID.String() != loggedInUserID {
-		utils.UpdateProfileViews(&user)
+		routines.UpdateProfileViews(&user)
 	}
 
 	return c.Status(200).JSON(fiber.Map{

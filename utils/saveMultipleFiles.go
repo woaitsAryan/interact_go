@@ -1,8 +1,7 @@
 package utils
 
 import (
-	"log"
-
+	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -23,7 +22,7 @@ func SaveMultipleFiles(c *fiber.Ctx, fieldName string, path string, resize bool,
 		filePath := "public/" + path + "/" + c.GetRespHeader("loggedInUserID") + "-" + file.Filename
 
 		if err := c.SaveFile(file, filePath); err != nil {
-			log.Println("Error while saving the file:", err)
+			helpers.LogServerError("Error while saving a file", err, c.Path())
 			return nil, err
 		}
 

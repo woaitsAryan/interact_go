@@ -1,9 +1,9 @@
-package utils
+package routines
 
 import (
-	"log"
 	"time"
 
+	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/google/uuid"
@@ -21,17 +21,17 @@ func UpdateLastViewed(userID uuid.UUID, projectID uuid.UUID) {
 
 			result := initializers.DB.Create(&projectView)
 			if result.Error != nil {
-				log.Print("Database Error whiling creating last viewed.")
+				helpers.LogDatabaseError("Error whiling creating last viewed-UpdateLastViewed", err, "go_routine")
 			}
 		} else {
-			log.Print("Database Error whiling creating last viewed.")
+			helpers.LogDatabaseError("Error whiling fetching last viewed-UpdateLastViewed", err, "go_routine")
 		}
 	} else {
 		projectView.Timestamp = time.Now()
 
 		result := initializers.DB.Save(&projectView)
 		if result.Error != nil {
-			log.Print("Database Error whiling updating last viewed.")
+			helpers.LogDatabaseError("Error whiling updating last viewed-UpdateLastViewed", err, "go_routine")
 		}
 	}
 

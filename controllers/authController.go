@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/Pratham-Mishra04/interact/config"
+	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/schemas"
@@ -23,6 +24,7 @@ func createSendToken(c *fiber.Ctx, user models.User, statusCode int, message str
 	tokenString, err := token.SignedString([]byte(initializers.CONFIG.JWT_SECRET))
 
 	if err != nil {
+		go helpers.LogServerError("Error while decrypting JWT Token.", err, c.Path())
 		return &fiber.Error{Code: 500, Message: config.SERVER_ERROR}
 	}
 
@@ -46,6 +48,7 @@ func SignUp(c *fiber.Ctx) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(reqBody.Password), 10)
 
 	if err != nil {
+		go helpers.LogServerError("Error while hashing Password.", err, c.Path())
 		return &fiber.Error{Code: 500, Message: config.SERVER_ERROR}
 	}
 

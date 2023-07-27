@@ -1,8 +1,7 @@
 package routines
 
 import (
-	"log"
-
+	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/google/uuid"
@@ -11,12 +10,12 @@ import (
 func IncrementPostShare(postID uuid.UUID) {
 	var post models.Post
 	if err := initializers.DB.First(&post, "id=?", postID).Error; err != nil {
-		log.Println("No Post of this ID found.")
+		helpers.LogDatabaseError("No Post of this ID found-IncrementPostShare.", err, "go_routine")
 	} else {
 		post.NoShares++
 		result := initializers.DB.Save(post)
 		if result.Error != nil {
-			log.Println("Database Error while updating Post.")
+			helpers.LogDatabaseError("Error while updating Post-IncrementPostShare", err, "go_routine")
 		}
 	}
 }
@@ -24,12 +23,12 @@ func IncrementPostShare(postID uuid.UUID) {
 func IncrementProjectShare(projectID uuid.UUID) {
 	var project models.Project
 	if err := initializers.DB.First(&project, "id=?", projectID).Error; err != nil {
-		log.Println("No Project of this ID found.")
+		helpers.LogDatabaseError("No Project of this ID found-IncrementProjectShare.", err, "go_routine")
 	} else {
 		project.NoShares++
 		result := initializers.DB.Save(project)
 		if result.Error != nil {
-			log.Println("Database Error while updating Project.")
+			helpers.LogDatabaseError("Error while updating Project-IncrementProjectShare", err, "go_routine")
 		}
 	}
 }

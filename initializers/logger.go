@@ -55,7 +55,7 @@ func newCore(LogFile *os.File, LoggerLevel zapcore.Level) zapcore.Core {
 	fileCore := zapcore.NewCore(
 		zapcore.NewConsoleEncoder(encoderCfg),
 		zapcore.AddSync(LogFile),
-		LoggerLevel, // Minimum log level
+		LoggerLevel,
 	)
 	return fileCore
 }

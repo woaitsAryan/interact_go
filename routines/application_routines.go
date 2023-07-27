@@ -1,8 +1,7 @@
 package routines
 
 import (
-	"log"
-
+	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/google/uuid"
@@ -11,13 +10,13 @@ import (
 func IncrementOpeningApplicationsAndSendNotification(openingID uuid.UUID, applicationID uuid.UUID, userID uuid.UUID) {
 	var opening models.Opening
 	if err := initializers.DB.First(&opening, "id=?", openingID).Error; err != nil {
-		log.Println("No Opening of this ID found.")
+		helpers.LogDatabaseError("No Opening of this ID found-IncrementOpeningApplicationsAndSendNotification.", err, "go_routine")
 	} else {
 		opening.NoOfApplications++
 		result := initializers.DB.Save(&opening)
 
 		if result.Error != nil {
-			log.Println("Internal Server Error while saving the opening.")
+			helpers.LogDatabaseError("Error while updating Opening-IncrementOpeningApplicationsAndSendNotification", err, "go_routine")
 		}
 
 		notification := models.Notification{
@@ -30,7 +29,7 @@ func IncrementOpeningApplicationsAndSendNotification(openingID uuid.UUID, applic
 		}
 
 		if err := initializers.DB.Create(&notification).Error; err != nil {
-			log.Println("Database Error while creating notification.")
+			helpers.LogDatabaseError("Error while creating Notification-IncrementOpeningApplicationsAndSendNotification", err, "go_routine")
 		}
 	}
 
@@ -39,13 +38,13 @@ func IncrementOpeningApplicationsAndSendNotification(openingID uuid.UUID, applic
 func DecrementOpeningApplications(openingID uuid.UUID) {
 	var opening models.Opening
 	if err := initializers.DB.First(&opening, "id=?", openingID).Error; err != nil {
-		log.Println("No Opening of this ID found.")
+		helpers.LogDatabaseError("No Opening of this ID found-DecrementOpeningApplications.", err, "go_routine")
 	} else {
 		opening.NoOfApplications--
 		result := initializers.DB.Save(&opening)
 
 		if result.Error != nil {
-			log.Println("Internal Server Error while saving the opening.")
+			helpers.LogDatabaseError("Error while updating Opening-DecrementOpeningApplications", err, "go_routine")
 		}
 	}
 
@@ -62,7 +61,7 @@ func CreateMembershipAndSendNotification(application *models.Application) {
 	result := initializers.DB.Create(&membership)
 
 	if result.Error != nil {
-		log.Println("Internal Server Error while creating membership.")
+		helpers.LogDatabaseError("Error while creating Membership-CreateMembershipAndSendNotification", result.Error, "go_routine")
 	}
 
 	notification := models.Notification{
@@ -72,6 +71,6 @@ func CreateMembershipAndSendNotification(application *models.Application) {
 	}
 
 	if err := initializers.DB.Create(&notification).Error; err != nil {
-		log.Println("Internal Server Error while creating notification.")
+		helpers.LogDatabaseError("Error while creating Notification-CreateMembershipAndSendNotification", err, "go_routine")
 	}
 }

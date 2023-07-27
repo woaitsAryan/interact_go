@@ -8,6 +8,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/schemas"
 	"github.com/Pratham-Mishra04/interact/utils"
 	"github.com/gofiber/fiber/v2"
@@ -36,13 +37,13 @@ func GetProject(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
-	go utils.UpdateProjectViews(&project)
+	go routines.UpdateProjectViews(&project)
 
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedLoggedInUserID, err := uuid.Parse(loggedInUserID)
 
 	if err == nil {
-		go utils.UpdateLastViewed(parsedLoggedInUserID, project.ID)
+		go routines.UpdateLastViewed(parsedLoggedInUserID, project.ID)
 	}
 
 	_, count, err := utils.GetProjectViews(parsedProjectID)
