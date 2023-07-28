@@ -7,7 +7,7 @@ import (
 )
 
 /*
-!Status Codes:
+Status Codes:
 *0 - User started following you
 *1 - User liked your post
 *2 - User commented on your post
@@ -21,8 +21,7 @@ import (
 //! Add a chat request notification
 
 // ! Problem in Go Routines
-// ! Add Logger
-type Notification struct { //! Add constraints for project delete etc
+type Notification struct {
 	ID               uuid.UUID   `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	NotificationType int         `json:"notificationType"`
 	UserID           uuid.UUID   `gorm:"type:uuid;not null" json:"userID"`

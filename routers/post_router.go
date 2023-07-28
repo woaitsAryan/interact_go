@@ -12,8 +12,8 @@ func PostRouter(app *fiber.App) {
 	postRoutes.Get("/me", controllers.GetMyPosts)
 	postRoutes.Get("/me/likes", controllers.GetMyLikedPosts)
 	postRoutes.Get("/:postID", controllers.GetPost)
-	postRoutes.Patch("/:postID", middlewares.PostUserProtect, controllers.UpdatePost)
-	postRoutes.Delete("/:postID", middlewares.PostUserProtect, controllers.DeletePost)
+	postRoutes.Patch("/:postID", controllers.UpdatePost)
+	postRoutes.Delete("/:postID", controllers.DeletePost)
 
 	postRoutes.Get("/like/:postID", controllers.LikePost)
 

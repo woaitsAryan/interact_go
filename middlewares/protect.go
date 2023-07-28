@@ -120,15 +120,6 @@ func PartialProtect(c *fiber.Ctx) error {
 	return c.Next()
 }
 
-func SelfProtect(c *fiber.Ctx) error {
+// func MembershipProtect(c *fiber.Ctx) error {
 
-	loggedInUserID := c.GetRespHeader("loggedInUserID")
-
-	userID := c.Params("userID")
-
-	if loggedInUserID != userID {
-		return &fiber.Error{Code: 403, Message: "Not Allowed to Perfom this Action."}
-	}
-
-	return c.Next()
-}
+// }

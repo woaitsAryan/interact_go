@@ -71,7 +71,7 @@ func DeleteAchievement(c *fiber.Ctx) error {
 	}
 
 	if err := initializers.DB.Delete(&achievement).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return config.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(204).JSON(fiber.Map{
