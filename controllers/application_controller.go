@@ -86,8 +86,14 @@ func AddApplication(c *fiber.Ctx) error {
 		return err
 	}
 
+	var opening models.Opening
+	if err := initializers.DB.Where("id=?", parsedOpeningID).First(&opening).Error; err == nil {
+		return &fiber.Error{Code: 400, Message: "No Opening of this ID found."}
+	}
+
 	newApplication := models.Application{
 		OpeningID: parsedOpeningID,
+		ProjectID: opening.ProjectID,
 		UserID:    parsedUserID,
 		Content:   reqBody.Content,
 		Resume:    resumePath,

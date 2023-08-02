@@ -37,6 +37,7 @@ type ProjectChatMessage struct {
 	ID            uuid.UUID   `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	ProjectChatID uuid.UUID   `gorm:"type:uuid;not null" json:"projectChatID"`
 	ProjectChat   ProjectChat `gorm:"" json:"projectChat"`
+	ProjectID     uuid.UUID   `gorm:"type:uuid" json:"projectID"`
 	UserID        uuid.UUID   `gorm:"type:uuid;not null" json:"userID"`
 	User          User        `gorm:"" json:"user"`
 	Content       string      `gorm:"type:text;not null" json:"content"`

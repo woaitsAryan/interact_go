@@ -108,11 +108,17 @@ func LikePostComment(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
 	}
 
+	var comment models.PostComment
+	if err := initializers.DB.Where("id=?", parsedCommentID).First(&comment).Error; err == nil {
+		return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
+	}
+
 	var like models.UserPostCommentLike
 	if err := initializers.DB.Where("user_id=? AND post_comment_id=?", userID, parsedCommentID).First(&like).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			likeModel := models.UserPostCommentLike{
-				PostCommentID: parsedCommentID,
+				PostID:        comment.PostID,
+				PostCommentID: comment.ID,
 				UserID:        userID,
 			}
 			result := initializers.DB.Create(&likeModel)
@@ -148,11 +154,17 @@ func LikeProjectComment(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
 	}
 
+	var comment models.ProjectComment
+	if err := initializers.DB.Where("id=?", parsedCommentID).First(&comment).Error; err == nil {
+		return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
+	}
+
 	var like models.UserProjectCommentLike
 	if err := initializers.DB.Where("user_id=? AND project_comment_id=?", userID, parsedCommentID).First(&like).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			likeModel := models.UserProjectCommentLike{
-				ProjectCommentID: parsedCommentID,
+				ProjectID:        comment.ProjectID,
+				ProjectCommentID: comment.ID,
 				UserID:           userID,
 			}
 			result := initializers.DB.Create(&likeModel)

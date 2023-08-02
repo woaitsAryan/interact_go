@@ -131,11 +131,12 @@ func AddProjectChatMessage(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid ID."}
 	}
 
-	// var chat models.ProjectChat
-	// if err := initializers.DB.First(&chat, "id=?", parsedChatID).Error; err != nil {
-	// 	return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
-	// }
+	var chat models.ProjectChat
+	if err := initializers.DB.First(&chat, "id=?", parsedChatID).Error; err != nil {
+		return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
+	}
 	message.ProjectChatID = parsedChatID
+	message.ProjectID = chat.ProjectID
 
 	result := initializers.DB.Create(&message)
 

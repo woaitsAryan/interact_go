@@ -23,6 +23,7 @@ type UserPostCommentLike struct {
 	ID            uuid.UUID   `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	UserID        uuid.UUID   `gorm:"type:uuid;not null" json:"userID"`
 	User          User        `gorm:"" json:"user"`
+	PostID        uuid.UUID   `gorm:"type:uuid;not null" json:"-"`
 	PostCommentID uuid.UUID   `gorm:"type:uuid;not null" json:"commentID"`
 	PostComment   PostComment `gorm:"" json:"comment"`
 	CreatedAt     time.Time   `gorm:"default:current_timestamp" json:"createdAt"`
@@ -45,6 +46,7 @@ type UserProjectCommentLike struct {
 	ID               uuid.UUID      `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	UserID           uuid.UUID      `gorm:"type:uuid;not null" json:"userID"`
 	User             User           `gorm:"" json:"user"`
+	ProjectID        uuid.UUID      `gorm:"type:uuid;not null" json:"-"`
 	ProjectCommentID uuid.UUID      `gorm:"type:uuid;not null" json:"commentID"`
 	ProjectComment   ProjectComment `gorm:"" json:"comment"`
 	CreatedAt        time.Time      `gorm:"default:current_timestamp" json:"createdAt"`

@@ -11,6 +11,7 @@ type Application struct {
 	ID            uuid.UUID      `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	OpeningID     uuid.UUID      `gorm:"type:uuid;not null" json:"openingID"`
 	Opening       Opening        `gorm:"" json:"opening"`
+	ProjectID     uuid.UUID      `gorm:"type:uuid;not null" json:"-"`
 	UserID        uuid.UUID      `gorm:"type:uuid;not null" json:"userID"`
 	User          User           `gorm:"" json:"user"`
 	CreatedAt     time.Time      `gorm:"default:current_timestamp" json:"createdAt"`
