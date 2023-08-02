@@ -8,6 +8,10 @@ import (
 
 func ExploreRouter(app *fiber.App) {
 	exploreRoutes := app.Group("/explore", middlewares.PartialProtect)
+
+	exploreRoutes.Get("/trending_searches", controllers.GetTrendingSearches)
+	exploreRoutes.Post("/search", controllers.AddSearchQuery)
+
 	exploreRoutes.Get("/posts", controllers.GetTrendingPosts)
 
 	exploreRoutes.Get("/openings", controllers.GetTrendingOpenings)

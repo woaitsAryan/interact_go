@@ -1,6 +1,9 @@
 package controllers
 
 import (
+	"strings"
+	"time"
+
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
@@ -8,6 +11,49 @@ import (
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
 )
+
+func GetTrendingSearches(c *fiber.Ctx) error {
+	var trendingSearches []string
+	timeWindow := time.Now().Add(-24 * time.Hour)
+
+	// Count the frequency of each normalized search query within the time window
+	var searchCounts []struct {
+		Query  string
+		Counts int
+	}
+	initializers.DB.Table("search_queries").
+		Select("LOWER(query) as query, COUNT(*) as counts"). // Ensure lowercase comparison
+		Where("timestamp > ?", timeWindow).
+		Group("LOWER(query)"). // Ensure grouping with lowercase
+		Order("counts DESC").
+		Limit(10). // You can adjust the number of trending searches you want to display
+		Scan(&searchCounts)
+
+	// Extract the search queries from the results
+	for _, searchCount := range searchCounts {
+		trendingSearches = append(trendingSearches, searchCount.Query)
+	}
+	return c.Status(200).JSON(fiber.Map{
+		"status":   "success",
+		"searches": trendingSearches,
+	})
+}
+
+func AddSearchQuery(c *fiber.Ctx) error {
+	var reqBody struct {
+		Search string `json:"search"`
+	}
+	if err := c.BodyParser(&reqBody); err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
+	}
+	searchQuery := models.SearchQuery{
+		Query: strings.ToLower(strings.TrimSpace(reqBody.Search)),
+	}
+	initializers.DB.Create(&searchQuery)
+	return c.Status(201).JSON(fiber.Map{
+		"status": "success",
+	})
+}
 
 func GetTrendingPosts(c *fiber.Ctx) error {
 	paginatedDB := API.Paginator(c)(initializers.DB)

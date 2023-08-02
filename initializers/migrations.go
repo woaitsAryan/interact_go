@@ -36,5 +36,6 @@ func AutoMigrate() {
 		&models.UserPostCommentLike{},
 		&models.UserProjectCommentLike{},
 		&models.LastViewed{},
+		&models.SearchQuery{},
 	)
 }
