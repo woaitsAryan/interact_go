@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"github.com/Pratham-Mishra04/interact/config"
+	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/gofiber/fiber/v2"
@@ -29,7 +30,7 @@ func AddProjectBookmark(c *fiber.Ctx) error {
 	result := initializers.DB.Create(&bookmark)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -51,7 +52,7 @@ func EditProjectBookmark(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Bookmark of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	var reqBody struct {
@@ -68,7 +69,7 @@ func EditProjectBookmark(c *fiber.Ctx) error {
 	result := initializers.DB.Save(&bookmark)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -90,13 +91,13 @@ func DeleteProjectBookmark(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Bookmark of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	result := initializers.DB.Delete(&bookmark)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -133,7 +134,7 @@ func AddProjectBookmarkItem(c *fiber.Ctx) error {
 		result := initializers.DB.Create(&item)
 
 		if result.Error != nil {
-			return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 		}
 		return c.Status(200).JSON(fiber.Map{
 			"status":  "success",
@@ -155,13 +156,13 @@ func RemoveProjectBookmarkItem(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Bookmark Item of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	result := initializers.DB.Delete(&bookmarkItem)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(204).JSON(fiber.Map{

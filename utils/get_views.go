@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/Pratham-Mishra04/interact/config"
+	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
-	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
 
@@ -30,7 +30,7 @@ func GetProfileViews(userID uuid.UUID) ([]ViewResponse, int, error) {
 	sevenDaysAgo := time.Now().AddDate(0, 0, -6).UTC().Truncate(24 * time.Hour) // Get the date 7 days ago
 	var profileViews []models.ProfileView
 	if err := initializers.DB.Where("user_id = ? AND date >= ?", userID, sevenDaysAgo).Find(&profileViews).Error; err != nil {
-		return nil, 0, &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return nil, 0, helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	// Update the count in the map based on the retrieved profile views
@@ -61,7 +61,7 @@ func GetProjectViews(projectID uuid.UUID) ([]ViewResponse, int, error) {
 
 	var projectViews []models.ProjectView
 	if err := initializers.DB.Where("project_id = ? AND date >= ?", projectID, time.Now().AddDate(0, 0, -30).Format("2006-01-02")).Find(&projectViews).Error; err != nil {
-		return nil, 0, &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return nil, 0, helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	var totalViews int

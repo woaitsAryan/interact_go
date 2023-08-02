@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"github.com/Pratham-Mishra04/interact/config"
+	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
@@ -33,17 +34,17 @@ func LikePost(c *fiber.Ctx) error {
 
 			result := initializers.DB.Create(&likeModel)
 			if result.Error != nil {
-				return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 			}
 			go routines.IncrementPostLikesAndSendNotification(parsedPostID, parsedLoggedInUserID)
 
 		} else {
-			return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 		}
 	} else {
 		result := initializers.DB.Delete(&like)
 		if result.Error != nil {
-			return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 		}
 		go routines.DecrementPostLikes(parsedPostID)
 
@@ -77,16 +78,16 @@ func LikeProject(c *fiber.Ctx) error {
 			result := initializers.DB.Create(&likeModel)
 
 			if result.Error != nil {
-				return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 			}
 			go routines.IncrementProjectLikesAndSendNotification(parsedProjectID, userID)
 		} else {
-			return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 		}
 	} else {
 		result := initializers.DB.Delete(&like)
 		if result.Error != nil {
-			return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 		}
 		go routines.DecrementProjectLikes(parsedProjectID)
 	}
@@ -116,16 +117,16 @@ func LikePostComment(c *fiber.Ctx) error {
 			}
 			result := initializers.DB.Create(&likeModel)
 			if result.Error != nil {
-				return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 			}
 			go routines.IncrementPostCommentLikes(parsedCommentID, userID)
 		} else {
-			return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 		}
 	} else {
 		result := initializers.DB.Delete(&like)
 		if result.Error != nil {
-			return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 		}
 		go routines.DecrementPostCommentLikes(parsedCommentID)
 	}
@@ -156,16 +157,16 @@ func LikeProjectComment(c *fiber.Ctx) error {
 			}
 			result := initializers.DB.Create(&likeModel)
 			if result.Error != nil {
-				return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 			}
 			go routines.IncrementProjectCommentLikes(parsedCommentID, userID)
 		} else {
-			return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 		}
 	} else {
 		result := initializers.DB.Delete(&like)
 		if result.Error != nil {
-			return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 		}
 		go routines.DecrementProjectCommentLikes(parsedCommentID)
 	}

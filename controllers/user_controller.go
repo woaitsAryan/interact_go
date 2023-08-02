@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Pratham-Mishra04/interact/config"
+	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
@@ -90,7 +91,7 @@ func UpdateMe(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &fiber.Error{Code: 400, Message: "No user of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	var reqBody schemas.UserUpdateSchema
@@ -139,7 +140,7 @@ func UpdateMe(c *fiber.Ctx) error {
 	}
 
 	if err := initializers.DB.Save(&user).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -157,13 +158,13 @@ func DeleteMe(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &fiber.Error{Code: 400, Message: "No user of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	user.Active = false
 
 	if err := initializers.DB.Save(&user).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(204).JSON(fiber.Map{
@@ -200,14 +201,14 @@ func UpdatePassword(c *fiber.Ctx) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(reqBody.NewPassword), 10)
 
 	if err != nil {
-		return &fiber.Error{Code: 500, Message: config.SERVER_ERROR}
+		return helpers.AppError{Code: 500, Message: config.SERVER_ERROR, Err: err}
 	}
 
 	user.Password = string(hash)
 	user.PasswordChangedAt = time.Now()
 
 	if err := initializers.DB.Save(&user).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return createSendToken(c, user, 200, "Password updated successfully")

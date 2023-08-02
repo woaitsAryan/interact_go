@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"github.com/Pratham-Mishra04/interact/config"
+	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/gofiber/fiber/v2"
@@ -31,7 +32,7 @@ func AddMember(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No User of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	var project models.Project
@@ -39,7 +40,7 @@ func AddMember(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	if reqBody.UserID == project.UserID.String() {
@@ -64,7 +65,7 @@ func AddMember(c *fiber.Ctx) error {
 			result := initializers.DB.Create(&invitation)
 
 			if result.Error != nil {
-				return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 			}
 
 			invitation.User = user
@@ -75,7 +76,7 @@ func AddMember(c *fiber.Ctx) error {
 				"invitation": invitation,
 			})
 		}
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	} else {
 		return &fiber.Error{Code: 400, Message: "User is a already a collaborator of this project."}
 	}
@@ -95,7 +96,7 @@ func RemoveMember(c *fiber.Ctx) error { //! Only project creator can access
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Membership of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	result := initializers.DB.Delete(&membership)
@@ -131,7 +132,7 @@ func ChangeMemberRole(c *fiber.Ctx) error { //! Only project creator can access
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Membership of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	membership.Role = reqBody.Role
@@ -139,7 +140,7 @@ func ChangeMemberRole(c *fiber.Ctx) error { //! Only project creator can access
 	result := initializers.DB.Save(&membership)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{

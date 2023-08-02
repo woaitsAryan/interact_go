@@ -26,7 +26,7 @@ func GetApplication(c *fiber.Ctx) error { //! Only user and project applied memb
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Application of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -46,7 +46,7 @@ func GetAllApplicationsOfOpening(c *fiber.Ctx) error { //! Only project members 
 
 	var applications []models.Application
 	if err := initializers.DB.Preload("User").Where("opening_id=?", parsedOpeningID).Find(&applications).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -97,7 +97,7 @@ func AddApplication(c *fiber.Ctx) error {
 	result := initializers.DB.Create(&newApplication)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	go routines.IncrementOpeningApplicationsAndSendNotification(parsedOpeningID, newApplication.ID, parsedUserID)
@@ -122,13 +122,13 @@ func DeleteApplication(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Application of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	result := initializers.DB.Delete(&application)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	parsedOpeningID := application.OpeningID

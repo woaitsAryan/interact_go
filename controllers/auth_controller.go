@@ -25,10 +25,17 @@ func createSendToken(c *fiber.Ctx, user models.User, statusCode int, message str
 
 	if err != nil {
 		go helpers.LogServerError("Error while decrypting JWT Token.", err, c.Path())
-		return &fiber.Error{Code: 500, Message: config.SERVER_ERROR}
+		return helpers.AppError{Code: 500, Message: config.SERVER_ERROR, Err: err}
 	}
 
 	//set cookie
+	//! Implement access and refresh token
+	c.Cookie(&fiber.Cookie{
+		Name:     "token",
+		Value:    tokenString,
+		Expires:  time.Now().Add(config.REFRESH_TOKEN_TTL),
+		HTTPOnly: true,
+	})
 
 	return c.Status(statusCode).JSON(fiber.Map{
 		"status":     "success",
@@ -49,7 +56,7 @@ func SignUp(c *fiber.Ctx) error {
 
 	if err != nil {
 		go helpers.LogServerError("Error while hashing Password.", err, c.Path())
-		return &fiber.Error{Code: 500, Message: config.SERVER_ERROR}
+		return helpers.AppError{Code: 500, Message: config.SERVER_ERROR, Err: err}
 	}
 
 	newUser := models.User{
@@ -63,7 +70,7 @@ func SignUp(c *fiber.Ctx) error {
 	result := initializers.DB.Create(&newUser)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return createSendToken(c, newUser, 201, "Account Created")

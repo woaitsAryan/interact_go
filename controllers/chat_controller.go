@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"github.com/Pratham-Mishra04/interact/config"
+	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/gofiber/fiber/v2"
@@ -55,7 +56,7 @@ func GetUserNonPopulatedChats(c *fiber.Ctx) error {
 
 	var chats []models.Chat
 	if err := initializers.DB.Where("creating_user_id=?", loggedInUserID).Or("accepting_user_id = ?", loggedInUserID).Find(&chats).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -77,7 +78,7 @@ func GetUserChats(c *fiber.Ctx) error {
 		Where("creating_user_id=?", loggedInUserID).
 		Or("accepting_user_id = ?", loggedInUserID).
 		Find(&chats).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	var projectChats []models.ProjectChat
@@ -90,7 +91,7 @@ func GetUserChats(c *fiber.Ctx) error {
 		Joins("JOIN project_chat_memberships ON project_chat_memberships.project_chat_id = project_chats.id").
 		Where("project_chat_memberships.user_id = ?", loggedInUserID).
 		Find(&projectChats).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -117,7 +118,7 @@ func AcceptChat(c *fiber.Ctx) error {
 	result := initializers.DB.Save(&chat)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -173,7 +174,7 @@ func AddChat(c *fiber.Ctx) error {
 	result := initializers.DB.Create(&chat)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(201).JSON(fiber.Map{
@@ -231,7 +232,7 @@ func AddGroupChat(c *fiber.Ctx) error {
 	result := initializers.DB.Create(&chat)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	// for _, chatUser := range chatUsers {
@@ -288,7 +289,7 @@ func AddProjectChat(c *fiber.Ctx) error {
 	result := initializers.DB.Create(&projectChat)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	for _, chatUserID := range chatUserIDs {
@@ -306,7 +307,7 @@ func AddProjectChat(c *fiber.Ctx) error {
 		result := initializers.DB.Create(&ProjectChatMembership)
 
 		if result.Error != nil {
-			return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 		}
 	}
 
@@ -364,7 +365,7 @@ func EditGroupChat(c *fiber.Ctx) error { //* Adding new users here only
 	result := initializers.DB.Save(&chat)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	for _, chatUser := range newChatUsers {
@@ -375,7 +376,7 @@ func EditGroupChat(c *fiber.Ctx) error { //* Adding new users here only
 		result := initializers.DB.Create(&invitation)
 
 		if result.Error != nil {
-			return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 		}
 	}
 
@@ -436,7 +437,7 @@ func EditProjectChat(c *fiber.Ctx) error { //* Adding new users here only
 	result := initializers.DB.Save(&projectChat)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -459,11 +460,11 @@ func DeleteChat(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	if err := initializers.DB.Delete(&chat).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(204).JSON(fiber.Map{
@@ -485,11 +486,11 @@ func DeleteGroupChat(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	if err := initializers.DB.Delete(&chat).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(204).JSON(fiber.Map{
@@ -511,11 +512,11 @@ func DeleteProjectChat(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	if err := initializers.DB.Delete(&chat).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(204).JSON(fiber.Map{

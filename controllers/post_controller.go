@@ -29,7 +29,7 @@ func GetPost(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Post of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -46,7 +46,7 @@ func GetUserPosts(c *fiber.Ctx) error {
 
 	var posts []models.Post
 	if err := paginatedDB.Preload("User").Where("user_id = ?", userID).Find(&posts).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -63,7 +63,7 @@ func GetMyPosts(c *fiber.Ctx) error {
 
 	var posts []models.Post
 	if err := paginatedDB.Preload("User").Where("user_id = ?", loggedInUserID).Find(&posts).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -78,7 +78,7 @@ func GetMyLikedPosts(c *fiber.Ctx) error {
 
 	var postLikes []models.UserPostLike
 	if err := initializers.DB.Where("user_id = ?", loggedInUserID).Find(&postLikes).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	var postIDs []string
@@ -123,12 +123,12 @@ func AddPost(c *fiber.Ctx) error {
 	result := initializers.DB.Create(&newPost)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	var post models.Post
 	if err := initializers.DB.Preload("User").First(&post, "id = ?", newPost.ID).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(201).JSON(fiber.Map{
@@ -152,7 +152,7 @@ func UpdatePost(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Post of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	var updatePost schemas.PostUpdateSchema
@@ -170,7 +170,7 @@ func UpdatePost(c *fiber.Ctx) error {
 	post.Edited = true
 
 	if err := initializers.DB.Save(&post).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -194,7 +194,7 @@ func DeletePost(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Post of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	for _, image := range post.Images {
@@ -205,7 +205,7 @@ func DeletePost(c *fiber.Ctx) error {
 	}
 
 	if err := initializers.DB.Delete(&post).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(204).JSON(fiber.Map{

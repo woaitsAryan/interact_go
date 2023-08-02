@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"github.com/Pratham-Mishra04/interact/config"
+	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
@@ -25,7 +26,7 @@ func GetNotifications(c *fiber.Ctx) error {
 		Where("user_id=?", loggedInUserID).
 		Find(&notifications).
 		Order("created_at DESC").Error; err != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -44,13 +45,13 @@ func DeleteNotification(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Notification of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	result := initializers.DB.Delete(&notification)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
 
 	return c.Status(204).JSON(fiber.Map{

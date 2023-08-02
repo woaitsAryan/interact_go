@@ -13,6 +13,7 @@ type Config struct {
 	DB_URL     string `mapstructure:"DB_URL"`
 	JWT_SECRET string `mapstructure:"JWT_SECRET"`
 	ENV        string `mapstructure:"ENV"`
+	BASE_URL   string `mapstructure:"BASE_URL"` // * for dev
 }
 
 var CONFIG Config

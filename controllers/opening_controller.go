@@ -24,7 +24,7 @@ func GetOpening(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Opening of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -44,7 +44,7 @@ func GetAllOpeningsOfProject(c *fiber.Ctx) error {
 
 	var openings []models.Opening
 	if err := initializers.DB.Where("project_id=?", parsedProjectID).Find(&openings).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -88,7 +88,7 @@ func AddOpening(c *fiber.Ctx) error { //! Only Project Creator can perform this 
 	result := initializers.DB.Create(&newOpening)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(201).JSON(fiber.Map{
@@ -126,7 +126,7 @@ func EditOpening(c *fiber.Ctx) error { //! Only Project Creator can perform this
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Opening of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	if reqBody.Description != "" {
@@ -142,7 +142,7 @@ func EditOpening(c *fiber.Ctx) error { //! Only Project Creator can perform this
 	result := initializers.DB.Save(&opening)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -170,13 +170,13 @@ func DeleteOpening(c *fiber.Ctx) error { //! Only Project Creator can perform th
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Opening of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	result := initializers.DB.Delete(&opening)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(204).JSON(fiber.Map{

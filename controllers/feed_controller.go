@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"github.com/Pratham-Mishra04/interact/config"
+	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
@@ -14,7 +15,7 @@ func GetFeed(c *fiber.Ctx) error {
 
 	var followings []models.FollowFollower
 	if err := initializers.DB.Model(&models.FollowFollower{}).Where("follower_id = ?", loggedInUserID).Find(&followings).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	followingIDs := make([]uuid.UUID, len(followings))
@@ -26,7 +27,7 @@ func GetFeed(c *fiber.Ctx) error {
 
 	var posts []models.Post
 	if err := paginatedDB.Preload("User").Where("user_id = ? OR user_id IN (?)", loggedInUserID, followingIDs).Order("created_at DESC").Find(&posts).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{

@@ -20,12 +20,12 @@ const (
 )
 
 const (
-	DebugLogFilePath = "logs/debug.log"
-	InfoLogFilePath  = "logs/info.log"
-	WarnLogFilePath  = "logs/warn.log"
-	ErrorLogFilePath = "logs/error.log"
-	PanicLogFilePath = "logs/panic.log"
-	FatalLogFilePath = "logs/fatal.log"
+	DebugLogFilePath = "log/debug.log"
+	InfoLogFilePath  = "log/info.log"
+	WarnLogFilePath  = "log/warn.log"
+	ErrorLogFilePath = "log/error.log"
+	PanicLogFilePath = "log/panic.log"
+	FatalLogFilePath = "log/fatal.log"
 )
 
 var logFiles struct {

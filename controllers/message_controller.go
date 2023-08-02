@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"github.com/Pratham-Mishra04/interact/config"
+	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
@@ -25,7 +26,7 @@ func GetMessages(c *fiber.Ctx) error {
 		Where("chat_id = ?", chatID).
 		Order("created_at DESC").
 		Find(&messages).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	if len(messages) > 0 {
@@ -48,7 +49,7 @@ func GetProjectChatMessages(c *fiber.Ctx) error { //! Only project chat members 
 
 	var messages []models.ProjectChatMessage
 	if err := paginatedDB.Preload("User").Where("project_chat_id = ? ", chatID).Order("created_at DESC").Find(&messages).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 	return c.Status(200).JSON(fiber.Map{
 		"status":   "success",
@@ -93,11 +94,11 @@ func AddMessage(c *fiber.Ctx) error {
 	result := initializers.DB.Create(&message)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	if err := initializers.DB.Preload("User").First(&message).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(201).JSON(fiber.Map{
@@ -139,11 +140,11 @@ func AddProjectChatMessage(c *fiber.Ctx) error {
 	result := initializers.DB.Create(&message)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	if err := initializers.DB.Preload("User").First(&message).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(201).JSON(fiber.Map{
@@ -166,13 +167,13 @@ func DeleteMessage(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Message of this ID found."}
 		}
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	result := initializers.DB.Delete(&message)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(204).JSON(fiber.Map{
