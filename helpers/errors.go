@@ -23,6 +23,11 @@ func ErrorHandler(c *fiber.Ctx, err error) error {
 	Message := config.SERVER_ERROR
 	Error := err
 
+	if e, ok := err.(*fiber.Error); ok {
+		Code = e.Code
+		Message = e.Message
+	}
+
 	if e, ok := err.(*AppError); ok {
 		Code = e.Code
 		Message = e.Message

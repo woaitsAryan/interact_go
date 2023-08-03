@@ -10,6 +10,7 @@ import (
 func UserRouter(app *fiber.App) {
 	app.Post("/signup", validators.UserCreateValidator, controllers.SignUp)
 	app.Post("/login", controllers.LogIn)
+	app.Post("/refresh", controllers.Refresh)
 
 	userRoutes := app.Group("/users", middlewares.Protect)
 	userRoutes.Get("/me", controllers.GetMe)
