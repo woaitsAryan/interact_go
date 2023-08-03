@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -129,8 +130,8 @@ func Refresh(c *fiber.Ctx) error {
 		return []byte(initializers.CONFIG.JWT_SECRET), nil
 	})
 
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid Token"}
+	if err != nil && !errors.Is(err, jwt.ErrTokenExpired) {
+		return &fiber.Error{Code: 400, Message: config.TOKEN_EXPIRED_ERROR}
 	}
 
 	if access_token_claims, ok := access_token.Claims.(jwt.MapClaims); ok {
@@ -152,16 +153,19 @@ func Refresh(c *fiber.Ctx) error {
 
 		refresh_token_string := c.Cookies("refresh_token")
 		if refresh_token_string == "" {
-			return &fiber.Error{Code: 401, Message: "Session Expired, Log In Again"}
+			return &fiber.Error{Code: 401, Message: config.TOKEN_EXPIRED_ERROR}
 		}
 
-		refresh_token, _ := jwt.Parse(refresh_token_string, func(token *jwt.Token) (interface{}, error) {
+		refresh_token, err := jwt.Parse(refresh_token_string, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
-
 			return []byte(initializers.CONFIG.JWT_SECRET), nil
 		})
+
+		if err != nil && !errors.Is(err, jwt.ErrTokenExpired) {
+			return &fiber.Error{Code: 400, Message: config.TOKEN_EXPIRED_ERROR}
+		}
 
 		if refresh_token_claims, ok := refresh_token.Claims.(jwt.MapClaims); ok && refresh_token.Valid {
 			refresh_token_userID, ok := refresh_token_claims["sub"].(string)
@@ -174,7 +178,7 @@ func Refresh(c *fiber.Ctx) error {
 			}
 
 			if time.Now().After(time.Unix(int64(refresh_token_claims["exp"].(float64)), 0)) {
-				return &fiber.Error{Code: 401, Message: "Token has expired, Log in again."}
+				return &fiber.Error{Code: 401, Message: config.TOKEN_EXPIRED_ERROR}
 			}
 
 			new_access_token_claim := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{

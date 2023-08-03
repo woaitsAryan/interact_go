@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/gofiber/fiber/v2"
@@ -21,7 +22,7 @@ func verifyToken(tokenString string, user *models.User) error {
 	})
 
 	if err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid Token"}
+		return &fiber.Error{Code: 403, Message: config.TOKEN_EXPIRED_ERROR}
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
@@ -31,10 +32,8 @@ func verifyToken(tokenString string, user *models.User) error {
 
 		userID, ok := claims["sub"].(string)
 		if !ok {
-			// return "", &fiber.Error{Code: 401, Message: "Invalid user ID in token claims."}
 			return &fiber.Error{Code: 401, Message: "Invalid user ID in token claims."}
 		}
-		// return userID, nil
 
 		initializers.DB.First(user, "id = ?", userID)
 
@@ -84,10 +83,6 @@ func PartialProtect(c *fiber.Ctx) error {
 	}
 
 	tokenString := tokenArr[1]
-	// userID, err := verifyToken(tokenString)
-	// if err != nil {
-	// 	return nil
-	// }
 
 	var user models.User
 	err := verifyToken(tokenString, &user)
@@ -96,9 +91,6 @@ func PartialProtect(c *fiber.Ctx) error {
 	}
 
 	c.Set("loggedInUserID", user.ID.String())
-	// c.Set("loggedInUserID", userID)
-
-	// c.Locals("loggedInUser", user)
 
 	return c.Next()
 }
