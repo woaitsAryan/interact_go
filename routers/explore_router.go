@@ -7,7 +7,7 @@ import (
 )
 
 func ExploreRouter(app *fiber.App) {
-	exploreRoutes := app.Group("/explore", middlewares.PartialProtect)
+	exploreRoutes := app.Group("/explore")
 
 	exploreRoutes.Get("/trending_searches", controllers.GetTrendingSearches)
 	exploreRoutes.Post("/search", controllers.AddSearchQuery)

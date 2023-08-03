@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func verifyToken(tokenString string, user *models.User) error {
+func verifyToken(tokenString string, user *models.User) error { //! Crashes when both access and refresh tokens are expired
 	token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -21,7 +21,6 @@ func verifyToken(tokenString string, user *models.User) error {
 	})
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-
 		if float64(time.Now().Unix()) > claims["exp"].(float64) {
 			return &fiber.Error{Code: 403, Message: "Your token has expired."}
 		}
@@ -44,7 +43,6 @@ func verifyToken(tokenString string, user *models.User) error {
 		// }
 
 		return nil
-
 	} else {
 		return &fiber.Error{Code: 403, Message: "Invalid Token"}
 	}
