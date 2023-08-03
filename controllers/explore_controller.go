@@ -10,6 +10,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/models"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
+	"github.com/lib/pq"
 )
 
 func GetTrendingSearches(c *fiber.Ctx) error {
@@ -90,6 +91,18 @@ func GetTrendingOpenings(c *fiber.Ctx) error {
 	})
 }
 
+func GetProjectOpenings(c *fiber.Ctx) error {
+	projectID := c.Params("projectID")
+	var openings []models.Opening
+	if err := initializers.DB.Preload("Project").Where("project_id = ?", projectID).Find(&openings).Order("created_at DESC").Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+	return c.Status(200).JSON(fiber.Map{
+		"status":   "success",
+		"openings": openings,
+	})
+}
+
 func GetTrendingProjects(c *fiber.Ctx) error {
 	paginatedDB := API.Paginator(c)(initializers.DB)
 	var projects []models.Project
@@ -109,12 +122,14 @@ func GetTrendingProjects(c *fiber.Ctx) error {
 }
 
 func GetRecommendedProjects(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
 	paginatedDB := API.Paginator(c)(initializers.DB)
 	var projects []models.Project
 
 	searchedDB := API.Search(c, 1)(paginatedDB)
 
-	if err := searchedDB.Find(&projects).Error; err != nil {
+	if err := searchedDB.Where("user_id <> ?", loggedInUserID).Find(&projects).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 	return c.Status(200).JSON(fiber.Map{
@@ -205,5 +220,44 @@ func GetRecommendedUsers(c *fiber.Ctx) error {
 	return c.Status(200).JSON(fiber.Map{
 		"status": "success",
 		"users":  users,
+	})
+}
+
+func GetSimilarUsers(c *fiber.Ctx) error {
+	userID := c.Params("userID")
+
+	var user models.User
+	initializers.DB.
+		First(&user, "id = ?", userID)
+
+	var users []models.User
+	if err := initializers.DB.
+		Where("id <> ?", userID).
+		Where("tags && ?", pq.StringArray(user.Tags)).Limit(10).Find(&users).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+	return c.Status(200).JSON(fiber.Map{
+		"status": "success",
+		"users":  users,
+	})
+}
+
+func GetSimilarProjects(c *fiber.Ctx) error {
+	projectID := c.Params("projectID")
+
+	var project models.Project
+	initializers.DB.
+		First(&project, "id = ?", projectID)
+
+	var projects []models.Project
+	if err := initializers.DB.
+		Where("id <> ?", projectID).
+		Where("category LIKE ?", "%"+project.Category+"%").
+		Where("tags && ?", pq.StringArray(project.Tags)).Limit(10).Find(&projects).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+	return c.Status(200).JSON(fiber.Map{
+		"status":   "success",
+		"projects": projects,
 	})
 }

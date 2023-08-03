@@ -26,7 +26,7 @@ func verifyToken(tokenString string, user *models.User) error {
 
 		if float64(time.Now().Unix()) > claims["exp"].(float64) {
 			// return "", &fiber.Error{Code: 401, Message: "Your token has expired, log in again."}
-			return &fiber.Error{Code: 401, Message: "Your token has expired, log in again."}
+			return &fiber.Error{Code: 403, Message: "Your token has expired, log in again."}
 		}
 
 		userID, ok := claims["sub"].(string)
@@ -43,7 +43,7 @@ func verifyToken(tokenString string, user *models.User) error {
 		}
 
 		if time.Now().After(time.Unix(int64(claims["exp"].(float64)), 0)) {
-			return &fiber.Error{Code: 401, Message: "Token has expired, log in again."}
+			return &fiber.Error{Code: 403, Message: "Token has expired, log in again."}
 		}
 
 		// if user.PasswordChangedAt.After(time.Unix(int64(claims["crt"].(float64)), 0)) {

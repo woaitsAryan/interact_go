@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"log"
-
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
@@ -200,7 +198,20 @@ func DeletePost(c *fiber.Ctx) error {
 	for _, image := range post.Images {
 		err := utils.DeleteFile("post", image)
 		if err != nil {
-			log.Printf("Error while deleting post pic: %e", err)
+			initializers.Logger.Warnf("Error while deleting post pic", err)
+		}
+	}
+
+	var messages []models.Message
+	if err := initializers.DB.First(&messages, "post_id=?", parsedPostID).Error; err != nil {
+		if err != gorm.ErrRecordNotFound {
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		}
+	}
+
+	for _, message := range messages {
+		if err := initializers.DB.Delete(&message).Error; err != nil {
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 		}
 	}
 

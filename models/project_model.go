@@ -35,7 +35,7 @@ type Project struct {
 	Memberships            []Membership             `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"memberships"`
 	Notifications          []Notification           `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"notifications"`
 	LastViews              []LastViewed             `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"-"`
-	Messages               []Message                `gorm:"foreignKey:ProjectID;constraint:OnDelete:SET NULL" json:"-"`
+	Messages               []Message                `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"-"`
 	BookMarkItems          []ProjectBookmarkItem    `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"-"`
 	ProjectChatMemberships []ProjectChatMembership  `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"-"`
 	ProjectViews           []ProjectView            `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"-"`

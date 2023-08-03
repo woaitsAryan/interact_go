@@ -47,7 +47,7 @@ func AddPostBookMarkItem(c *fiber.Ctx) error {
 	result := initializers.DB.Create(&bookmarkItem)
 
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
 
 	return c.Status(201).JSON(fiber.Map{
@@ -94,7 +94,7 @@ func AddProjectBookMarkItem(c *fiber.Ctx) error {
 	result := initializers.DB.Create(&bookmarkItem)
 
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
 
 	return c.Status(201).JSON(fiber.Map{

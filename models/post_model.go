@@ -22,7 +22,7 @@ type Post struct {
 	Edited        bool                  `gorm:"default:false" json:"edited"`
 	Comments      []PostComment         `gorm:"foreignKey:PostID;constraint:OnDelete:CASCADE" json:"comments"`
 	Notifications []Notification        `gorm:"foreignKey:PostID;constraint:OnDelete:CASCADE" json:"-"`
-	Messages      []Message             `gorm:"foreignKey:PostID;constraint:SET NULL" json:"-"`
+	Messages      []Message             `gorm:"foreignKey:PostID;constraint:OnDelete:CASCADE" json:"-"`
 	Likes         []UserPostLike        `gorm:"foreignKey:PostID;constraint:OnDelete:CASCADE" json:"-"`
 	BookMarkItems []PostBookmarkItem    `gorm:"foreignKey:PostID;constraint:OnDelete:CASCADE" json:"-"`
 	CommentLikes  []UserPostCommentLike `gorm:"foreignKey:PostID;constraint:OnDelete:CASCADE" json:"-"`

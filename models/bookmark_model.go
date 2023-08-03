@@ -15,11 +15,10 @@ type PostBookmark struct {
 }
 
 type PostBookmarkItem struct {
-	ID             uuid.UUID    `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	PostBookmarkID uuid.UUID    `gorm:"type:uuid;not null" json:"postBookmarkID"`
-	PostBookmark   PostBookmark `gorm:"type:uuid;not null" json:"-"`
-	PostID         uuid.UUID    `gorm:"type:uuid;not null" json:"postID"`
-	Post           Post         `json:"post"`
+	ID             uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	PostBookmarkID uuid.UUID `gorm:"type:uuid;not null" json:"postBookmarkID"`
+	PostID         uuid.UUID `gorm:"type:uuid;not null" json:"postID"`
+	Post           Post      `json:"post"`
 }
 type ProjectBookmark struct {
 	ID           uuid.UUID             `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
@@ -30,9 +29,8 @@ type ProjectBookmark struct {
 }
 
 type ProjectBookmarkItem struct {
-	ID                uuid.UUID       `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	ProjectBookmarkID uuid.UUID       `gorm:"type:uuid;not null" json:"projectBookmarkID"`
-	ProjectBookmark   ProjectBookmark `gorm:"type:uuid;not null" json:"-"`
-	ProjectID         uuid.UUID       `gorm:"type:uuid;not null" json:"projectID"`
-	Project           Project         `json:"project"`
+	ID                uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	ProjectBookmarkID uuid.UUID `gorm:"type:uuid;not null" json:"projectBookmarkID"`
+	ProjectID         uuid.UUID `gorm:"type:uuid;not null" json:"projectID"`
+	Project           Project   `json:"project"`
 }

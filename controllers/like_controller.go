@@ -109,8 +109,11 @@ func LikePostComment(c *fiber.Ctx) error {
 	}
 
 	var comment models.PostComment
-	if err := initializers.DB.Where("id=?", parsedCommentID).First(&comment).Error; err == nil {
-		return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
+	if err := initializers.DB.Where("id = ?", parsedCommentID).First(&comment).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
+		}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	var like models.UserPostCommentLike
@@ -155,8 +158,11 @@ func LikeProjectComment(c *fiber.Ctx) error {
 	}
 
 	var comment models.ProjectComment
-	if err := initializers.DB.Where("id=?", parsedCommentID).First(&comment).Error; err == nil {
-		return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
+	if err := initializers.DB.Where("id=?", parsedCommentID).First(&comment).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
+		}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	var like models.UserProjectCommentLike

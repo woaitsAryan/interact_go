@@ -331,6 +331,19 @@ func DeleteProject(c *fiber.Ctx) error {
 		log.Printf("Error while deleting project cover pic: %e", err)
 	}
 
+	var messages []models.Message
+	if err := initializers.DB.First(&messages, "project_id=?", parsedProjectID).Error; err != nil {
+		if err != gorm.ErrRecordNotFound {
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		}
+	}
+
+	for _, message := range messages {
+		if err := initializers.DB.Delete(&message).Error; err != nil {
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		}
+	}
+
 	if err := initializers.DB.Delete(&project).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
