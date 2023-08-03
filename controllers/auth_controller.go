@@ -122,12 +122,16 @@ func Refresh(c *fiber.Ctx) error {
 
 	access_token_string := reqBody.Token
 
-	access_token, _ := jwt.Parse(access_token_string, func(token *jwt.Token) (interface{}, error) {
+	access_token, err := jwt.Parse(access_token_string, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(initializers.CONFIG.JWT_SECRET), nil
 	})
+
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid Token"}
+	}
 
 	if access_token_claims, ok := access_token.Claims.(jwt.MapClaims); ok {
 

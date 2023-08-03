@@ -12,13 +12,17 @@ import (
 	"github.com/google/uuid"
 )
 
-func verifyToken(tokenString string, user *models.User) error { //! Crashes when both access and refresh tokens are expired
-	token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+func verifyToken(tokenString string, user *models.User) error {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(initializers.CONFIG.JWT_SECRET), nil
 	})
+
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid Token"}
+	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		if float64(time.Now().Unix()) > claims["exp"].(float64) {
