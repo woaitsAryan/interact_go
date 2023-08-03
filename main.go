@@ -1,11 +1,11 @@
 package main
 
 import (
+	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/routers"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 )
@@ -21,20 +21,13 @@ func main() {
 	defer initializers.LoggerCleanUp()
 	app := fiber.New(fiber.Config{
 		ErrorHandler: helpers.ErrorHandler,
-		BodyLimit:    10 * 1024 * 1024,
+		BodyLimit:    config.BODY_LIMIT,
 	})
 
 	app.Use(helmet.New())
 	app.Use(logger.New())
-
-	app.Use(cors.New(cors.Config{
-		AllowOrigins:     initializers.CONFIG.BASE_URL,
-		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
-		AllowMethods:     "GET, POST, PATCH, DELETE",
-		AllowCredentials: true,
-	}))
-
-	// app.Use(limiter.New())
+	app.Use(config.CORS())
+	app.Use(config.RATE_LIMITER())
 
 	app.Static("/", "./public")
 
