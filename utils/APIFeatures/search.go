@@ -32,7 +32,7 @@ func Search(c *fiber.Ctx, index int) func(db *gorm.DB) *gorm.DB {
 
 		// var searchCondition interface{}
 		switch index {
-		case 0: //! users
+		case 0: //* users
 			// searchCondition = []interface{}{
 			// 	map[string]interface{}{
 			// 		"username": gorm.Expr("IN (?)", interfaceArry),
@@ -43,7 +43,7 @@ func Search(c *fiber.Ctx, index int) func(db *gorm.DB) *gorm.DB {
 			// }
 			db = db.Where("name LIKE ? OR username LIKE ? OR ? = ANY (tags)", "%"+searchStr+"%", "%"+searchStr+"%", searchStr)
 			return db
-		case 1: //! projects
+		case 1: //* projects
 			// searchCondition = []interface{}{
 			// 	map[string]interface{}{
 			// 		"title": gorm.Expr("IN (?)", interfaceArry),
@@ -59,7 +59,7 @@ func Search(c *fiber.Ctx, index int) func(db *gorm.DB) *gorm.DB {
 			// }
 			db = db.Where("title LIKE ? OR ? = ANY (tags)", "%"+searchStr+"%", searchStr)
 			return db
-		case 2: //! posts
+		case 2: //* posts
 			// searchCondition = []interface{}{
 			// 	map[string]interface{}{
 			// 		"content": gorm.Expr("content IN (?)", interfaceArry),
@@ -72,7 +72,7 @@ func Search(c *fiber.Ctx, index int) func(db *gorm.DB) *gorm.DB {
 			// }
 			db = db.Where("content LIKE ? OR ? = ANY (tags) ", "%"+searchStr+"%", searchStr)
 			return db
-		case 3: //! openings
+		case 3: //* openings
 			// searchCondition = []interface{}{
 			// 	map[string]interface{}{
 			// 		"title": gorm.Expr("IN (?)", interfaceArry),

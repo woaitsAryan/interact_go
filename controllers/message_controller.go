@@ -42,10 +42,29 @@ func GetMessages(c *fiber.Ctx) error {
 	})
 }
 
-func GetProjectChatMessages(c *fiber.Ctx) error { //! Only project chat members can get
+func GetProjectChatMessages(c *fiber.Ctx) error {
 	chatID := c.Params("projectChatID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
 	paginatedDB := API.Paginator(c)(initializers.DB)
+
+	var memberships []models.ProjectChatMembership
+	if err := initializers.DB.Where("project_chat_id=?", chatID).Find(&memberships).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+	check := false
+
+	for _, membership := range memberships {
+		if membership.UserID == parsedLoggedInUserID {
+			check = true
+		}
+	}
+
+	if !check {
+		return &fiber.Error{Code: 403, Message: "Do not have the permission to perform this action."}
+	}
 
 	var messages []models.ProjectChatMessage
 	if err := paginatedDB.Preload("User").Where("project_chat_id = ? ", chatID).Order("created_at DESC").Find(&messages).Error; err != nil {
@@ -84,10 +103,10 @@ func AddMessage(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid ID."}
 	}
 
-	// var chat models.Chat
-	// if err := initializers.DB.First(&chat, "id=? AND (chat.creating_user_id = ? OR chat.accepting_user_id = ?)", parsedChatID, loggedInUserID, loggedInUserID).Error; err != nil {
-	// 	return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
-	// }
+	var chat models.Chat
+	if err := initializers.DB.First(&chat, "id=? AND (chat.creating_user_id = ? OR chat.accepting_user_id = ?)", parsedChatID, loggedInUserID, loggedInUserID).Error; err != nil {
+		return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
+	}
 
 	message.ChatID = parsedChatID
 
@@ -120,6 +139,22 @@ func AddProjectChatMessage(c *fiber.Ctx) error {
 	}
 
 	chatID := reqBody.ChatID
+
+	// var memberships []models.ProjectChatMembership
+	// if err := initializers.DB.Where("project_chat_id=?", chatID).Find(&memberships).Error; err != nil {
+	// 	return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	// }
+	// check := false
+
+	// for _, membership := range memberships {
+	// 	if membership.UserID == parsedUserID {
+	// 		check = true
+	// 	}
+	// }
+
+	// if !check {
+	// 	return &fiber.Error{Code: 403, Message: "Do not have the permission to perform this action."}
+	// }
 
 	message := models.ProjectChatMessage{
 		UserID:  parsedUserID,

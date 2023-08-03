@@ -119,7 +119,3 @@ func PartialProtect(c *fiber.Ctx) error {
 
 	return c.Next()
 }
-
-// func MembershipProtect(c *fiber.Ctx) error {
-
-// }

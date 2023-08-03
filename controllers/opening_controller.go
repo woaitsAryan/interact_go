@@ -54,7 +54,7 @@ func GetAllOpeningsOfProject(c *fiber.Ctx) error {
 	})
 }
 
-func AddOpening(c *fiber.Ctx) error { //! Only Project Creator can perform this action
+func AddOpening(c *fiber.Ctx) error {
 	projectID := c.Params("projectID")
 	userID := c.GetRespHeader("loggedInUserID")
 
@@ -66,6 +66,14 @@ func AddOpening(c *fiber.Ctx) error { //! Only Project Creator can perform this 
 	parsedUserID, err := uuid.Parse(userID)
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
+	}
+
+	var project models.Project
+	if err := initializers.DB.First(&project, "id = ? AND user_id=?", parsedProjectID, parsedUserID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
+		}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	var reqBody schemas.OpeningCreateSchema
@@ -98,7 +106,7 @@ func AddOpening(c *fiber.Ctx) error { //! Only Project Creator can perform this 
 	})
 }
 
-func EditOpening(c *fiber.Ctx) error { //! Only Project Creator can perform this action
+func EditOpening(c *fiber.Ctx) error {
 	openingID := c.Params("openingID")
 	userID := c.GetRespHeader("loggedInUserID")
 
@@ -151,7 +159,7 @@ func EditOpening(c *fiber.Ctx) error { //! Only Project Creator can perform this
 	})
 }
 
-func DeleteOpening(c *fiber.Ctx) error { //! Only Project Creator can perform this action
+func DeleteOpening(c *fiber.Ctx) error {
 	openingID := c.Params("openingID")
 	userID := c.GetRespHeader("loggedInUserID")
 

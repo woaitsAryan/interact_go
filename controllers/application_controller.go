@@ -13,8 +13,11 @@ import (
 	"gorm.io/gorm"
 )
 
-func GetApplication(c *fiber.Ctx) error { //! Only user and project applied members can get
+func GetApplication(c *fiber.Ctx) error {
 	applicationID := c.Params("applicationID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
 	parsedApplicationID, err := uuid.Parse(applicationID)
 	if err != nil {
@@ -22,11 +25,15 @@ func GetApplication(c *fiber.Ctx) error { //! Only user and project applied memb
 	}
 
 	var application models.Application
-	if err := initializers.DB.Preload("User").First(&application, "id = ?", parsedApplicationID).Error; err != nil {
+	if err := initializers.DB.Preload("User").Preload("Project").First(&application, "id = ?", parsedApplicationID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Application of this ID found."}
 		}
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	if application.UserID != parsedLoggedInUserID || application.Project.UserID != parsedLoggedInUserID {
+		return &fiber.Error{Code: 403, Message: "Do not have the permission to perform this action."}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -36,8 +43,11 @@ func GetApplication(c *fiber.Ctx) error { //! Only user and project applied memb
 	})
 }
 
-func GetAllApplicationsOfOpening(c *fiber.Ctx) error { //! Only project members can get, Save a memberships in redux for frontend security
+func GetAllApplicationsOfOpening(c *fiber.Ctx) error { //! Save memberships in redux for frontend security
 	openingID := c.Params("openingID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
 	parsedOpeningID, err := uuid.Parse(openingID)
 	if err != nil {
@@ -47,6 +57,33 @@ func GetAllApplicationsOfOpening(c *fiber.Ctx) error { //! Only project members 
 	var applications []models.Application
 	if err := initializers.DB.Preload("User").Where("opening_id=?", parsedOpeningID).Find(&applications).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	var opening models.Opening
+	if err := initializers.DB.Preload("Project").First(&opening, "id = ?", parsedOpeningID).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	if len(applications) > 0 {
+		var memberships []models.Membership
+		if err := initializers.DB.Where("project_id=?", applications[0].ProjectID).Find(&memberships).Error; err != nil {
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		}
+		check := false
+
+		for _, membership := range memberships {
+			if membership.UserID == parsedLoggedInUserID {
+				check = true
+			}
+		}
+
+		if opening.Project.UserID == parsedLoggedInUserID {
+			check = true
+		}
+
+		if !check {
+			return &fiber.Error{Code: 403, Message: "Do not have the permission to perform this action."}
+		}
 	}
 
 	return c.Status(200).JSON(fiber.Map{

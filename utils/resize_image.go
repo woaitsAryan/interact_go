@@ -15,7 +15,7 @@ func ResizeImage(picPath string, d1 int, d2 int) (string, error) {
 		return "", err
 	}
 
-	img, err := jpeg.Decode(file) //! Does not works with jpg format
+	img, err := jpeg.Decode(file)
 	if err != nil {
 		return "", err
 	}

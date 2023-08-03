@@ -15,14 +15,25 @@ import (
 )
 
 func createSendToken(c *fiber.Ctx, user models.User, statusCode int, message string) error {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+	access_token_claim := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": user.ID,
 		"crt": time.Now().Unix(),
 		"exp": time.Now().Add(time.Hour * 24 * 30).Unix(), // 30 days
 	})
 
-	tokenString, err := token.SignedString([]byte(initializers.CONFIG.JWT_SECRET))
+	refresh_token_claim := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"sub": user.ID,
+		"crt": time.Now().Unix(),
+		"exp": time.Now().Add(time.Hour * 24 * 30).Unix(), // 30 days
+	})
 
+	access_token, err := access_token_claim.SignedString([]byte(initializers.CONFIG.JWT_SECRET))
+	if err != nil {
+		go helpers.LogServerError("Error while decrypting JWT Token.", err, c.Path())
+		return helpers.AppError{Code: 500, Message: config.SERVER_ERROR, Err: err}
+	}
+
+	refresh_token, err := refresh_token_claim.SignedString([]byte(initializers.CONFIG.JWT_SECRET))
 	if err != nil {
 		go helpers.LogServerError("Error while decrypting JWT Token.", err, c.Path())
 		return helpers.AppError{Code: 500, Message: config.SERVER_ERROR, Err: err}
@@ -31,8 +42,8 @@ func createSendToken(c *fiber.Ctx, user models.User, statusCode int, message str
 	//set cookie
 	//! Implement access and refresh token
 	c.Cookie(&fiber.Cookie{
-		Name:     "token",
-		Value:    tokenString,
+		Name:     "refresh_token",
+		Value:    refresh_token,
 		Expires:  time.Now().Add(config.REFRESH_TOKEN_TTL),
 		HTTPOnly: true,
 	})
@@ -40,7 +51,7 @@ func createSendToken(c *fiber.Ctx, user models.User, statusCode int, message str
 	return c.Status(statusCode).JSON(fiber.Map{
 		"status":     "success",
 		"message":    message,
-		"token":      tokenString,
+		"token":      access_token,
 		"userID":     user.ID,
 		"profilePic": user.ProfilePic,
 	})

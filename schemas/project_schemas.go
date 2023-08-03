@@ -11,7 +11,6 @@ type ProjectCreateSchema struct {
 }
 
 type ProjectUpdateSchema struct {
-	Title        string   `json:"title" validate:"alphanum,max=20"` //! Remove later
 	Tagline      string   `json:"tagline" validate:"alphanum,max=40"`
 	CoverPic     string   `json:"coverPic" validate:"image"`
 	Description  string   `json:"description" validate:"alphanum,max=500"`

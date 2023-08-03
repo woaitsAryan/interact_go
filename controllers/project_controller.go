@@ -60,7 +60,7 @@ func GetProject(c *fiber.Ctx) error {
 	})
 }
 
-func GetWorkSpaceProject(c *fiber.Ctx) error { //! Only project members can access
+func GetWorkSpaceProject(c *fiber.Ctx) error {
 	projectID := c.Params("projectID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 

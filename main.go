@@ -14,7 +14,7 @@ func init() {
 	initializers.LoadEnv()
 	initializers.ConnectToDB()
 	initializers.AddLogger()
-	initializers.AutoMigrate()
+	// initializers.AutoMigrate()
 }
 
 func main() {
