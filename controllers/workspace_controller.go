@@ -30,7 +30,7 @@ func GetMyContributingProjects(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var memberships []models.Membership
-	if err := initializers.DB.Preload("Project").Select("project_id").Where("user_id = ?", loggedInUserID).Find(&memberships).Error; err != nil {
+	if err := initializers.DB.Preload("Project").Where("user_id = ?", loggedInUserID).Find(&memberships).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 

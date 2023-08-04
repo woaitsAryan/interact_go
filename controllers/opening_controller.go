@@ -36,14 +36,15 @@ func GetOpening(c *fiber.Ctx) error {
 
 func GetAllOpeningsOfProject(c *fiber.Ctx) error {
 	projectID := c.Params("projectID")
+	userID := c.GetRespHeader("loggedInUserID")
 
-	parsedProjectID, err := uuid.Parse(projectID)
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid ID"}
+	var project models.Project
+	if err := initializers.DB.Where("id=? and user_id=?", projectID, userID).First(&project).Error; err != nil {
+		return &fiber.Error{Code: 500, Message: "Cannot perform this action"}
 	}
 
 	var openings []models.Opening
-	if err := initializers.DB.Where("project_id=?", parsedProjectID).Find(&openings).Error; err != nil {
+	if err := initializers.DB.Where("project_id=?", projectID).Find(&openings).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 

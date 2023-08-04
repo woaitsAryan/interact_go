@@ -25,7 +25,7 @@ func GetApplication(c *fiber.Ctx) error {
 	}
 
 	var application models.Application
-	if err := initializers.DB.Preload("User").Preload("Project").First(&application, "id = ?", parsedApplicationID).Error; err != nil {
+	if err := initializers.DB.Preload("User").Preload("Project").Preload("Opening").First(&application, "id = ?", parsedApplicationID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Application of this ID found."}
 		}

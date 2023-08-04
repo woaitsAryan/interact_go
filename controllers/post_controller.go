@@ -203,7 +203,7 @@ func DeletePost(c *fiber.Ctx) error {
 	}
 
 	var messages []models.Message
-	if err := initializers.DB.First(&messages, "post_id=?", parsedPostID).Error; err != nil {
+	if err := initializers.DB.Find(&messages, "post_id=?", parsedPostID).Error; err != nil {
 		if err != gorm.ErrRecordNotFound {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 		}
