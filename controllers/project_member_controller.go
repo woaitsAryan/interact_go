@@ -100,7 +100,7 @@ func RemoveMember(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	if membership.Project.UserID != parsedLoggedInUserID || membership.UserID != parsedLoggedInUserID {
+	if membership.Project.UserID != parsedLoggedInUserID {
 		return &fiber.Error{Code: 403, Message: "You do not have the permission to perform this action."}
 	}
 
@@ -113,6 +113,29 @@ func RemoveMember(c *fiber.Ctx) error {
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",
 		"message": "User removed to the project.",
+	})
+}
+
+func LeaveProject(c *fiber.Ctx) error {
+	projectID := c.Params("projectID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	var membership models.Membership
+	if err := initializers.DB.Preload("Project").First(&membership, "user_id=? AND project_id = ?", loggedInUserID, projectID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return &fiber.Error{Code: 400, Message: "No Membership of this ID found."}
+		}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	result := initializers.DB.Delete(&membership)
+	if result.Error != nil {
+		return &fiber.Error{Code: 500, Message: "Internal Server Error while deleting membership."}
+	}
+
+	return c.Status(204).JSON(fiber.Map{
+		"status":  "success",
+		"message": "You left the project.",
 	})
 }
 
