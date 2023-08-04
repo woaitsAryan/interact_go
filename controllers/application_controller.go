@@ -32,7 +32,7 @@ func GetApplication(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	if application.UserID != parsedLoggedInUserID || application.Project.UserID != parsedLoggedInUserID {
+	if application.UserID != parsedLoggedInUserID && application.Project.UserID != parsedLoggedInUserID {
 		return &fiber.Error{Code: 403, Message: "Do not have the permission to perform this action."}
 	}
 

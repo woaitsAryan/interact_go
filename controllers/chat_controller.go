@@ -32,16 +32,32 @@ func GetChat(c *fiber.Ctx) error {
 func GetProjectChat(c *fiber.Ctx) error {
 	chatID := c.Params("projectChatID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
 	var chat models.ProjectChat
-
 	err := initializers.DB.
-		Joins("JOIN project_chat_memberships ON project_chat_memberships.project_chat_id = project_chats.id").
-		Where("project_chat_memberships.user_id = ?", loggedInUserID).
-		First(&chat, "id=?", chatID).Error
-
+		Preload("Memberships").
+		Preload("Memberships.User").
+		Preload("Project").
+		Where("id = ?", chatID).
+		First(&chat).Error
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
+	}
+
+	check := false
+	for _, membership := range chat.Memberships { // Even Owner has a chat membership
+		if membership.UserID == parsedLoggedInUserID {
+			check = true
+		}
+	}
+
+	if chat.Project.UserID == parsedLoggedInUserID {
+		check = true
+	}
+
+	if !check {
+		return &fiber.Error{Code: 403, Message: "Do not have the permission to perform this action."}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -99,6 +115,13 @@ func GetUserChats(c *fiber.Ctx) error {
 		"message":      "",
 		"chats":        chats,
 		"projectChats": projectChats,
+	})
+}
+
+func GetProjectChats(c *fiber.Ctx) error { // All project chats the user is part of
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "",
 	})
 }
 
@@ -397,6 +420,9 @@ func EditProjectChat(c *fiber.Ctx) error { //* Adding new users here only
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
 	}
 
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
+
 	// newChatUserIDs := reqBody.UserIDs
 	// newChatUsers := make([]models.User, len(newChatUserIDs))
 
@@ -418,10 +444,13 @@ func EditProjectChat(c *fiber.Ctx) error { //* Adding new users here only
 	projectChatID := c.Params("projectChatID")
 
 	var projectChat models.ProjectChat
-	err := initializers.DB.First(&projectChat, "id = ?", projectChatID).Error
-
+	err := initializers.DB.Preload("Project").First(&projectChat, "id = ?", projectChatID).Error
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "No chat of this id found."}
+	}
+
+	if projectChat.Project.UserID != parsedLoggedInUserID {
+		return &fiber.Error{Code: 403, Message: "You do not have the permission to perform this action."}
 	}
 
 	if reqBody.Title != "" {
@@ -501,6 +530,8 @@ func DeleteGroupChat(c *fiber.Ctx) error {
 
 func DeleteProjectChat(c *fiber.Ctx) error {
 	chatID := c.Params("projectChatID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
 	parsedChatID, err := uuid.Parse(chatID)
 	if err != nil {
@@ -508,11 +539,15 @@ func DeleteProjectChat(c *fiber.Ctx) error {
 	}
 
 	var chat models.ProjectChat
-	if err := initializers.DB.First(&chat, "id = ?", parsedChatID).Error; err != nil {
+	if err := initializers.DB.Preload("Project").First(&chat, "id = ?", parsedChatID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
 		}
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	if chat.Project.UserID != parsedLoggedInUserID {
+		return &fiber.Error{Code: 403, Message: "You do not have the permission to perform this action."}
 	}
 
 	if err := initializers.DB.Delete(&chat).Error; err != nil {
@@ -522,5 +557,32 @@ func DeleteProjectChat(c *fiber.Ctx) error {
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Chat deleted successfully",
+	})
+}
+
+func LeaveProjectChat(c *fiber.Ctx) error {
+	membershipID := c.Params("membershipID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
+
+	var membership models.ProjectChatMembership
+	if err := initializers.DB.Preload("Project").First(&membership, "id = ?", membershipID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return &fiber.Error{Code: 400, Message: "No Chat Membership of this ID found."}
+		}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	if membership.UserID != parsedLoggedInUserID && membership.Project.UserID != parsedLoggedInUserID {
+		return &fiber.Error{Code: 403, Message: "You do not have the permission to perform this action."}
+	}
+
+	if err := initializers.DB.Delete(&membership).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return c.Status(204).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Chat Membership deleted successfully",
 	})
 }

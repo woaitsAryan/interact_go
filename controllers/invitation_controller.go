@@ -213,10 +213,13 @@ func WithdrawProjectInvitation(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var invitation models.ProjectInvitation
-	err := initializers.DB.First(&invitation, "id=? AND user_id=?", invitationID, loggedInUserID).Error
-
+	err := initializers.DB.Preload("Project").First(&invitation, "id=?", invitationID).Error
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "No Invitation of this ID found."}
+	}
+
+	if invitation.Project.UserID.String() != loggedInUserID {
+		return &fiber.Error{Code: 403, Message: "You don't have the permission to perform this action."}
 	}
 
 	if invitation.Status == 1 {

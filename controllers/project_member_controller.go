@@ -82,9 +82,10 @@ func AddMember(c *fiber.Ctx) error {
 	}
 }
 
-func RemoveMember(c *fiber.Ctx) error { //! Only project creator can access
-
+func RemoveMember(c *fiber.Ctx) error {
 	membershipID := c.Params("membershipID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
 	parsedMembershipID, err := uuid.Parse(membershipID)
 	if err != nil {
@@ -92,11 +93,15 @@ func RemoveMember(c *fiber.Ctx) error { //! Only project creator can access
 	}
 
 	var membership models.Membership
-	if err := initializers.DB.First(&membership, "id = ?", parsedMembershipID).Error; err != nil {
+	if err := initializers.DB.Preload("Project").First(&membership, "id = ?", parsedMembershipID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Membership of this ID found."}
 		}
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	if membership.Project.UserID != parsedLoggedInUserID || membership.UserID != parsedLoggedInUserID {
+		return &fiber.Error{Code: 403, Message: "You do not have the permission to perform this action."}
 	}
 
 	result := initializers.DB.Delete(&membership)
@@ -111,9 +116,10 @@ func RemoveMember(c *fiber.Ctx) error { //! Only project creator can access
 	})
 }
 
-func ChangeMemberRole(c *fiber.Ctx) error { //! Only project creator can access
-
+func ChangeMemberRole(c *fiber.Ctx) error {
 	membershipID := c.Params("membershipID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
 	parsedMembershipID, err := uuid.Parse(membershipID)
 	if err != nil {
@@ -128,11 +134,15 @@ func ChangeMemberRole(c *fiber.Ctx) error { //! Only project creator can access
 	}
 
 	var membership models.Membership
-	if err := initializers.DB.First(&membership, "id = ?", parsedMembershipID).Error; err != nil {
+	if err := initializers.DB.Preload("Project").First(&membership, "id = ?", parsedMembershipID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Membership of this ID found."}
 		}
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	if membership.Project.UserID != parsedLoggedInUserID {
+		return &fiber.Error{Code: 403, Message: "You do not have the permission to perform this action."}
 	}
 
 	membership.Role = reqBody.Role

@@ -50,7 +50,7 @@ func GetMyApplications(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var applications []models.Application
-	if err := initializers.DB.Preload("Opening").Where("user_id=?", loggedInUserID).Find(&applications).Error; err != nil {
+	if err := initializers.DB.Preload("Opening").Preload("Project").Where("user_id=?", loggedInUserID).Find(&applications).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 

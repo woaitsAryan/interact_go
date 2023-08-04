@@ -93,30 +93,24 @@ func AddMessage(c *fiber.Ctx) error {
 
 	chatID := reqBody.ChatID
 
-	message := models.Message{
-		UserID:  parsedUserID,
-		Content: reqBody.Content,
-	}
-
 	parsedChatID, err := uuid.Parse(chatID)
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid ID."}
 	}
 
 	var chat models.Chat
-	if err := initializers.DB.First(&chat, "id=? AND (chat.creating_user_id = ? OR chat.accepting_user_id = ?)", parsedChatID, loggedInUserID, loggedInUserID).Error; err != nil {
+	if err := initializers.DB.First(&chat, "id=? AND (creating_user_id = ? OR accepting_user_id = ?)", parsedChatID, parsedUserID, parsedUserID).Error; err != nil {
 		return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
 	}
 
-	message.ChatID = parsedChatID
-
-	result := initializers.DB.Create(&message)
-
-	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	message := models.Message{
+		UserID:  parsedUserID,
+		Content: reqBody.Content,
+		ChatID:  parsedChatID,
 	}
 
-	if err := initializers.DB.Preload("User").First(&message).Error; err != nil {
+	result := initializers.DB.Create(&message)
+	if result.Error != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 

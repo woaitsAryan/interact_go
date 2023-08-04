@@ -13,7 +13,7 @@ func MessagingRouter(app *fiber.App) {
 
 	messagingRoutes.Get("/", controllers.GetUserChats)
 	messagingRoutes.Get("/:chatID", controllers.GetChat)
-	messagingRoutes.Get("/project/:projectChatID", controllers.GetChat)
+	messagingRoutes.Get("/project/:projectChatID", controllers.GetProjectChat)
 
 	messagingRoutes.Get("/accept/:chatID", controllers.AcceptChat)
 
@@ -27,6 +27,8 @@ func MessagingRouter(app *fiber.App) {
 	messagingRoutes.Delete("/:chatID", controllers.DeleteChat)
 	messagingRoutes.Delete("/group/:chatID", controllers.DeleteGroupChat)
 	messagingRoutes.Delete("/project/:projectChatID", controllers.DeleteProjectChat)
+
+	messagingRoutes.Delete("/project/membership/:membershipID", controllers.LeaveProjectChat)
 
 	messagingRoutes.Get("/content/:chatID", controllers.GetMessages)
 	messagingRoutes.Get("/content/group/:ChatID", controllers.GetMessages)
