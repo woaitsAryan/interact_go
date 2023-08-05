@@ -27,6 +27,7 @@ type User struct {
 	NoFollowers               int               `gorm:"default:0" json:"noFollowers"`
 	PasswordChangedAt         time.Time         `gorm:"default:current_timestamp" json:"-"`
 	Admin                     bool              `gorm:"default:false" json:"-"`
+	Verified                  bool              `gorm:"default:false" json:"isVerified"`
 	Active                    bool              `gorm:"default:true" json:"-"` //! add a functionality that on delete the acc goes inActive and if the user logs in within 30 days, it goes active again
 	CreatedAt                 time.Time         `gorm:"default:current_timestamp" json:"-"`
 	Projects                  []Project         `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"projects"`
@@ -41,6 +42,7 @@ type User struct {
 	SendNotifications         []Notification    `gorm:"foreignKey:SenderID;constraint:OnDelete:CASCADE" json:"-"`
 	Followers                 []FollowFollower  `gorm:"foreignKey:FollowerID;constraint:OnDelete:CASCADE" json:"-"`
 	Following                 []FollowFollower  `gorm:"foreignKey:FollowedID;constraint:OnDelete:CASCADE" json:"-"`
+	Verification              UserVerification  `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"-"`
 }
 
 type ProfileView struct {
@@ -49,12 +51,6 @@ type ProfileView struct {
 	Date   time.Time `gorm:"type:date" json:"date"`
 	Count  int       `json:"count"`
 }
-
-// This func is called before gorm conversion
-// func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
-// 	u.PasswordChangedAt = time.Now()
-// 	return nil
-// }
 
 type FollowFollower struct { //* follower follows followed
 	FollowerID uuid.UUID `json:"followerID"`
@@ -79,4 +75,11 @@ type LastViewed struct {
 	ProjectID uuid.UUID `gorm:"type:uuid;not null" json:"projectID"`
 	Project   Project   `json:"project"`
 	Timestamp time.Time `gorm:"default:current_timestamp" json:"timestamp"`
+}
+
+type UserVerification struct {
+	ID             uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	UserID         uuid.UUID `gorm:"type:uuid;not null;unique" json:"userID"`
+	Code           string    `json:"code"`
+	ExpirationTime time.Time `json:"expirationTime"`
 }
