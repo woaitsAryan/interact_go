@@ -73,10 +73,10 @@ func SendVerificationCode(c *fiber.Ctx) error {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 		}
 	}
-	// err = helpers.SendMail(config.EMAIL_SUBJECT, config.EMAIL_BODY+code, user.Email)
-	// if err != nil {
-	// 	return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-	// }
+	err = helpers.SendMail(config.EMAIL_SUBJECT, config.EMAIL_BODY+code, user.Name, user.Email)
+	if err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",

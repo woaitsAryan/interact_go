@@ -218,6 +218,14 @@ func AddProject(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Error Parsing the Loggedin User ID."}
 	}
 
+	var user models.User
+	if err := initializers.DB.Where("id=?", parsedID).First(&user).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+	if !user.Verified {
+		return &fiber.Error{Code: 401, Message: config.VERIFICATION_ERROR}
+	}
+
 	picName, err := utils.SaveFile(c, "coverPic", "project/coverPics", true, 900, 400)
 	if err != nil {
 		return err

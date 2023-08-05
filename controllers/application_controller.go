@@ -104,6 +104,14 @@ func AddApplication(c *fiber.Ctx) error {
 
 	parsedUserID, _ := uuid.Parse(userID)
 
+	var user models.User
+	if err := initializers.DB.Where("id=?", parsedUserID).First(&user).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+	if !user.Verified {
+		return &fiber.Error{Code: 401, Message: config.VERIFICATION_ERROR}
+	}
+
 	var application models.Application
 	if err := initializers.DB.Where("opening_id=? AND user_id=?", parsedOpeningID, parsedUserID).First(&application).Error; err == nil {
 		return &fiber.Error{Code: 400, Message: "You already have applied for this opening."}

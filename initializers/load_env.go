@@ -9,14 +9,12 @@ import (
 )
 
 type Config struct {
-	PORT                    string `mapstructure:"PORT"`
-	DB_URL                  string `mapstructure:"DB_URL"`
-	JWT_SECRET              string `mapstructure:"JWT_SECRET"`
-	ENV                     string `mapstructure:"ENV"`
-	BASE_URL                string `mapstructure:"BASE_URL"`
-	MAILGUN_PRIVATE_API_KEY string `mapstructure:"MAILGUN_PRIVATE_API_KEY"`
-	MAILGUN_PUBLIC_API_KEY  string `mapstructure:"MAILGUN_PUBLIC_API_KEY"`
-	MAILGUN_DOMAIN          string `mapstructure:"MAILGUN_DOMAIN"`
+	PORT         string `mapstructure:"PORT"`
+	DB_URL       string `mapstructure:"DB_URL"`
+	JWT_SECRET   string `mapstructure:"JWT_SECRET"`
+	ENV          string `mapstructure:"ENV"`
+	BASE_URL     string `mapstructure:"BASE_URL"`
+	SENDGRID_KEY string `mapstructure:"SENDGRID_KEY"`
 }
 
 var CONFIG Config

@@ -93,6 +93,14 @@ func AcceptProjectInvitation(c *fiber.Ctx) error {
 	invitationID := c.Params("invitationID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
+	var user models.User
+	if err := initializers.DB.Where("id=?", loggedInUserID).First(&user).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+	if !user.Verified {
+		return &fiber.Error{Code: 401, Message: config.VERIFICATION_ERROR}
+	}
+
 	var invitation models.ProjectInvitation
 	err := initializers.DB.First(&invitation, "id=? AND user_id=?", invitationID, loggedInUserID).Error
 

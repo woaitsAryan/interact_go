@@ -97,13 +97,21 @@ func AddPost(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
 	}
 
-	if err := helpers.Validate[schemas.PostCreateSchema](reqBody); err != nil {
-		return err
-	}
-
 	parsedID, err := uuid.Parse(c.GetRespHeader("loggedInUserID"))
 	if err != nil {
 		return &fiber.Error{Code: 500, Message: "Error Parsing the Loggedin User ID."}
+	}
+
+	var user models.User
+	if err := initializers.DB.Where("id=?", parsedID).First(&user).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+	if !user.Verified {
+		return &fiber.Error{Code: 401, Message: config.VERIFICATION_ERROR}
+	}
+
+	if err := helpers.Validate[schemas.PostCreateSchema](reqBody); err != nil {
+		return err
 	}
 
 	images, err := utils.SaveMultipleFiles(c, "images", "post", true, 1280, 720)
