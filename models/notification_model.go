@@ -8,6 +8,7 @@ import (
 
 /*
 Status Codes:
+*-1 - Welcome to Interact
 *0 - User started following you
 *1 - User liked your post
 *2 - User commented on your post
@@ -36,5 +37,6 @@ type Notification struct {
 	Opening          Opening     `json:"opening"`
 	ApplicationID    *uuid.UUID  `gorm:"type:uuid" json:"applicationID"`
 	Application      Application `json:"application"`
+	Read             bool        `gorm:"default:false" json:"isRead"`
 	CreatedAt        time.Time   `gorm:"default:current_timestamp" json:"createdAt"`
 }

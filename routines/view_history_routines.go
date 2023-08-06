@@ -21,7 +21,7 @@ func UpdateLastViewed(userID uuid.UUID, projectID uuid.UUID) {
 
 			result := initializers.DB.Create(&projectView)
 			if result.Error != nil {
-				helpers.LogDatabaseError("Error whiling creating last viewed-UpdateLastViewed", err, "go_routine")
+				helpers.LogDatabaseError("Error whiling creating last viewed-UpdateLastViewed", result.Error, "go_routine")
 			}
 		} else {
 			helpers.LogDatabaseError("Error whiling fetching last viewed-UpdateLastViewed", err, "go_routine")
@@ -31,7 +31,7 @@ func UpdateLastViewed(userID uuid.UUID, projectID uuid.UUID) {
 
 		result := initializers.DB.Save(&projectView)
 		if result.Error != nil {
-			helpers.LogDatabaseError("Error whiling updating last viewed-UpdateLastViewed", err, "go_routine")
+			helpers.LogDatabaseError("Error whiling updating last viewed-UpdateLastViewed", result.Error, "go_routine")
 		}
 	}
 

@@ -9,6 +9,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/schemas"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
@@ -79,8 +80,10 @@ func SignUp(c *fiber.Ctx) error {
 
 	result := initializers.DB.Create(&newUser)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
+
+	go routines.AddWelcomeNotification(newUser.ID)
 
 	return createSendToken(c, newUser, 201, "Account Created")
 }
