@@ -12,6 +12,9 @@ func UserRouter(app *fiber.App) {
 	app.Post("/login", controllers.LogIn)
 	app.Post("/refresh", controllers.Refresh)
 
+	app.Post("/recovery", controllers.SendResetURL)
+	app.Post("/recovery/verify", controllers.ResetPassword)
+
 	userRoutes := app.Group("/users", middlewares.Protect)
 	userRoutes.Get("/me", controllers.GetMe)
 	userRoutes.Get("/views", controllers.GetViews)

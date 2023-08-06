@@ -39,7 +39,7 @@ func SendVerificationCode(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.SERVER_ERROR, Err: err}
 	}
 
-	expirationTime := time.Now().Add(config.OTP_EXPIRATION_TIME)
+	expirationTime := time.Now().Add(config.VERIFICATION_OTP_EXPIRATION_TIME)
 
 	var user models.User
 	if err := initializers.DB.Where("id=?", parsedLoggedInUserID).First(&user).Error; err != nil {
@@ -73,7 +73,7 @@ func SendVerificationCode(c *fiber.Ctx) error {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 		}
 	}
-	err = helpers.SendMail(config.EMAIL_SUBJECT, config.EMAIL_BODY+code, user.Name, user.Email)
+	err = helpers.SendMail(config.VERIFICATION_EMAIL_SUBJECT, config.VERIFICATION_EMAIL_BODY+code, user.Name, user.Email)
 	if err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}

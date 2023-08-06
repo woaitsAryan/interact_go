@@ -53,6 +53,7 @@ func createSendToken(c *fiber.Ctx, user models.User, statusCode int, message str
 		"message":    message,
 		"token":      access_token,
 		"userID":     user.ID,
+		"email":      user.Email,
 		"profilePic": user.ProfilePic,
 	})
 }
@@ -77,7 +78,6 @@ func SignUp(c *fiber.Ctx) error {
 	}
 
 	result := initializers.DB.Create(&newUser)
-
 	if result.Error != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
@@ -96,7 +96,6 @@ func LogIn(c *fiber.Ctx) error {
 	}
 
 	var user models.User
-
 	initializers.DB.First(&user, "username = ?", reqBody.Username)
 
 	if user.ID == uuid.Nil {
