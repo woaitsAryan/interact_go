@@ -24,5 +24,6 @@ type ProjectInvitation struct {
 	Project   Project   `gorm:"constraint:OnDelete:CASCADE" json:"project"`
 	Title     string    `gorm:"type:varchar(25);not null" json:"title"`
 	Status    int       `gorm:"default:0" json:"status"` //* -1 for reject, 0 for waiting and, 1 for accept
+	Read      bool      `gorm:"default:false" json:"isRead"`
 	CreatedAt time.Time `gorm:"default:current_timestamp" json:"createdAt"`
 }

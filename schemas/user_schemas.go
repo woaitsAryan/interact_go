@@ -10,7 +10,6 @@ type UserCreateSchema struct {
 
 type UserUpdateSchema struct {
 	Name       string   `json:"name" validate:"alpha"`
-	PhoneNo    string   `json:"phoneNo"  validate:"e164"`
 	ProfilePic string   `json:"profilePic" validate:"image"`
 	CoverPic   string   `json:"coverPic" validate:"image"`
 	Bio        string   `json:"bio"`

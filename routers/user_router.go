@@ -18,7 +18,12 @@ func UserRouter(app *fiber.App) {
 	userRoutes := app.Group("/users", middlewares.Protect)
 	userRoutes.Get("/me", controllers.GetMe)
 	userRoutes.Get("/views", controllers.GetViews)
+
 	userRoutes.Patch("/update_password", controllers.UpdatePassword)
+	userRoutes.Patch("/update_email", controllers.UpdateEmail)
+	userRoutes.Patch("/update_phone_number", controllers.UpdatePhoneNo)
+	userRoutes.Delete("/deactive", controllers.Deactive)
+
 	userRoutes.Patch("/me", controllers.UpdateMe)
 	userRoutes.Patch("/me/achievements", controllers.AddAchievement)
 	userRoutes.Delete("/me/achievements/:achievementID", controllers.DeleteAchievement)

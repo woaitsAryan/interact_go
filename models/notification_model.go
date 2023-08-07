@@ -18,10 +18,9 @@ Status Codes:
 *6 - You got selected for the opening
 *7 - You got rejected for the opening
 *8 - You were removed from the project
+*9 - Chat request
 */
-//! Add a chat request notification
 
-// ! Problem in Go Routines
 type Notification struct {
 	ID               uuid.UUID   `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	NotificationType int         `json:"notificationType"`

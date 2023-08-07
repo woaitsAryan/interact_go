@@ -15,7 +15,7 @@ import (
 
 func GetTrendingSearches(c *fiber.Ctx) error {
 	var trendingSearches []string
-	timeWindow := time.Now().Add(-24 * time.Hour)
+	timeWindow := time.Now().Add(-10 * 24 * time.Hour)
 
 	// Count the frequency of each normalized search query within the time window
 	var searchCounts []struct {
@@ -64,6 +64,7 @@ func GetTrendingPosts(c *fiber.Ctx) error {
 
 	if err := searchedDB.
 		Preload("User").
+		Joins("JOIN users ON posts.user_id = users.id AND users.active = ?", true).
 		Select("*, (2 * no_likes + no_comments + 5 * no_shares) AS weighted_average").
 		Order("weighted_average DESC").
 		Find(&posts).Error; err != nil {
@@ -197,6 +198,7 @@ func GetTrendingUsers(c *fiber.Ctx) error {
 
 	var users []models.User
 	if err := searchedDB.
+		Where("active=?", true).
 		Select("*, (2 * no_followers - no_following) AS weighted_average").
 		Order("weighted_average DESC").
 		Find(&users).Error; err != nil {
@@ -214,7 +216,7 @@ func GetRecommendedUsers(c *fiber.Ctx) error {
 	searchedDB := API.Search(c, 0)(paginatedDB)
 
 	var users []models.User
-	if err := searchedDB.Order("created_at DESC").Find(&users).Error; err != nil {
+	if err := searchedDB.Where("active=?", true).Order("created_at DESC").Find(&users).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 	return c.Status(200).JSON(fiber.Map{
@@ -232,6 +234,7 @@ func GetSimilarUsers(c *fiber.Ctx) error {
 
 	var users []models.User
 	if err := initializers.DB.
+		Where("active=?", true).
 		Where("id <> ?", userID).
 		Where("tags && ?", pq.StringArray(user.Tags)).Limit(10).Find(&users).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}

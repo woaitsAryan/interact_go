@@ -15,6 +15,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 func createSendToken(c *fiber.Ctx, user models.User, statusCode int, message string) error {
@@ -50,12 +51,10 @@ func createSendToken(c *fiber.Ctx, user models.User, statusCode int, message str
 	})
 
 	return c.Status(statusCode).JSON(fiber.Map{
-		"status":     "success",
-		"message":    message,
-		"token":      access_token,
-		"userID":     user.ID,
-		"email":      user.Email,
-		"profilePic": user.ProfilePic,
+		"status":  "success",
+		"message": message,
+		"token":   access_token,
+		"user":    user,
 	})
 }
 
@@ -83,7 +82,7 @@ func SignUp(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
 
-	go routines.AddWelcomeNotification(newUser.ID)
+	go routines.SendWelcomeNotification(newUser.ID)
 
 	return createSendToken(c, newUser, 201, "Account Created")
 }
@@ -99,7 +98,7 @@ func LogIn(c *fiber.Ctx) error {
 	}
 
 	var user models.User
-	initializers.DB.First(&user, "username = ?", reqBody.Username)
+	initializers.DB.Session(&gorm.Session{SkipHooks: true}).First(&user, "username = ?", reqBody.Username)
 
 	if user.ID == uuid.Nil {
 		return &fiber.Error{Code: 400, Message: "No user with these credentials found."}
@@ -109,11 +108,24 @@ func LogIn(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "No user with these credentials found."}
 	}
 
+	if !user.Active {
+		if time.Now().After(user.DeactivatedAt.Add(30 * 24 * time.Hour)) {
+			return &fiber.Error{Code: 400, Message: "Cannot Log into a deactivated account."}
+		}
+		user.Active = true
+		fmt.Println("---------------------HERE----------------------")
+		fmt.Printf("---------------------%s----------------------", user.Username)
+		if err := initializers.DB.Save(&user).Error; err != nil {
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		}
+
+		return createSendToken(c, user, 200, "Account Restored!")
+	}
+
 	return createSendToken(c, user, 200, "Logged In")
 }
 
 func Refresh(c *fiber.Ctx) error {
-
 	var reqBody struct {
 		Token string `json:"token"`
 	}

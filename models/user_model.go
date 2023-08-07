@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
+	"gorm.io/gorm"
 )
 
 type User struct {
@@ -26,6 +27,7 @@ type User struct {
 	NoFollowing               int               `gorm:"default:0" json:"noFollowing"`
 	NoFollowers               int               `gorm:"default:0" json:"noFollowers"`
 	PasswordChangedAt         time.Time         `gorm:"default:current_timestamp" json:"-"`
+	DeactivatedAt             time.Time         `gorm:"default:current_timestamp" json:"-"`
 	Admin                     bool              `gorm:"default:false" json:"-"`
 	Verified                  bool              `gorm:"default:false" json:"isVerified"`
 	Active                    bool              `gorm:"default:true" json:"-"` //! add a functionality that on delete the acc goes inActive and if the user logs in within 30 days, it goes active again
@@ -43,6 +45,27 @@ type User struct {
 	Followers                 []FollowFollower  `gorm:"foreignKey:FollowerID;constraint:OnDelete:CASCADE" json:"-"`
 	Following                 []FollowFollower  `gorm:"foreignKey:FollowedID;constraint:OnDelete:CASCADE" json:"-"`
 	Verification              UserVerification  `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"-"`
+}
+
+func (u *User) AfterFind(tx *gorm.DB) error {
+	if !u.Active {
+		u.Username = "deactived"
+		u.Name = "Interact User"
+		u.CoverPic = "default.jpg"
+		u.ProfilePic = "default.jpg"
+		u.Bio = ""
+		u.Title = ""
+		u.Tagline = ""
+		u.Tags = nil
+		u.Views = 0
+		u.NoFollowers = 0
+		u.NoFollowing = 0
+		u.Achievements = nil
+		u.Memberships = nil
+		u.Projects = nil
+		u.Posts = nil
+	}
+	return nil
 }
 
 type ProfileView struct {

@@ -212,5 +212,99 @@ func UpdatePassword(c *fiber.Ctx) error {
 	}
 
 	return createSendToken(c, user, 200, "Password updated successfully")
+}
 
+func UpdateEmail(c *fiber.Ctx) error {
+	userID := c.GetRespHeader("loggedInUserID")
+
+	var reqBody struct {
+		Email string `json:"email" validate:"required,email"`
+	}
+	if err := c.BodyParser(&reqBody); err != nil {
+		return &fiber.Error{Code: 400, Message: "Validation Failed"}
+	}
+
+	var emailCheckUser models.User
+	if err := initializers.DB.First(&emailCheckUser, "email = ?", reqBody.Email).Error; err == nil {
+		return &fiber.Error{Code: 400, Message: "Email Address Already In Use."}
+	}
+
+	var user models.User
+	if err := initializers.DB.First(&user, "id = ?", userID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return &fiber.Error{Code: 400, Message: "No user of this ID found."}
+		}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	user.Email = reqBody.Email
+	user.Verified = false
+
+	if err := initializers.DB.Save(&user).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "User updated successfully",
+	})
+}
+
+func UpdatePhoneNo(c *fiber.Ctx) error {
+	userID := c.GetRespHeader("loggedInUserID")
+
+	var reqBody struct {
+		PhoneNo string `json:"phoneNo"  validate:"e164"`
+	}
+	if err := c.BodyParser(&reqBody); err != nil {
+		return &fiber.Error{Code: 400, Message: "Validation Failed"}
+	}
+
+	var emailCheckUser models.User
+	if err := initializers.DB.First(&emailCheckUser, "phone_no = ?", reqBody.PhoneNo).Error; err == nil {
+		return &fiber.Error{Code: 400, Message: "Phone Number Already In Use."}
+	}
+
+	var user models.User
+	if err := initializers.DB.First(&user, "id = ?", userID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return &fiber.Error{Code: 400, Message: "No user of this ID found."}
+		}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	user.PhoneNo = reqBody.PhoneNo
+
+	if err := initializers.DB.Save(&user).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "User updated successfully",
+	})
+}
+
+func Deactive(c *fiber.Ctx) error {
+	userID := c.GetRespHeader("loggedInUserID")
+
+	var user models.User
+	if err := initializers.DB.First(&user, "id = ?", userID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return &fiber.Error{Code: 400, Message: "No user of this ID found."}
+		}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	user.Active = false
+	user.DeactivatedAt = time.Now()
+
+	if err := initializers.DB.Save(&user).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return c.Status(204).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Account Deactived",
+	})
 }
