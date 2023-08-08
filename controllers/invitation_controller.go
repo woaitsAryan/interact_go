@@ -5,7 +5,10 @@ import (
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 // func sortInvitationsByCreatedAt(invitations []interface{}) {
@@ -93,6 +96,8 @@ func AcceptProjectInvitation(c *fiber.Ctx) error {
 	invitationID := c.Params("invitationID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
+	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
+
 	var user models.User
 	if err := initializers.DB.Where("id=?", loggedInUserID).First(&user).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
@@ -122,16 +127,16 @@ func AcceptProjectInvitation(c *fiber.Ctx) error {
 	}
 
 	result := initializers.DB.Create(&membership)
-
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
 
 	result = initializers.DB.Save(&invitation)
-
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
+
+	go routines.SendInvitationAcceptedNotification(invitation.UserID, parsedLoggedInUserID)
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
@@ -243,5 +248,58 @@ func WithdrawProjectInvitation(c *fiber.Ctx) error {
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Invitation Withdrawn",
+	})
+}
+
+func GetUnreadInvitations(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	var count int64
+	if err := initializers.DB.
+		Model(models.ProjectInvitation{}).
+		Where("user_id=? AND read=?", loggedInUserID, false).
+		Count(&count).
+		Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "",
+		"count":   count,
+	})
+}
+
+func MarkReadInvitations(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	var reqBody struct {
+		UnreadInvitations []string `json:"unreadInvitations"`
+	}
+	if err := c.BodyParser(&reqBody); err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid Request Body."}
+	}
+
+	for _, unreadInvitationID := range reqBody.UnreadInvitations {
+		var invitation models.ProjectInvitation
+		if err := initializers.DB.
+			Where("id=? AND user_id=?", unreadInvitationID, loggedInUserID).
+			First(&invitation).
+			Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return &fiber.Error{Code: 400, Message: "No Invitation of this ID found."}
+			}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		}
+		invitation.Read = true
+		result := initializers.DB.Save(&invitation)
+		if result.Error != nil {
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "",
 	})
 }

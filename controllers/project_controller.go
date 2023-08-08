@@ -25,7 +25,7 @@ func GetProject(c *fiber.Ctx) error {
 	}
 
 	var project models.Project
-	if err := initializers.DB.Preload("User").Preload("Openings").First(&project, "id = ?", parsedProjectID).Error; err != nil {
+	if err := initializers.DB.Omit("private_links").Preload("User").Preload("Openings").First(&project, "id = ?", parsedProjectID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
 		}

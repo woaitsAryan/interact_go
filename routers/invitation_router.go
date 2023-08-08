@@ -7,15 +7,18 @@ import (
 )
 
 func InvitationRouter(app *fiber.App) {
-	exploreRoutes := app.Group("/invitations", middlewares.Protect)
-	exploreRoutes.Get("/me", controllers.GetInvitations)
+	invitationRoutes := app.Group("/invitations", middlewares.Protect)
+	invitationRoutes.Get("/me", controllers.GetInvitations)
 
-	exploreRoutes.Get("/accept/chat/:invitationID", controllers.AcceptChatInvitation)
-	exploreRoutes.Get("/accept/project/:invitationID", controllers.AcceptProjectInvitation)
+	invitationRoutes.Get("/accept/chat/:invitationID", controllers.AcceptChatInvitation)
+	invitationRoutes.Get("/accept/project/:invitationID", controllers.AcceptProjectInvitation)
 
-	exploreRoutes.Get("/reject/chat/:invitationID", controllers.RejectChatInvitation)
-	exploreRoutes.Get("/reject/project/:invitationID", controllers.RejectProjectInvitation)
+	invitationRoutes.Get("/reject/chat/:invitationID", controllers.RejectChatInvitation)
+	invitationRoutes.Get("/reject/project/:invitationID", controllers.RejectProjectInvitation)
 
-	exploreRoutes.Delete("/withdraw/chat/:invitationID", controllers.WithdrawChatInvitation)
-	exploreRoutes.Delete("/withdraw/project/:invitationID", controllers.WithdrawProjectInvitation)
+	invitationRoutes.Get("/unread", controllers.GetUnreadInvitations)
+	invitationRoutes.Post("/unread", controllers.MarkReadInvitations)
+
+	invitationRoutes.Delete("/withdraw/chat/:invitationID", controllers.WithdrawChatInvitation)
+	invitationRoutes.Delete("/withdraw/project/:invitationID", controllers.WithdrawProjectInvitation)
 }

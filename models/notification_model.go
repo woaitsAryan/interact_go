@@ -19,6 +19,7 @@ Status Codes:
 *7 - You got rejected for the opening
 *8 - You were removed from the project
 *9 - Chat request
+*10 - Accepted Project Invitation
 */
 
 type Notification struct {

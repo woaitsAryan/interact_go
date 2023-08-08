@@ -30,3 +30,14 @@ func SendChatNotification(creatorID uuid.UUID, acceptorID uuid.UUID) {
 		helpers.LogDatabaseError("Error whiling creating notification-AddWelcomeNotification", result.Error, "go_routine")
 	}
 }
+func SendInvitationAcceptedNotification(creatorID uuid.UUID, acceptorID uuid.UUID) {
+	notification := models.Notification{
+		NotificationType: 10,
+		UserID:           creatorID,
+		SenderID:         acceptorID,
+	}
+	result := initializers.DB.Create(&notification)
+	if result.Error != nil {
+		helpers.LogDatabaseError("Error whiling creating notification-AddWelcomeNotification", result.Error, "go_routine")
+	}
+}

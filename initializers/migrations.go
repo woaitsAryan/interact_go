@@ -1,9 +1,13 @@
 package initializers
 
-import "github.com/Pratham-Mishra04/interact/models"
+import (
+	"fmt"
+
+	"github.com/Pratham-Mishra04/interact/models"
+)
 
 func AutoMigrate() {
-
+	fmt.Println("Starting Migrations...")
 	DB.AutoMigrate(
 		&models.User{},
 		// &models.Achievement{},
@@ -39,4 +43,5 @@ func AutoMigrate() {
 		// &models.SearchQuery{},
 		// &models.UserVerification{},
 	)
+	fmt.Println("Migrations Finished!")
 }

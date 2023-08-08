@@ -25,9 +25,10 @@ func Search(c *fiber.Ctx, index int) func(db *gorm.DB) *gorm.DB {
 
 		switch index {
 		case 0: //* users
-			for _, pattern := range regexPatterns {
-				db = db.Or("LOWER(name) ~ ? OR LOWER(username) ~ ? OR ? = ANY (tags)", pattern, pattern, searchStr)
-			}
+			// for _, pattern := range regexPatterns {
+			// 	db = db.Or("LOWER(name) ~ ? OR LOWER(username) ~ ? OR ? = ANY (tags)", pattern, pattern, searchStr)
+			// }
+			db = db.Where("LOWER(name) LIKE ? OR LOWER(username) LIKE ? OR ? = ANY (tags)", "%"+searchStr+"%", "%"+searchStr+"%", searchStr)
 			return db
 		case 1: //* projects
 			for _, pattern := range regexPatterns {

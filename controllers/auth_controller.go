@@ -113,8 +113,6 @@ func LogIn(c *fiber.Ctx) error {
 			return &fiber.Error{Code: 400, Message: "Cannot Log into a deactivated account."}
 		}
 		user.Active = true
-		fmt.Println("---------------------HERE----------------------")
-		fmt.Printf("---------------------%s----------------------", user.Username)
 		if err := initializers.DB.Save(&user).Error; err != nil {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 		}
