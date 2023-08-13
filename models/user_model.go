@@ -30,6 +30,7 @@ type User struct {
 	DeactivatedAt             time.Time         `gorm:"default:current_timestamp" json:"-"`
 	Admin                     bool              `gorm:"default:false" json:"-"`
 	Verified                  bool              `gorm:"default:false" json:"isVerified"`
+	LastLoggedIn              time.Time         `gorm:"default:current_timestamp" json:"-"`
 	Active                    bool              `gorm:"default:true" json:"-"` //! add a functionality that on delete the acc goes inActive and if the user logs in within 30 days, it goes active again
 	CreatedAt                 time.Time         `gorm:"default:current_timestamp" json:"-"`
 	Projects                  []Project         `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"projects"`

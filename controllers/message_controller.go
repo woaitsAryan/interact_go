@@ -15,10 +15,11 @@ func GetMessages(c *fiber.Ctx) error {
 	chatID := c.Params("chatID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
-	paginatedDB := API.Paginator(c)(initializers.DB)
+	// paginatedDB := API.Paginator(c)(initializers.DB)
 
 	var messages []models.Message
-	if err := paginatedDB.
+	// if err := paginatedDB.
+	if err := initializers.DB.
 		Preload("Chat").
 		Preload("User").
 		Preload("Post").

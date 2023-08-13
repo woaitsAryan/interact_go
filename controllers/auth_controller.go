@@ -48,6 +48,7 @@ func createSendToken(c *fiber.Ctx, user models.User, statusCode int, message str
 		Value:    refresh_token,
 		Expires:  time.Now().Add(config.REFRESH_TOKEN_TTL),
 		HTTPOnly: true,
+		Secure:   true,
 	})
 
 	return c.Status(statusCode).JSON(fiber.Map{
@@ -87,6 +88,32 @@ func SignUp(c *fiber.Ctx) error {
 	return createSendToken(c, newUser, 201, "Account Created")
 }
 
+func OAuthSignUp(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	var reqBody struct {
+		Username string `json:"username" validate:"alphanum,required"`
+	}
+
+	c.BodyParser(&reqBody)
+
+	var user models.User
+	if err := initializers.DB.First(&user, "id = ?", loggedInUserID).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	user.Username = reqBody.Username
+	user.Verified = true
+
+	result := initializers.DB.Create(&user)
+	if result.Error != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+	}
+
+	go routines.SendWelcomeNotification(user.ID)
+
+	return createSendToken(c, user, 201, "Account Created")
+}
+
 func LogIn(c *fiber.Ctx) error {
 	var reqBody struct {
 		Username string `json:"username"`
@@ -113,11 +140,40 @@ func LogIn(c *fiber.Ctx) error {
 			return &fiber.Error{Code: 400, Message: "Cannot Log into a deactivated account."}
 		}
 		user.Active = true
-		if err := initializers.DB.Save(&user).Error; err != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-		}
+	}
 
-		return createSendToken(c, user, 200, "Account Restored!")
+	user.LastLoggedIn = time.Now()
+
+	if err := initializers.DB.Save(&user).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return createSendToken(c, user, 200, "Logged In")
+}
+
+func OAuthLogIn(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	var user models.User
+	if err := initializers.DB.Session(&gorm.Session{SkipHooks: true}).First(&user, "id = ?", loggedInUserID).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	if user.ID == uuid.Nil {
+		return &fiber.Error{Code: 400, Message: "No user with these credentials found."}
+	}
+
+	if !user.Active {
+		if time.Now().After(user.DeactivatedAt.Add(30 * 24 * time.Hour)) {
+			return &fiber.Error{Code: 400, Message: "Cannot Log into a deactivated account."}
+		}
+		user.Active = true
+	}
+
+	user.LastLoggedIn = time.Now()
+
+	if err := initializers.DB.Save(&user).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return createSendToken(c, user, 200, "Logged In")

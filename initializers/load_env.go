@@ -8,13 +8,24 @@ import (
 	"github.com/spf13/viper"
 )
 
+type Environment string
+
+const (
+	DevelopmentEnv Environment = "development"
+	ProductionEnv  Environment = "production"
+)
+
 type Config struct {
-	PORT         string `mapstructure:"PORT"`
-	DB_URL       string `mapstructure:"DB_URL"`
-	JWT_SECRET   string `mapstructure:"JWT_SECRET"`
-	ENV          string `mapstructure:"ENV"`
-	BASE_URL     string `mapstructure:"BASE_URL"`
-	SENDGRID_KEY string `mapstructure:"SENDGRID_KEY"`
+	PORT                 string      `mapstructure:"PORT"`
+	DB_URL               string      `mapstructure:"DB_URL"`
+	JWT_SECRET           string      `mapstructure:"JWT_SECRET"`
+	ENV                  Environment `mapstructure:"ENV"`
+	FRONTEND_URL         string      `mapstructure:"FRONTEND_URL"`
+	BACKEND_URL          string      `mapstructure:"BACKEND_URL"`
+	SENDGRID_KEY         string      `mapstructure:"SENDGRID_KEY"`
+	GOOGLE_CLIENT_ID     string      `mapstructure:"GOOGLE_CLIENT_ID"`
+	GOOGLE_CLIENT_SECRET string      `mapstructure:"GOOGLE_CLIENT_SECRET"`
+	GOOGLE_OAUTH_STATE   string      `mapstructure:"GOOGLE_OAUTH_STATE"`
 }
 
 var CONFIG Config
@@ -37,6 +48,11 @@ func LoadEnv() {
 
 	if len(missingKeys) > 0 {
 		err := fmt.Errorf("following environment variables not found: %v", missingKeys)
+		log.Fatal(err)
+	}
+
+	if CONFIG.ENV != DevelopmentEnv && CONFIG.ENV != ProductionEnv {
+		err := fmt.Errorf("invalid ENV value: %s", CONFIG.ENV)
 		log.Fatal(err)
 	}
 }

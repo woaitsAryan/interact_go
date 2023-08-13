@@ -9,7 +9,7 @@ import (
 
 func RATE_LIMITER() fiber.Handler {
 	return limiter.New(limiter.Config{
-		Max:        1000,          // Maximum number of requests allowed within the duration
+		Max:        2000,          // Maximum number of requests allowed within the duration
 		Expiration: 1 * time.Hour, // Duration for which the limit applies
 		KeyGenerator: func(c *fiber.Ctx) string {
 			// Use IP address to differentiate clients

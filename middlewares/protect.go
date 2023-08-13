@@ -13,7 +13,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func verifyToken(tokenString string, user *models.User) error {
+func verifyToken(tokenString string, user *models.User, checkRedirect bool) error {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -28,6 +28,15 @@ func verifyToken(tokenString string, user *models.User) error {
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		if float64(time.Now().Unix()) > claims["exp"].(float64) {
 			return &fiber.Error{Code: 403, Message: "Your token has expired."}
+		}
+
+		rdt, ok := claims["rdt"].(bool)
+		if !ok {
+			return &fiber.Error{Code: 401, Message: "Not a redirect Token."}
+		}
+
+		if !rdt {
+			return &fiber.Error{Code: 403, Message: "Not a redirect Token."}
 		}
 
 		userID, ok := claims["sub"].(string)
@@ -52,7 +61,6 @@ func verifyToken(tokenString string, user *models.User) error {
 }
 
 func Protect(c *fiber.Ctx) error {
-
 	authHeader := c.Get("Authorization")
 	tokenArr := strings.Split(authHeader, " ")
 
@@ -63,7 +71,7 @@ func Protect(c *fiber.Ctx) error {
 	tokenString := tokenArr[1]
 
 	var user models.User
-	err := verifyToken(tokenString, &user)
+	err := verifyToken(tokenString, &user, false)
 	if err != nil {
 		return err
 	}
@@ -71,7 +79,6 @@ func Protect(c *fiber.Ctx) error {
 	c.Set("loggedInUserID", user.ID.String())
 
 	return c.Next()
-
 }
 
 func PartialProtect(c *fiber.Ctx) error {
@@ -85,7 +92,28 @@ func PartialProtect(c *fiber.Ctx) error {
 	tokenString := tokenArr[1]
 
 	var user models.User
-	err := verifyToken(tokenString, &user)
+	err := verifyToken(tokenString, &user, false)
+	if err != nil {
+		return err
+	}
+
+	c.Set("loggedInUserID", user.ID.String())
+
+	return c.Next()
+}
+
+func ProtectRedirect(c *fiber.Ctx) error {
+	authHeader := c.Get("Authorization")
+	tokenArr := strings.Split(authHeader, " ")
+
+	if len(tokenArr) != 2 {
+		return &fiber.Error{Code: 401, Message: "You are Not Logged In."}
+	}
+
+	tokenString := tokenArr[1]
+
+	var user models.User
+	err := verifyToken(tokenString, &user, true)
 	if err != nil {
 		return err
 	}
