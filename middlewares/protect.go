@@ -29,14 +29,15 @@ func verifyToken(tokenString string, user *models.User, checkRedirect bool) erro
 		if float64(time.Now().Unix()) > claims["exp"].(float64) {
 			return &fiber.Error{Code: 403, Message: "Your token has expired."}
 		}
+		if checkRedirect {
+			rdt, ok := claims["rdt"].(bool)
+			if !ok {
+				return &fiber.Error{Code: 401, Message: "Not a redirect Token."}
+			}
 
-		rdt, ok := claims["rdt"].(bool)
-		if !ok {
-			return &fiber.Error{Code: 401, Message: "Not a redirect Token."}
-		}
-
-		if !rdt {
-			return &fiber.Error{Code: 403, Message: "Not a redirect Token."}
+			if !rdt {
+				return &fiber.Error{Code: 403, Message: "Not a redirect Token."}
+			}
 		}
 
 		userID, ok := claims["sub"].(string)

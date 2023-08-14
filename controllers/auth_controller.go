@@ -101,10 +101,27 @@ func OAuthSignUp(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
+	var existingUser models.User
+	initializers.DB.First(&existingUser, "username = ?", reqBody.Username)
+	if existingUser.ID != uuid.Nil {
+		return &fiber.Error{Code: 400, Message: "User with this Username already exists"}
+	}
+
+	var oauth models.OAuth
+	if err := initializers.DB.First(&oauth, "user_id = ?", loggedInUserID).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
 	user.Username = reqBody.Username
 	user.Verified = true
+	oauth.OnBoardingCompleted = true
 
-	result := initializers.DB.Create(&user)
+	result := initializers.DB.Save(&user)
+	if result.Error != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+	}
+
+	result = initializers.DB.Save(&oauth)
 	if result.Error != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}

@@ -16,6 +16,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -33,7 +34,7 @@ func RedirectToSignUp(c *fiber.Ctx, user models.User) error {
 		return err
 	}
 
-	return c.Redirect(initializers.CONFIG.FRONTEND_URL+"/signup/complete?token="+sign_up_token, fiber.StatusTemporaryRedirect)
+	return c.Redirect(initializers.CONFIG.FRONTEND_URL+"/signup/callback?token="+sign_up_token, fiber.StatusTemporaryRedirect)
 }
 
 func RedirectToLogin(c *fiber.Ctx, user models.User) error {
@@ -50,7 +51,7 @@ func RedirectToLogin(c *fiber.Ctx, user models.User) error {
 		return err
 	}
 
-	return c.Redirect(initializers.CONFIG.FRONTEND_URL+"/login/complete?token="+login_token, fiber.StatusTemporaryRedirect)
+	return c.Redirect(initializers.CONFIG.FRONTEND_URL+"/login/callback?token="+login_token, fiber.StatusTemporaryRedirect)
 }
 
 func GoogleRedirect(c *fiber.Ctx) error {
@@ -119,7 +120,7 @@ func GoogleCallback(c *fiber.Ctx) error {
 		}
 
 		var user models.User
-		if err := initializers.DB.Session(&gorm.Session{SkipHooks: true}).First(&user, "email = ?", userInfo.Email).Error; err != nil {
+		if err := initializers.DB.Session(&gorm.Session{SkipHooks: true}).Preload("OAuth").First(&user, "email = ?", userInfo.Email).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
 				newUser := models.User{
 					Name:              userInfo.Name,
@@ -133,16 +134,26 @@ func GoogleCallback(c *fiber.Ctx) error {
 					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 				}
 
+				oauth := models.OAuth{
+					UserID:              newUser.ID,
+					Provider:            "Google",
+					OnBoardingCompleted: false,
+				}
+
+				result = initializers.DB.Create(&oauth)
+				if result.Error != nil {
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				}
+
 				return RedirectToSignUp(c, newUser)
 			} else {
 				return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 			}
 		}
 
-		if !user.Verified {
-			return RedirectToSignUp(c, user)
+		if user.OAuth.ID == uuid.Nil || user.OAuth.OnBoardingCompleted {
+			return RedirectToLogin(c, user)
 		}
-
-		return RedirectToLogin(c, user)
+		return RedirectToSignUp(c, user)
 	}
 }

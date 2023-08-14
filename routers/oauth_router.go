@@ -8,7 +8,7 @@ import (
 
 func OauthRouter(app *fiber.App) {
 	oauthRoutes := app.Group("/auth")
-	oauthRoutes.Get("/signup", middlewares.ProtectRedirect, controllers.OAuthSignUp)
+	oauthRoutes.Post("/signup", middlewares.ProtectRedirect, controllers.OAuthSignUp)
 	oauthRoutes.Get("/login", middlewares.ProtectRedirect, controllers.OAuthLogIn)
 
 	oauthRoutes.Get("/google", controllers.GoogleRedirect)

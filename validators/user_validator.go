@@ -26,13 +26,11 @@ func UserCreateValidator(c *fiber.Ctx) error {
 
 	var user models.User
 	initializers.DB.First(&user, "email = ?", reqBody.Email)
-
 	if user.ID != uuid.Nil {
 		return &fiber.Error{Code: 400, Message: "User with this Email ID already exists"}
 	}
 
 	initializers.DB.First(&user, "username = ?", reqBody.Username)
-
 	if user.ID != uuid.Nil {
 		return &fiber.Error{Code: 400, Message: "User with this Username already exists"}
 	}

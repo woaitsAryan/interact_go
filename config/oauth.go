@@ -10,7 +10,7 @@ var (
 	GoogleOAuthConfig = &oauth2.Config{
 		ClientID:     "",
 		ClientSecret: "",
-		RedirectURL:  initializers.CONFIG.BACKEND_URL + "/auth/google/callback",
+		RedirectURL:  "/auth/google/callback",
 		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email"},
 		Endpoint:     google.Endpoint,
 	}
@@ -20,5 +20,6 @@ var (
 func InitializeOAuthGoogle() {
 	GoogleOAuthConfig.ClientID = initializers.CONFIG.GOOGLE_CLIENT_ID
 	GoogleOAuthConfig.ClientSecret = initializers.CONFIG.GOOGLE_CLIENT_SECRET
+	GoogleOAuthConfig.RedirectURL = initializers.CONFIG.BACKEND_URL + GoogleOAuthConfig.RedirectURL
 	GoogleOAuthState = initializers.CONFIG.GOOGLE_OAUTH_STATE
 }

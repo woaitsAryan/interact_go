@@ -27,12 +27,13 @@ type User struct {
 	NoFollowing               int               `gorm:"default:0" json:"noFollowing"`
 	NoFollowers               int               `gorm:"default:0" json:"noFollowers"`
 	PasswordChangedAt         time.Time         `gorm:"default:current_timestamp" json:"-"`
-	DeactivatedAt             time.Time         `gorm:"default:current_timestamp" json:"-"`
+	DeactivatedAt             time.Time         `gorm:"" json:"-"`
 	Admin                     bool              `gorm:"default:false" json:"-"`
 	Verified                  bool              `gorm:"default:false" json:"isVerified"`
 	LastLoggedIn              time.Time         `gorm:"default:current_timestamp" json:"-"`
 	Active                    bool              `gorm:"default:true" json:"-"` //! add a functionality that on delete the acc goes inActive and if the user logs in within 30 days, it goes active again
 	CreatedAt                 time.Time         `gorm:"default:current_timestamp" json:"-"`
+	OAuth                     OAuth             `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"-"`
 	Projects                  []Project         `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"projects"`
 	Posts                     []Post            `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"posts"`
 	Memberships               []Membership      `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"memberships"`
@@ -67,6 +68,14 @@ func (u *User) AfterFind(tx *gorm.DB) error {
 		u.Posts = nil
 	}
 	return nil
+}
+
+type OAuth struct {
+	ID                  uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	UserID              uuid.UUID `gorm:"type:uuid;not null" json:"userID"`
+	Provider            string    `gorm:"" json:"provider"`
+	OnBoardingCompleted bool      `gorm:"default:false" json:"-"`
+	CreatedAt           time.Time `gorm:"default:current_timestamp" json:"-"`
 }
 
 type ProfileView struct {
