@@ -97,7 +97,7 @@ func GetWorkSpaceProject(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 403, Message: "Cannot perform this action."}
 	}
 
-	var invitations []models.ProjectInvitation
+	var invitations []models.Invitation
 	if err := initializers.DB.Preload("User").Find(&invitations, "project_id = ? AND (status = 0 OR status = -1)", parsedProjectID).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}

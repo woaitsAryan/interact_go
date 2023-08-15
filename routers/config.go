@@ -1,6 +1,9 @@
 package routers
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/Pratham-Mishra04/interact/routers/organization_routers"
+	"github.com/gofiber/fiber/v2"
+)
 
 func Config(app *fiber.App) {
 	UserRouter(app)
@@ -24,4 +27,6 @@ func Config(app *fiber.App) {
 	ShareRouter(app)
 
 	VerificationRouter(app)
+
+	organization_routers.Config(app)
 }

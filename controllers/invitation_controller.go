@@ -11,88 +11,22 @@ import (
 	"gorm.io/gorm"
 )
 
-// func sortInvitationsByCreatedAt(invitations []interface{}) {
-// 	sort.Slice(invitations, func(i, j int) bool {
-// 		invitationA := invitations[i]
-// 		invitationB := invitations[j]
-
-// 		createdAtA := getCreatedAt(invitationA)
-// 		createdAtB := getCreatedAt(invitationB)
-
-// 		return createdAtA.Before(createdAtB)
-// 	})
-// }
-
-// func getCreatedAt(invitation interface{}) time.Time {
-// 	switch inv := invitation.(type) {
-// 	case models.ChatInvitation:
-// 		return inv.CreatedAt
-// 	case models.ProjectInvitation:
-// 		return inv.CreatedAt
-// 	default:
-// 		return time.Time{}
-// 	}
-// }
-
 func GetInvitations(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
-	// var chatInvitations []models.ChatInvitation
-	// if err := initializers.DB.Preload("Chat").Where("user_id = ? ", loggedInUserID).Order("created_at DESC").Find(&chatInvitations).Error; err != nil {
-	// 	return &fiber.Error{Code: 500, Message: "Failed to get the Chat Invitations."}
-	// }
-
-	var projectInvitations []models.ProjectInvitation
-	if err := initializers.DB.Preload("Project").Where("user_id = ? ", loggedInUserID).Order("created_at DESC").Find(&projectInvitations).Error; err != nil {
+	var invitations []models.Invitation
+	if err := initializers.DB.Preload("Project").Preload("Organization").Where("user_id = ? ", loggedInUserID).Order("created_at DESC").Find(&invitations).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
-
-	// var combinedInvitations []interface{}
-
-	// for _, chatInvitation := range chatInvitations {
-	// 	combinedInvitations = append(combinedInvitations, chatInvitation)
-	// }
-
-	// for _, projectInvitation := range projectInvitations {
-	// 	combinedInvitations = append(combinedInvitations, projectInvitation)
-	// }
-
-	// sortInvitationsByCreatedAt(combinedInvitations)
 
 	return c.Status(200).JSON(fiber.Map{
-		"status":  "success",
-		"message": "",
-		// "chatInvitations":    chatInvitations,
-		"projectInvitations": projectInvitations,
+		"status":      "success",
+		"message":     "",
+		"invitations": invitations,
 	})
 }
 
-func AcceptChatInvitation(c *fiber.Ctx) error {
-
-	invitationID := c.Params("invitationID")
-
-	var invitation models.ChatInvitation
-	err := initializers.DB.First(&invitation, "id=?", invitationID).Error
-
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "No Invitation of this ID found."}
-	}
-
-	invitation.Status = 1
-
-	result := initializers.DB.Save(&invitation)
-
-	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-	}
-
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"status":  "success",
-		"message": "Invitation Accepted",
-	})
-}
-
-func AcceptProjectInvitation(c *fiber.Ctx) error {
+func AcceptInvitation(c *fiber.Ctx) error {
 	invitationID := c.Params("invitationID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
@@ -106,9 +40,8 @@ func AcceptProjectInvitation(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 401, Message: config.VERIFICATION_ERROR}
 	}
 
-	var invitation models.ProjectInvitation
+	var invitation models.Invitation
 	err := initializers.DB.First(&invitation, "id=? AND user_id=?", invitationID, loggedInUserID).Error
-
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "No Invitation of this ID found."}
 	}
@@ -119,19 +52,32 @@ func AcceptProjectInvitation(c *fiber.Ctx) error {
 
 	invitation.Status = 1
 
-	membership := models.Membership{
-		UserID:    invitation.UserID,
-		ProjectID: invitation.ProjectID,
-		Title:     invitation.Title,
-		Role:      "Member",
+	if invitation.ProjectID != nil {
+		membership := models.Membership{
+			UserID:    invitation.UserID,
+			ProjectID: *invitation.ProjectID,
+			Title:     invitation.Title,
+			Role:      "Member",
+		}
+
+		result := initializers.DB.Create(&membership)
+		if result.Error != nil {
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		}
+	} else if invitation.OrganizationID != nil {
+		membership := models.OrganizationMembership{
+			UserID:         invitation.UserID,
+			OrganizationID: *invitation.OrganizationID,
+			Role:           models.Member,
+		}
+
+		result := initializers.DB.Create(&membership)
+		if result.Error != nil {
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		}
 	}
 
-	result := initializers.DB.Create(&membership)
-	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
-	}
-
-	result = initializers.DB.Save(&invitation)
+	result := initializers.DB.Save(&invitation)
 	if result.Error != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
@@ -144,36 +90,11 @@ func AcceptProjectInvitation(c *fiber.Ctx) error {
 	})
 }
 
-func RejectChatInvitation(c *fiber.Ctx) error {
+func RejectInvitation(c *fiber.Ctx) error {
 	invitationID := c.Params("invitationID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
-	var invitation models.ChatInvitation
-	err := initializers.DB.First(&invitation, "id=? AND user_id=?", invitationID, loggedInUserID).Error
-
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "No Invitation of this ID found."}
-	}
-
-	invitation.Status = -1
-
-	result := initializers.DB.Save(&invitation)
-
-	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-	}
-
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"status":  "success",
-		"message": "Invitation Accepted",
-	})
-}
-
-func RejectProjectInvitation(c *fiber.Ctx) error {
-	invitationID := c.Params("invitationID")
-	loggedInUserID := c.GetRespHeader("loggedInUserID")
-
-	var invitation models.ProjectInvitation
+	var invitation models.Invitation
 	err := initializers.DB.First(&invitation, "id=? AND user_id=?", invitationID, loggedInUserID).Error
 
 	if err != nil {
@@ -198,41 +119,24 @@ func RejectProjectInvitation(c *fiber.Ctx) error {
 	})
 }
 
-func WithdrawChatInvitation(c *fiber.Ctx) error {
-
-	invitationID := c.Params("invitationID")
-
-	var invitation models.ChatInvitation
-	err := initializers.DB.First(&invitation, "id=?", invitationID).Error
-
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "No Invitation of this ID found."}
-	}
-
-	result := initializers.DB.Delete(&invitation)
-
-	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-	}
-
-	return c.Status(204).JSON(fiber.Map{
-		"status":  "success",
-		"message": "Invitation Withdrawn",
-	})
-}
-
-func WithdrawProjectInvitation(c *fiber.Ctx) error {
+func WithdrawInvitation(c *fiber.Ctx) error {
 	invitationID := c.Params("invitationID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
-	var invitation models.ProjectInvitation
-	err := initializers.DB.Preload("Project").First(&invitation, "id=?", invitationID).Error
+	var invitation models.Invitation
+	err := initializers.DB.Preload("Project").Preload("Organization").First(&invitation, "id=?", invitationID).Error
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "No Invitation of this ID found."}
 	}
 
-	if invitation.Project.UserID.String() != loggedInUserID {
-		return &fiber.Error{Code: 403, Message: "You don't have the permission to perform this action."}
+	if invitation.ProjectID != nil {
+		if invitation.Project.UserID.String() != loggedInUserID {
+			return &fiber.Error{Code: 403, Message: "You don't have the permission to perform this action."}
+		}
+	} else if invitation.OrganizationID != nil {
+		if invitation.Organization.UserID.String() != loggedInUserID {
+			return &fiber.Error{Code: 403, Message: "You don't have the permission to perform this action."}
+		}
 	}
 
 	if invitation.Status == 1 {
@@ -256,7 +160,7 @@ func GetUnreadInvitations(c *fiber.Ctx) error {
 
 	var count int64
 	if err := initializers.DB.
-		Model(models.ProjectInvitation{}).
+		Model(models.Invitation{}).
 		Where("user_id=? AND read=?", loggedInUserID, false).
 		Count(&count).
 		Error; err != nil {
@@ -281,7 +185,7 @@ func MarkReadInvitations(c *fiber.Ctx) error {
 	}
 
 	for _, unreadInvitationID := range reqBody.UnreadInvitations {
-		var invitation models.ProjectInvitation
+		var invitation models.Invitation
 		if err := initializers.DB.
 			Where("id=? AND user_id=?", unreadInvitationID, loggedInUserID).
 			First(&invitation).

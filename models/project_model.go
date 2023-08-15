@@ -31,7 +31,7 @@ type Project struct {
 	Comments               []ProjectComment         `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"comments"`
 	Openings               []Opening                `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"openings"`
 	Chats                  []ProjectChat            `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"chats"`
-	Invitations            []ProjectInvitation      `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"invitations"`
+	Invitations            []Invitation             `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"invitations"`
 	Memberships            []Membership             `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"memberships"`
 	Notifications          []Notification           `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"notifications"`
 	LastViews              []LastViewed             `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"-"`

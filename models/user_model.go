@@ -80,7 +80,7 @@ const (
 type OAuth struct {
 	ID                  uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	UserID              uuid.UUID `gorm:"type:uuid;not null" json:"userID"`
-	Provider            Provider  `gorm:"type:enum('Google')" json:"provider"`
+	Provider            Provider  `gorm:"type:text" json:"provider"`
 	OnBoardingCompleted bool      `gorm:"default:false" json:"-"`
 	CreatedAt           time.Time `gorm:"default:current_timestamp" json:"-"`
 }

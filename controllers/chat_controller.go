@@ -343,74 +343,74 @@ func AddProjectChat(c *fiber.Ctx) error {
 	})
 }
 
-func EditGroupChat(c *fiber.Ctx) error { //* Adding new users here only
-	var reqBody struct {
-		Title       string   `json:"title"`
-		Description string   `json:"description"`
-		UserIDs     []string `json:"userIDs"`
-	}
-	if err := c.BodyParser(&reqBody); err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
-	}
+// func EditGroupChat(c *fiber.Ctx) error { //* Adding new users here only
+// 	var reqBody struct {
+// 		Title       string   `json:"title"`
+// 		Description string   `json:"description"`
+// 		UserIDs     []string `json:"userIDs"`
+// 	}
+// 	if err := c.BodyParser(&reqBody); err != nil {
+// 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
+// 	}
 
-	newChatUserIDs := reqBody.UserIDs
-	newChatUsers := make([]models.User, len(newChatUserIDs))
+// 	newChatUserIDs := reqBody.UserIDs
+// 	newChatUsers := make([]models.User, len(newChatUserIDs))
 
-	for i, newChatUserID := range newChatUserIDs {
-		parsedNewChatUserID, err := uuid.Parse(newChatUserID)
-		if err != nil {
-			return &fiber.Error{Code: 500, Message: "Invalid User ID."}
-		}
-		var chatUser models.User
-		err = initializers.DB.First(&chatUser, "id = ?", parsedNewChatUserID).Error
+// 	for i, newChatUserID := range newChatUserIDs {
+// 		parsedNewChatUserID, err := uuid.Parse(newChatUserID)
+// 		if err != nil {
+// 			return &fiber.Error{Code: 500, Message: "Invalid User ID."}
+// 		}
+// 		var chatUser models.User
+// 		err = initializers.DB.First(&chatUser, "id = ?", parsedNewChatUserID).Error
 
-		if err != nil {
-			return &fiber.Error{Code: 400, Message: "No user of this id found."}
-		}
+// 		if err != nil {
+// 			return &fiber.Error{Code: 400, Message: "No user of this id found."}
+// 		}
 
-		newChatUsers[i] = chatUser
-	}
+// 		newChatUsers[i] = chatUser
+// 	}
 
-	chatID := c.Params("chatID")
+// 	chatID := c.Params("chatID")
 
-	var chat models.GroupChat
-	err := initializers.DB.First(&chat, "id = ?", chatID).Error
+// 	var chat models.GroupChat
+// 	err := initializers.DB.First(&chat, "id = ?", chatID).Error
 
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "No chat of this id found."}
-	}
+// 	if err != nil {
+// 		return &fiber.Error{Code: 400, Message: "No chat of this id found."}
+// 	}
 
-	if reqBody.Title != "" {
-		chat.Title = reqBody.Title
-	}
-	if reqBody.Description != "" {
-		chat.Description = reqBody.Description
-	}
+// 	if reqBody.Title != "" {
+// 		chat.Title = reqBody.Title
+// 	}
+// 	if reqBody.Description != "" {
+// 		chat.Description = reqBody.Description
+// 	}
 
-	result := initializers.DB.Save(&chat)
+// 	result := initializers.DB.Save(&chat)
 
-	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-	}
+// 	if result.Error != nil {
+// 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+// 	}
 
-	for _, chatUser := range newChatUsers {
-		invitation := models.ChatInvitation{
-			UserID:      chatUser.ID,
-			GroupChatID: chat.ID,
-		}
-		result := initializers.DB.Create(&invitation)
+// 	for _, chatUser := range newChatUsers {
+// 		invitation := models.Invitation{
+// 			UserID:      chatUser.ID,
+// 			GroupChatID: chat.ID,
+// 		}
+// 		result := initializers.DB.Create(&invitation)
 
-		if result.Error != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-		}
-	}
+// 		if result.Error != nil {
+// 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+// 		}
+// 	}
 
-	return c.Status(200).JSON(fiber.Map{
-		"status":  "success",
-		"message": "Chat Updated",
-		"chat":    chat,
-	})
-}
+// 	return c.Status(200).JSON(fiber.Map{
+// 		"status":  "success",
+// 		"message": "Chat Updated",
+// 		"chat":    chat,
+// 	})
+// }
 
 func EditProjectChat(c *fiber.Ctx) error { //* Adding new users here only
 	var reqBody struct {

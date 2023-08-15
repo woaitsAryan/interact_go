@@ -45,6 +45,7 @@ func RoleAuthorization(Role models.OrganizationRole) func(*fiber.Ctx) error {
 			return &fiber.Error{Code: 403, Message: "You don't have the Permission to perform this action."}
 		}
 
+		c.Set("orgMemberID", c.GetRespHeader("loggedInUserID"))
 		c.Set("loggedInUserID", orgMembership.Organization.UserID.String())
 
 		return c.Next()

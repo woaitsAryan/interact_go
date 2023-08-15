@@ -118,11 +118,11 @@ func RemoveMember(c *fiber.Ctx) error {
 }
 
 func LeaveOrganization(c *fiber.Ctx) error {
-	projectID := c.Params("projectID")
+	organizationID := c.Params("organizationID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var membership models.OrganizationMembership
-	if err := initializers.DB.Preload("Organization").First(&membership, "user_id=? AND organization_id = ?", loggedInUserID, projectID).Error; err != nil {
+	if err := initializers.DB.Preload("Organization").First(&membership, "user_id=? AND organization_id = ?", loggedInUserID, organizationID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Membership of this ID found."}
 		}

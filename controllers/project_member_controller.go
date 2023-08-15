@@ -51,14 +51,14 @@ func AddMember(c *fiber.Ctx) error {
 	if err := initializers.DB.Where("user_id=? AND project_id=?", user.ID, parsedProjectID).First(&membership).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 
-			var existingInvitation models.ProjectInvitation
+			var existingInvitation models.Invitation
 			err := initializers.DB.Where("user_id=? AND project_id=? AND status=0", user.ID, parsedProjectID).First(&existingInvitation).Error
 			if err == nil {
 				return &fiber.Error{Code: 400, Message: "Have already invited this User."}
 			}
 
-			var invitation models.ProjectInvitation
-			invitation.ProjectID = parsedProjectID
+			var invitation models.Invitation
+			invitation.ProjectID = &parsedProjectID
 			invitation.UserID = user.ID
 			invitation.Title = reqBody.Title
 

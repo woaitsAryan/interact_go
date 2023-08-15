@@ -131,6 +131,47 @@ func OAuthSignUp(c *fiber.Ctx) error {
 	return createSendToken(c, user, 201, "Account Created")
 }
 
+func OrganizationSignUp(c *fiber.Ctx) error {
+	var reqBody schemas.UserCreateSchema
+
+	c.BodyParser(&reqBody)
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(reqBody.Password), 10)
+	if err != nil {
+		go helpers.LogServerError("Error while hashing Password.", err, c.Path())
+		return helpers.AppError{Code: 500, Message: config.SERVER_ERROR, Err: err}
+	}
+
+	newOrg := models.User{
+		Name:               reqBody.Name,
+		Email:              reqBody.Email,
+		Password:           string(hash),
+		Username:           reqBody.Username,
+		PasswordChangedAt:  time.Now(),
+		OrganizationStatus: true,
+	}
+
+	result := initializers.DB.Create(&newOrg)
+	if result.Error != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+	}
+
+	organization := models.Organization{
+		UserID:            newOrg.ID,
+		OrganizationTitle: newOrg.Name,
+		CreatedAt:         time.Now(),
+	}
+
+	result = initializers.DB.Create(&organization)
+	if result.Error != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+	}
+
+	go routines.SendWelcomeNotification(newOrg.ID)
+
+	return createSendToken(c, newOrg, 201, "Organization Created")
+}
+
 func LogIn(c *fiber.Ctx) error {
 	var reqBody struct {
 		Username string `json:"username"`
@@ -145,11 +186,11 @@ func LogIn(c *fiber.Ctx) error {
 	initializers.DB.Session(&gorm.Session{SkipHooks: true}).First(&user, "username = ?", reqBody.Username)
 
 	if user.ID == uuid.Nil {
-		return &fiber.Error{Code: 400, Message: "No user with these credentials found."}
+		return &fiber.Error{Code: 400, Message: "No account with these credentials found."}
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(reqBody.Password)); err != nil {
-		return &fiber.Error{Code: 400, Message: "No user with these credentials found."}
+		return &fiber.Error{Code: 400, Message: "No account with these credentials found."}
 	}
 
 	if !user.Active {

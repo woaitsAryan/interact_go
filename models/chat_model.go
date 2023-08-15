@@ -20,17 +20,17 @@ type Chat struct {
 }
 
 type GroupChat struct {
-	ID              uuid.UUID        `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	Title           string           `gorm:"type:varchar(50);" json:"title"`
-	Description     string           `gorm:"type:text" json:"description"`
-	CreatingUserID  uuid.UUID        `gorm:"type:uuid;not null" json:"createdByID"`
-	CreatingUser    User             `gorm:"" json:"createdBy"`
-	CreatedAt       time.Time        `gorm:"default:current_timestamp" json:"createdAt"`
-	Members         []User           `gorm:"many2many:chat_members;constraint:OnDelete:CASCADE" json:"members"`
-	Messages        []GroupMessage   `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE" json:"messages"`
-	LatestMessageID uuid.UUID        `gorm:"type:uuid" json:"latestMessageID"`
-	LatestMessage   *GroupMessage    `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE" json:"latestMessage"`
-	Invitations     []ChatInvitation `gorm:"foreignKey:GroupChatID;constraint:OnDelete:CASCADE" json:"invitations"`
+	ID              uuid.UUID      `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	Title           string         `gorm:"type:varchar(50);" json:"title"`
+	Description     string         `gorm:"type:text" json:"description"`
+	CreatingUserID  uuid.UUID      `gorm:"type:uuid;not null" json:"createdByID"`
+	CreatingUser    User           `gorm:"" json:"createdBy"`
+	CreatedAt       time.Time      `gorm:"default:current_timestamp" json:"createdAt"`
+	Members         []User         `gorm:"many2many:chat_members;constraint:OnDelete:CASCADE" json:"members"`
+	Messages        []GroupMessage `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE" json:"messages"`
+	LatestMessageID uuid.UUID      `gorm:"type:uuid" json:"latestMessageID"`
+	LatestMessage   *GroupMessage  `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE" json:"latestMessage"`
+	Invitations     []Invitation   `gorm:"foreignKey:GroupChatID;constraint:OnDelete:CASCADE" json:"invitations"`
 }
 
 type ProjectChat struct {

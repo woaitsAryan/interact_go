@@ -34,6 +34,6 @@ type OrganizationMembership struct {
 	Organization   Organization     `gorm:"" json:"organization"`
 	UserID         uuid.UUID        `gorm:"type:uuid;not null" json:"userID"`
 	User           User             `gorm:"" json:"user"`
-	Role           OrganizationRole `gorm:"type:enum('Member', 'Manager','Owner')" json:"role"`
+	Role           OrganizationRole `gorm:"type:text" json:"role"`
 	CreatedAt      time.Time        `gorm:"default:current_timestamp" json:"createdAt"`
 }
