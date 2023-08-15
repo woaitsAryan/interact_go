@@ -30,8 +30,9 @@ type User struct {
 	DeactivatedAt             time.Time         `gorm:"" json:"-"`
 	Admin                     bool              `gorm:"default:false" json:"-"`
 	Verified                  bool              `gorm:"default:false" json:"isVerified"`
+	OrganizationStatus        bool              `gorm:"default:false" json:"isOrganization"`
 	LastLoggedIn              time.Time         `gorm:"default:current_timestamp" json:"-"`
-	Active                    bool              `gorm:"default:true" json:"-"` //! add a functionality that on delete the acc goes inActive and if the user logs in within 30 days, it goes active again
+	Active                    bool              `gorm:"default:true" json:"-"`
 	CreatedAt                 time.Time         `gorm:"default:current_timestamp" json:"-"`
 	OAuth                     OAuth             `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"-"`
 	Projects                  []Project         `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"projects"`
@@ -70,10 +71,16 @@ func (u *User) AfterFind(tx *gorm.DB) error {
 	return nil
 }
 
+type Provider string
+
+const (
+	Google Provider = "Google"
+)
+
 type OAuth struct {
 	ID                  uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	UserID              uuid.UUID `gorm:"type:uuid;not null" json:"userID"`
-	Provider            string    `gorm:"" json:"provider"`
+	Provider            Provider  `gorm:"type:enum('Google')" json:"provider"`
 	OnBoardingCompleted bool      `gorm:"default:false" json:"-"`
 	CreatedAt           time.Time `gorm:"default:current_timestamp" json:"-"`
 }

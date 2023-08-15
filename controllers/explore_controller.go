@@ -200,6 +200,7 @@ func GetTrendingUsers(c *fiber.Ctx) error {
 	var users []models.User
 	if err := searchedDB.
 		Where("active=?", true).
+		Where("organization_status=?", false).
 		Select("*, (2 * no_followers - no_following) AS weighted_average").
 		Order("weighted_average DESC").
 		Find(&users).Error; err != nil {
@@ -217,7 +218,7 @@ func GetRecommendedUsers(c *fiber.Ctx) error {
 	searchedDB := API.Search(c, 0)(paginatedDB)
 
 	var users []models.User
-	if err := searchedDB.Where("active=?", true).Order("created_at DESC").Find(&users).Error; err != nil {
+	if err := searchedDB.Where("active=?", true).Where("organization_status=?", false).Order("created_at DESC").Find(&users).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 	return c.Status(200).JSON(fiber.Map{
@@ -236,6 +237,7 @@ func GetSimilarUsers(c *fiber.Ctx) error {
 	var users []models.User
 	if err := initializers.DB.
 		Where("active=?", true).
+		Where("organization_status=?", false).
 		Where("id <> ?", userID).
 		Where("tags && ?", pq.StringArray(user.Tags)).Limit(10).Find(&users).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}

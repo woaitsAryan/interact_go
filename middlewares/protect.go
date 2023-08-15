@@ -6,11 +6,12 @@ import (
 	"time"
 
 	"github.com/Pratham-Mishra04/interact/config"
+	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 func verifyToken(tokenString string, user *models.User, checkRedirect bool) error {
@@ -45,10 +46,11 @@ func verifyToken(tokenString string, user *models.User, checkRedirect bool) erro
 			return &fiber.Error{Code: 401, Message: "Invalid user ID in token claims."}
 		}
 
-		initializers.DB.First(user, "id = ?", userID)
-
-		if user.ID == uuid.Nil {
-			return &fiber.Error{Code: 401, Message: "User of this token no longer exists"}
+		if err := initializers.DB.First(user, "id = ?", userID).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return &fiber.Error{Code: 401, Message: "User of this token no longer exists"}
+			}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 		}
 
 		// if user.PasswordChangedAt.After(time.Unix(int64(claims["crt"].(float64)), 0)) {
