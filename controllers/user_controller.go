@@ -174,7 +174,6 @@ func DeleteMe(c *fiber.Ctx) error {
 }
 
 func UpdatePassword(c *fiber.Ctx) error {
-
 	var reqBody struct {
 		Password        string `json:"password"`
 		NewPassword     string `json:"newPassword"`
@@ -198,6 +197,8 @@ func UpdatePassword(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Incorrect Password."}
 	}
 
+	//TODO send email for verification
+
 	hash, err := bcrypt.GenerateFromPassword([]byte(reqBody.NewPassword), 10)
 
 	if err != nil {
@@ -211,7 +212,7 @@ func UpdatePassword(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	return createSendToken(c, user, 200, "Password updated successfully")
+	return CreateSendToken(c, user, 200, "Password updated successfully")
 }
 
 func UpdateEmail(c *fiber.Ctx) error {

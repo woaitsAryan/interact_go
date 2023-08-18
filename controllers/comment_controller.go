@@ -22,7 +22,7 @@ func GetPostComments(c *fiber.Ctx) error {
 
 	paginatedDB := API.Paginator(c)(initializers.DB)
 
-	var comments []models.PostComment
+	var comments []models.Comment
 	if err := paginatedDB.Preload("User").Where("post_id=?", parsedPostID).Order("created_at DESC").Find(&comments).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
@@ -44,7 +44,7 @@ func GetProjectComments(c *fiber.Ctx) error {
 
 	paginatedDB := API.Paginator(c)(initializers.DB)
 
-	var comments []models.ProjectComment
+	var comments []models.Comment
 	if err := paginatedDB.Preload("User").Where("project_id=?", parsedProjectID).Order("created_at DESC").Find(&comments).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
@@ -56,86 +56,52 @@ func GetProjectComments(c *fiber.Ctx) error {
 	})
 }
 
-func AddPostComment(c *fiber.Ctx) error {
-	loggedInUserID := c.GetRespHeader("loggedInUserID")
-	parsedUserID, _ := uuid.Parse(loggedInUserID)
-
-	var reqBody struct {
-		Content string `json:"content"`
-		PostID  string `json:"postID"`
-	}
-	if err := c.BodyParser(&reqBody); err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
-	}
-
-	postID := reqBody.PostID
-	parsedPostID, err := uuid.Parse(postID)
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid ID."}
-	}
-
-	comment := models.PostComment{
-		UserID:  parsedUserID,
-		Content: reqBody.Content,
-	}
-
-	comment.PostID = parsedPostID
-	result := initializers.DB.Create(&comment)
-
-	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-	}
-
-	if err := initializers.DB.Preload("User").First(&comment).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-	}
-
-	go routines.IncrementPostCommentsAndSendNotification(parsedPostID, parsedUserID)
-
-	return c.Status(201).JSON(fiber.Map{
-		"status":  "success",
-		"message": "Comment Added",
-		"comment": comment,
-	})
-}
-
-func AddProjectComment(c *fiber.Ctx) error {
+func AddComment(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedUserID, _ := uuid.Parse(loggedInUserID)
 
 	var reqBody struct {
 		Content   string `json:"content"`
+		PostID    string `json:"postID"`
 		ProjectID string `json:"projectID"`
 	}
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
 	}
 
+	postID := reqBody.PostID
 	projectID := reqBody.ProjectID
 
-	comment := models.ProjectComment{
+	comment := models.Comment{
 		UserID:  parsedUserID,
 		Content: reqBody.Content,
 	}
 
-	parsedProjectID, err := uuid.Parse(projectID)
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid ID."}
+	if postID != "" {
+		parsedPostID, err := uuid.Parse(postID)
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid ID."}
+		}
+		comment.PostID = &parsedPostID
+		go routines.IncrementPostCommentsAndSendNotification(parsedPostID, parsedUserID)
+	} else if projectID != "" {
+		parsedProjectID, err := uuid.Parse(projectID)
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid ID."}
+		}
+		comment.ProjectID = &parsedProjectID
+		go routines.IncrementProjectCommentsAndSendNotification(parsedProjectID, parsedUserID)
 	}
-
-	comment.ProjectID = parsedProjectID
 
 	result := initializers.DB.Create(&comment)
 
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
 
 	if err := initializers.DB.Preload("User").First(&comment).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
-
-	go routines.IncrementProjectCommentsAndSendNotification(parsedProjectID, parsedUserID)
 
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",
@@ -144,7 +110,8 @@ func AddProjectComment(c *fiber.Ctx) error {
 	})
 }
 
-func UpdatePostComment(c *fiber.Ctx) error {
+func UpdateComment(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	commentID := c.Params("commentID")
 
 	parsedCommentID, err := uuid.Parse(commentID)
@@ -152,8 +119,8 @@ func UpdatePostComment(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
 	}
 
-	var comment models.PostComment
-	if err := initializers.DB.First(&comment, "id = ?", parsedCommentID).Error; err != nil {
+	var comment models.Comment
+	if err := initializers.DB.First(&comment, "id = ? AND user_id=?", parsedCommentID, loggedInUserID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
 		}
@@ -184,7 +151,7 @@ func UpdatePostComment(c *fiber.Ctx) error {
 	})
 }
 
-func DeletePostComment(c *fiber.Ctx) error {
+func DeleteComment(c *fiber.Ctx) error {
 	commentID := c.Params("commentID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
@@ -193,7 +160,7 @@ func DeletePostComment(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
 	}
 
-	var comment models.PostComment
+	var comment models.Comment
 	if err := initializers.DB.First(&comment, "id = ? AND user_id = ?", parsedCommentID, loggedInUserID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
@@ -201,11 +168,18 @@ func DeletePostComment(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
+	postID := comment.PostID
+	projectID := comment.ProjectID
+
 	if err := initializers.DB.Delete(&comment).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	go routines.DecrementPostComments(comment.PostID)
+	if postID != nil {
+		go routines.DecrementPostComments(*postID)
+	} else if projectID != nil {
+		go routines.DecrementProjectComments(*projectID)
+	}
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",
@@ -213,71 +187,22 @@ func DeletePostComment(c *fiber.Ctx) error {
 	})
 }
 
-func DeleteProjectComment(c *fiber.Ctx) error {
-	commentID := c.Params("commentID")
+func GetMyLikedComments(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
-	parsedCommentID, err := uuid.Parse(commentID)
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid ID"}
-	}
-
-	var comment models.ProjectComment
-	if err := initializers.DB.First(&comment, "id = ? AND user_id = ?", parsedCommentID, loggedInUserID).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
-		}
+	var commentLikes []models.UserCommentLike
+	if err := initializers.DB.Where("user_id = ?", loggedInUserID).Find(&commentLikes).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	if err := initializers.DB.Delete(&comment).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-	}
-
-	go routines.DecrementProjectComments(comment.ProjectID)
-
-	return c.Status(204).JSON(fiber.Map{
-		"status":  "success",
-		"message": "Comment deleted successfully",
-	})
-}
-
-func GetMyLikedPostsComments(c *fiber.Ctx) error {
-	loggedInUserID := c.GetRespHeader("loggedInUserID")
-
-	var postCommentLikes []models.UserPostCommentLike
-	if err := initializers.DB.Where("user_id = ?", loggedInUserID).Find(&postCommentLikes).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-	}
-
-	var postCommentIDs []string
-	for _, postCommentLike := range postCommentLikes {
-		postCommentIDs = append(postCommentIDs, postCommentLike.PostCommentID.String())
+	var commentIDs []string
+	for _, commentLike := range commentLikes {
+		commentIDs = append(commentIDs, commentLike.CommentID.String())
 	}
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":   "success",
 		"message":  "",
-		"comments": postCommentIDs,
-	})
-}
-
-func GetMyLikedProjectsComments(c *fiber.Ctx) error {
-	loggedInUserID := c.GetRespHeader("loggedInUserID")
-
-	var projectCommentLikes []models.UserProjectCommentLike
-	if err := initializers.DB.Where("user_id = ?", loggedInUserID).Find(&projectCommentLikes).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-	}
-
-	var projectCommentIDs []string
-	for _, projectCommentLike := range projectCommentLikes {
-		projectCommentIDs = append(projectCommentIDs, projectCommentLike.ProjectCommentID.String())
-	}
-
-	return c.Status(200).JSON(fiber.Map{
-		"status":   "success",
-		"message":  "",
-		"comments": projectCommentIDs,
+		"comments": commentIDs,
 	})
 }

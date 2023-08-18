@@ -8,7 +8,7 @@ import (
 )
 
 func PostRouter(app *fiber.App) {
-	postRoutes := app.Group("/org/posts", middlewares.Protect, middlewares.RoleAuthorization(models.Manager))
+	postRoutes := app.Group("/org/posts", middlewares.OrgProtect, middlewares.RoleAuthorization(models.Manager))
 	postRoutes.Post("/", controllers.AddPost)
 	postRoutes.Patch("/:postID", controllers.UpdatePost)
 	postRoutes.Delete("/:postID", controllers.DeletePost)

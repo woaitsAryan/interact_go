@@ -34,3 +34,18 @@ type ProjectBookmarkItem struct {
 	ProjectID         uuid.UUID `gorm:"type:uuid;not null" json:"projectID"`
 	Project           Project   `json:"project"`
 }
+
+type OpeningBookmark struct {
+	ID           uuid.UUID             `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	UserID       uuid.UUID             `gorm:"type:uuid;not null" json:"userID"`
+	Title        string                `json:"title"`
+	CreatedAt    time.Time             `gorm:"default:current_timestamp" json:"createdAt"`
+	OpeningItems []OpeningBookmarkItem `gorm:"foreignKey:OpeningBookmarkID;constraint:OnDelete:CASCADE" json:"openingItems"`
+}
+
+type OpeningBookmarkItem struct {
+	ID                uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	OpeningBookmarkID uuid.UUID `gorm:"type:uuid;not null" json:"openingBookmarkID"`
+	OpeningID         uuid.UUID `gorm:"type:uuid;not null" json:"openingID"`
+	Opening           Opening   `json:"opening"`
+}

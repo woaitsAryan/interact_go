@@ -5,6 +5,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/Pratham-Mishra04/interact/routines"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -31,9 +32,11 @@ func GetMessages(c *fiber.Ctx) error {
 	}
 
 	if len(messages) > 0 {
-		if messages[0].Chat.AcceptingUserID.String() != loggedInUserID && messages[0].Chat.CreatingUserID.String() != loggedInUserID {
+		parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
+		if messages[0].Chat.AcceptingUserID != parsedLoggedInUserID && messages[0].Chat.CreatingUserID != parsedLoggedInUserID {
 			return &fiber.Error{Code: 403, Message: "Cannot perform this action."}
 		}
+		go routines.UpdateChatLastRead(messages[0].ChatID, parsedLoggedInUserID)
 	}
 
 	return c.Status(200).JSON(fiber.Map{

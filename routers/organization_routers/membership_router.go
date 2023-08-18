@@ -9,7 +9,7 @@ import (
 
 func MembershipRouter(app *fiber.App) {
 
-	app.Delete("/org/membership/:organizationID", middlewares.Protect, middlewares.RoleAuthorization(models.Member), organization_controllers.LeaveOrganization)
+	app.Delete("/org/membership/:organizationID", middlewares.OrgProtect, middlewares.RoleAuthorization(models.Member), organization_controllers.LeaveOrganization)
 
 	membershipRoutes := app.Group("/org/membership", middlewares.Protect, middlewares.RoleAuthorization(models.Owner))
 	membershipRoutes.Post("/:organizationID", organization_controllers.AddMember)

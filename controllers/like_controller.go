@@ -97,7 +97,7 @@ func LikeProject(c *fiber.Ctx) error {
 	})
 }
 
-func LikePostComment(c *fiber.Ctx) error {
+func LikeComment(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	userID, _ := uuid.Parse(loggedInUserID)
 
@@ -108,7 +108,7 @@ func LikePostComment(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
 	}
 
-	var comment models.PostComment
+	var comment models.Comment
 	if err := initializers.DB.Where("id = ?", parsedCommentID).First(&comment).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
@@ -116,19 +116,20 @@ func LikePostComment(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	var like models.UserPostCommentLike
-	if err := initializers.DB.Where("user_id=? AND post_comment_id=?", userID, parsedCommentID).First(&like).Error; err != nil {
+	var like models.UserCommentLike
+	if err := initializers.DB.Where("user_id=? AND comment_id=?", userID, parsedCommentID).First(&like).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			likeModel := models.UserPostCommentLike{
-				PostID:        comment.PostID,
-				PostCommentID: comment.ID,
-				UserID:        userID,
+			likeModel := models.UserCommentLike{
+				PostID:    comment.PostID,
+				ProjectID: comment.ProjectID,
+				CommentID: comment.ID,
+				UserID:    userID,
 			}
 			result := initializers.DB.Create(&likeModel)
 			if result.Error != nil {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 			}
-			go routines.IncrementPostCommentLikes(parsedCommentID, userID)
+			go routines.IncrementCommentLikes(parsedCommentID, userID)
 		} else {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 		}
@@ -137,57 +138,9 @@ func LikePostComment(c *fiber.Ctx) error {
 		if result.Error != nil {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 		}
-		go routines.DecrementPostCommentLikes(parsedCommentID)
+		go routines.DecrementCommentLikes(parsedCommentID)
 	}
 
-	return c.Status(200).JSON(fiber.Map{
-		"status":  "success",
-		"message": "Comment Liked/Unliked.",
-	})
-}
-
-func LikeProjectComment(c *fiber.Ctx) error {
-	loggedInUserID := c.GetRespHeader("loggedInUserID")
-	userID, _ := uuid.Parse(loggedInUserID)
-
-	commentID := c.Params("commentID")
-	parsedCommentID, err := uuid.Parse(commentID)
-
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid ID"}
-	}
-
-	var comment models.ProjectComment
-	if err := initializers.DB.Where("id=?", parsedCommentID).First(&comment).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
-		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-	}
-
-	var like models.UserProjectCommentLike
-	if err := initializers.DB.Where("user_id=? AND project_comment_id=?", userID, parsedCommentID).First(&like).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			likeModel := models.UserProjectCommentLike{
-				ProjectID:        comment.ProjectID,
-				ProjectCommentID: comment.ID,
-				UserID:           userID,
-			}
-			result := initializers.DB.Create(&likeModel)
-			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-			}
-			go routines.IncrementProjectCommentLikes(parsedCommentID, userID)
-		} else {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-		}
-	} else {
-		result := initializers.DB.Delete(&like)
-		if result.Error != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-		}
-		go routines.DecrementProjectCommentLikes(parsedCommentID)
-	}
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Comment Liked/Unliked.",

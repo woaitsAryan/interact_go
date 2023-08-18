@@ -79,6 +79,35 @@ func Protect(c *fiber.Ctx) error {
 		return err
 	}
 
+	if user.OrganizationStatus {
+		return &fiber.Error{Code: 403, Message: "Organizational Accounts cannot access this route."}
+	}
+
+	c.Set("loggedInUserID", user.ID.String())
+
+	return c.Next()
+}
+
+func OrgProtect(c *fiber.Ctx) error {
+	authHeader := c.Get("Authorization")
+	tokenArr := strings.Split(authHeader, " ")
+
+	if len(tokenArr) != 2 {
+		return &fiber.Error{Code: 401, Message: "You are Not Logged In."}
+	}
+
+	tokenString := tokenArr[1]
+
+	var user models.User
+	err := verifyToken(tokenString, &user, false)
+	if err != nil {
+		return err
+	}
+
+	if !user.OrganizationStatus {
+		return &fiber.Error{Code: 403, Message: "Only Organizational Accounts can access this route."}
+	}
+
 	c.Set("loggedInUserID", user.ID.String())
 
 	return c.Next()

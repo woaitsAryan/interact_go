@@ -108,8 +108,8 @@ func DecrementProjectLikes(projectID uuid.UUID) {
 	}
 }
 
-func IncrementPostCommentLikes(commentID uuid.UUID, loggedInUserID uuid.UUID) {
-	var comment models.PostComment
+func IncrementCommentLikes(commentID uuid.UUID, loggedInUserID uuid.UUID) {
+	var comment models.Comment
 	if err := initializers.DB.First(&comment, "id = ?", commentID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			helpers.LogDatabaseError("No Post Comment of this ID found-IncrementPostCommentLikes.", err, "go_routine")
@@ -126,8 +126,8 @@ func IncrementPostCommentLikes(commentID uuid.UUID, loggedInUserID uuid.UUID) {
 	}
 }
 
-func DecrementPostCommentLikes(commentID uuid.UUID) {
-	var comment models.PostComment
+func DecrementCommentLikes(commentID uuid.UUID) {
+	var comment models.Comment
 	if err := initializers.DB.First(&comment, "id = ?", commentID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			helpers.LogDatabaseError("No Post Comment of this ID found-DecrementPostCommentLikes.", err, "go_routine")
@@ -140,42 +140,6 @@ func DecrementPostCommentLikes(commentID uuid.UUID) {
 		result := initializers.DB.Save(&comment)
 		if result.Error != nil {
 			helpers.LogDatabaseError("Error while updating Post Comment-DecrementPostCommentLikes", err, "go_routine")
-		}
-	}
-}
-
-func IncrementProjectCommentLikes(commentID uuid.UUID, loggedInUserID uuid.UUID) {
-	var comment models.ProjectComment
-	if err := initializers.DB.First(&comment, "id = ?", commentID).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			helpers.LogDatabaseError("No Project Comment of this ID found-IncrementProjectCommentLikes.", err, "go_routine")
-		} else {
-			helpers.LogDatabaseError("Error while fetching Project Comment-IncrementProjectCommentLikes", err, "go_routine")
-		}
-	} else {
-		comment.NoLikes++
-
-		result := initializers.DB.Save(&comment)
-		if result.Error != nil {
-			helpers.LogDatabaseError("Error while updating Project Comment-IncrementProjectCommentLikes", err, "go_routine")
-		}
-	}
-}
-
-func DecrementProjectCommentLikes(commentID uuid.UUID) {
-	var comment models.ProjectComment
-	if err := initializers.DB.First(&comment, "id = ?", commentID).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			helpers.LogDatabaseError("No Project Comment of this ID found-DecrementProjectCommentLikes.", err, "go_routine")
-		} else {
-			helpers.LogDatabaseError("Error while fetching Project Comment-DecrementProjectCommentLikes", err, "go_routine")
-		}
-	} else {
-		comment.NoLikes--
-
-		result := initializers.DB.Save(&comment)
-		if result.Error != nil {
-			helpers.LogDatabaseError("Error while updating Project Comment-DecrementProjectCommentLikes", err, "go_routine")
 		}
 	}
 }

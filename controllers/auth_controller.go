@@ -18,7 +18,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func createSendToken(c *fiber.Ctx, user models.User, statusCode int, message string) error {
+func CreateSendToken(c *fiber.Ctx, user models.User, statusCode int, message string) error {
 	access_token_claim := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": user.ID,
 		"crt": time.Now().Unix(),
@@ -85,7 +85,7 @@ func SignUp(c *fiber.Ctx) error {
 
 	go routines.SendWelcomeNotification(newUser.ID)
 
-	return createSendToken(c, newUser, 201, "Account Created")
+	return CreateSendToken(c, newUser, 201, "Account Created")
 }
 
 func OAuthSignUp(c *fiber.Ctx) error {
@@ -128,48 +128,7 @@ func OAuthSignUp(c *fiber.Ctx) error {
 
 	go routines.SendWelcomeNotification(user.ID)
 
-	return createSendToken(c, user, 201, "Account Created")
-}
-
-func OrganizationSignUp(c *fiber.Ctx) error {
-	var reqBody schemas.UserCreateSchema
-
-	c.BodyParser(&reqBody)
-
-	hash, err := bcrypt.GenerateFromPassword([]byte(reqBody.Password), 10)
-	if err != nil {
-		go helpers.LogServerError("Error while hashing Password.", err, c.Path())
-		return helpers.AppError{Code: 500, Message: config.SERVER_ERROR, Err: err}
-	}
-
-	newOrg := models.User{
-		Name:               reqBody.Name,
-		Email:              reqBody.Email,
-		Password:           string(hash),
-		Username:           reqBody.Username,
-		PasswordChangedAt:  time.Now(),
-		OrganizationStatus: true,
-	}
-
-	result := initializers.DB.Create(&newOrg)
-	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
-	}
-
-	organization := models.Organization{
-		UserID:            newOrg.ID,
-		OrganizationTitle: newOrg.Name,
-		CreatedAt:         time.Now(),
-	}
-
-	result = initializers.DB.Create(&organization)
-	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
-	}
-
-	go routines.SendWelcomeNotification(newOrg.ID)
-
-	return createSendToken(c, newOrg, 201, "Organization Created")
+	return CreateSendToken(c, user, 201, "Account Created")
 }
 
 func LogIn(c *fiber.Ctx) error {
@@ -183,7 +142,7 @@ func LogIn(c *fiber.Ctx) error {
 	}
 
 	var user models.User
-	initializers.DB.Session(&gorm.Session{SkipHooks: true}).First(&user, "username = ?", reqBody.Username)
+	initializers.DB.Session(&gorm.Session{SkipHooks: true}).First(&user, "username = ? AND organization_status = false", reqBody.Username)
 
 	if user.ID == uuid.Nil {
 		return &fiber.Error{Code: 400, Message: "No account with these credentials found."}
@@ -206,14 +165,14 @@ func LogIn(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	return createSendToken(c, user, 200, "Logged In")
+	return CreateSendToken(c, user, 200, "Logged In")
 }
 
 func OAuthLogIn(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var user models.User
-	if err := initializers.DB.Session(&gorm.Session{SkipHooks: true}).First(&user, "id = ?", loggedInUserID).Error; err != nil {
+	if err := initializers.DB.Session(&gorm.Session{SkipHooks: true}).First(&user, "id = ? AND organization_status = false", loggedInUserID).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
@@ -234,7 +193,7 @@ func OAuthLogIn(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	return createSendToken(c, user, 200, "Logged In")
+	return CreateSendToken(c, user, 200, "Logged In")
 }
 
 func Refresh(c *fiber.Ctx) error {

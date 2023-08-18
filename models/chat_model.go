@@ -7,16 +7,18 @@ import (
 )
 
 type Chat struct {
-	ID              uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	CreatingUserID  uuid.UUID `gorm:"type:uuid;not null" json:"createdByID"`
-	CreatingUser    User      `gorm:"" json:"createdBy"`
-	AcceptingUserID uuid.UUID `gorm:"type:uuid;not null" json:"acceptedByID"`
-	AcceptingUser   User      `gorm:"" json:"acceptedBy"`
-	CreatedAt       time.Time `gorm:"default:current_timestamp" json:"createdAt"`
-	Messages        []Message `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE" json:"messages"`
-	LatestMessageID uuid.UUID `gorm:"type:uuid" json:"latestMessageID"`
-	LatestMessage   *Message  `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE" json:"latestMessage"`
-	Accepted        bool      `gorm:"default:false" json:"accepted"`
+	ID                               uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	CreatingUserID                   uuid.UUID `gorm:"type:uuid;not null" json:"createdByID"`
+	CreatingUser                     User      `gorm:"" json:"createdBy"`
+	AcceptingUserID                  uuid.UUID `gorm:"type:uuid;not null" json:"acceptedByID"`
+	AcceptingUser                    User      `gorm:"" json:"acceptedBy"`
+	CreatedAt                        time.Time `gorm:"default:current_timestamp" json:"createdAt"`
+	Messages                         []Message `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE" json:"messages"`
+	LatestMessageID                  uuid.UUID `gorm:"type:uuid" json:"latestMessageID"`
+	LatestMessage                    *Message  `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE" json:"latestMessage"`
+	Accepted                         bool      `gorm:"default:false" json:"accepted"`
+	LastReadMessageByCreatingUserID  uuid.UUID `gorm:"type:uuid" json:"lastReadMessageByCreatingUserID"`
+	LastReadMessageByAcceptingUserID uuid.UUID `gorm:"type:uuid" json:"lastReadMessageByAcceptingUserID"`
 }
 
 type GroupChat struct {
