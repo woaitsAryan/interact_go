@@ -22,13 +22,13 @@ func LikePost(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
 	}
 
-	var like models.UserPostLike
+	var like models.Like
 	err = initializers.DB.Where("user_id=? AND post_id=?", parsedLoggedInUserID, parsedPostID).First(&like).Error
 
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			likeModel := models.UserPostLike{
-				PostID: parsedPostID,
+			likeModel := models.Like{
+				PostID: &parsedPostID,
 				UserID: parsedLoggedInUserID,
 			}
 
@@ -67,11 +67,11 @@ func LikeProject(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
 	}
 
-	var like models.UserProjectLike
+	var like models.Like
 	if err := initializers.DB.Where("user_id=? AND project_id=?", userID, parsedProjectID).First(&like).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			likeModel := models.UserProjectLike{
-				ProjectID: parsedProjectID,
+			likeModel := models.Like{
+				ProjectID: &parsedProjectID,
 				UserID:    userID,
 			}
 
@@ -116,13 +116,11 @@ func LikeComment(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	var like models.UserCommentLike
+	var like models.Like
 	if err := initializers.DB.Where("user_id=? AND comment_id=?", userID, parsedCommentID).First(&like).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			likeModel := models.UserCommentLike{
-				PostID:    comment.PostID,
-				ProjectID: comment.ProjectID,
-				CommentID: comment.ID,
+			likeModel := models.Like{
+				CommentID: &comment.ID,
 				UserID:    userID,
 			}
 			result := initializers.DB.Create(&likeModel)

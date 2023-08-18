@@ -17,6 +17,7 @@ func UserRouter(app *fiber.App) {
 
 	userRoutes := app.Group("/users", middlewares.Protect)
 	userRoutes.Get("/me", controllers.GetMe)
+	userRoutes.Get("/me/likes", controllers.GetMyLikes)
 	userRoutes.Get("/views", controllers.GetViews)
 
 	userRoutes.Patch("/update_password", controllers.UpdatePassword)

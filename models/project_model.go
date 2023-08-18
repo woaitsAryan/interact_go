@@ -39,9 +39,8 @@ type Project struct {
 	BookMarkItems          []ProjectBookmarkItem   `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"-"`
 	ProjectChatMemberships []ProjectChatMembership `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"-"`
 	ProjectViews           []ProjectView           `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"-"`
-	Likes                  []UserProjectLike       `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"-"`
+	Likes                  []Like                  `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"-"`
 	Applications           []Application           `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"-"`
-	CommentLikes           []UserCommentLike       `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"-"`
 	ChatMessages           []ProjectChatMessage    `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"-"`
 }
 
@@ -50,13 +49,4 @@ type ProjectView struct {
 	ProjectID uuid.UUID `gorm:"type:uuid;not null" json:"projectID"`
 	Date      time.Time `json:"date"`
 	Count     int       `json:"count"`
-}
-
-type UserProjectLike struct {
-	ID        uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	UserID    uuid.UUID `gorm:"type:uuid;not null" json:"likedByID"`
-	User      User      `gorm:"" json:"likedBy"`
-	ProjectID uuid.UUID `gorm:"type:uuid;not null" json:"projectID"`
-	Project   Project   `gorm:"" json:"project"`
-	CreatedAt time.Time `gorm:"default:current_timestamp" json:"likedAt"`
 }

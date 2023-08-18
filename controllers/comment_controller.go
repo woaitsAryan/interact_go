@@ -186,23 +186,3 @@ func DeleteComment(c *fiber.Ctx) error {
 		"message": "Comment deleted successfully",
 	})
 }
-
-func GetMyLikedComments(c *fiber.Ctx) error {
-	loggedInUserID := c.GetRespHeader("loggedInUserID")
-
-	var commentLikes []models.UserCommentLike
-	if err := initializers.DB.Where("user_id = ?", loggedInUserID).Find(&commentLikes).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-	}
-
-	var commentIDs []string
-	for _, commentLike := range commentLikes {
-		commentIDs = append(commentIDs, commentLike.CommentID.String())
-	}
-
-	return c.Status(200).JSON(fiber.Map{
-		"status":   "success",
-		"message":  "",
-		"comments": commentIDs,
-	})
-}

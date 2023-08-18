@@ -84,6 +84,25 @@ func GetUser(c *fiber.Ctx) error {
 	})
 }
 
+func GetMyLikes(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	var likes []models.Like
+	initializers.DB.
+		Find(&likes, "user_id = ?", loggedInUserID)
+
+	var likeIDs []string
+	for _, like := range likes {
+		likeIDs = append(likeIDs, like.ID.String())
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "User Found",
+		"likes":   likeIDs,
+	})
+}
+
 func UpdateMe(c *fiber.Ctx) error {
 	userID := c.GetRespHeader("loggedInUserID")
 	var user models.User

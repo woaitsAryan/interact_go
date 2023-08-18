@@ -9,8 +9,6 @@ import (
 func CommentRouter(app *fiber.App) {
 	CommentRoutes := app.Group("/comments", middlewares.Protect)
 
-	CommentRoutes.Get("/me/likes", controllers.GetMyLikedComments)
-
 	CommentRoutes.Get("/post/:postID", controllers.GetPostComments)
 	CommentRoutes.Get("/project/:projectID", controllers.GetProjectComments)
 

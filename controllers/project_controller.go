@@ -126,8 +126,8 @@ func GetWorkSpaceProject(c *fiber.Ctx) error {
 func GetMyLikedProjects(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
-	var projectLikes []models.UserProjectLike
-	if err := initializers.DB.Where("user_id = ?", loggedInUserID).Find(&projectLikes).Error; err != nil {
+	var projectLikes []models.Like
+	if err := initializers.DB.Where("user_id = ? AND project_id IS NOT NULL", loggedInUserID).Find(&projectLikes).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 

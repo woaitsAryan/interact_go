@@ -74,8 +74,8 @@ func GetMyPosts(c *fiber.Ctx) error {
 func GetMyLikedPosts(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
-	var postLikes []models.UserPostLike
-	if err := initializers.DB.Where("user_id = ?", loggedInUserID).Find(&postLikes).Error; err != nil {
+	var postLikes []models.Like
+	if err := initializers.DB.Where("user_id = ? AND post_id IS NOT NULL", loggedInUserID).Find(&postLikes).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
