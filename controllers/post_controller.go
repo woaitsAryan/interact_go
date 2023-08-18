@@ -127,9 +127,25 @@ func AddPost(c *fiber.Ctx) error {
 	}
 
 	result := initializers.DB.Create(&newPost)
-
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+	}
+
+	if reqBody.TaggedUserIDS != nil {
+		for _, userID := range reqBody.TaggedUserIDS {
+			parsedUserID, err := uuid.Parse(userID)
+			if err != nil {
+				return &fiber.Error{Code: 400, Message: "Invalid User ID in tagged users"}
+			}
+			userTag := models.UserPostTag{
+				UserID: parsedUserID,
+				PostID: newPost.ID,
+			}
+			result := initializers.DB.Create(&userTag)
+			if result.Error != nil {
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			}
+		}
 	}
 
 	var post models.Post
@@ -161,22 +177,39 @@ func UpdatePost(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	var updatePost schemas.PostUpdateSchema
-	if err := c.BodyParser(&updatePost); err != nil {
+	var reqBody schemas.PostUpdateSchema
+	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Request Body."}
 	}
 
-	if updatePost.Content != "" {
-		post.Content = updatePost.Content
+	if reqBody.Content != "" {
+		post.Content = reqBody.Content
 	}
-	if len(updatePost.Tags) != 0 {
-		post.Tags = updatePost.Tags
+	if len(reqBody.Tags) != 0 {
+		post.Tags = reqBody.Tags
 	}
 
 	post.Edited = true
 
 	if err := initializers.DB.Save(&post).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	if reqBody.TaggedUserIDS != nil {
+		for _, userID := range reqBody.TaggedUserIDS {
+			parsedUserID, err := uuid.Parse(userID)
+			if err != nil {
+				return &fiber.Error{Code: 400, Message: "Invalid User ID in tagged users"}
+			}
+			userTag := models.UserPostTag{
+				UserID: parsedUserID,
+				PostID: post.ID,
+			}
+			result := initializers.DB.Create(&userTag)
+			if result.Error != nil {
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			}
+		}
 	}
 
 	return c.Status(200).JSON(fiber.Map{

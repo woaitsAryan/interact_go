@@ -49,28 +49,29 @@ func AddMember(c *fiber.Ctx) error {
 	var membership models.OrganizationMembership
 	if err := initializers.DB.Where("user_id=? AND organization_id=?", user.ID, parsedOrganizationID).First(&membership).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			// var existingInvitation models.ProjectInvitation
-			// err := initializers.DB.Where("user_id=? AND project_id=? AND status=0", user.ID, parsedProjectID).First(&existingInvitation).Error
-			// if err == nil {
-			// 	return &fiber.Error{Code: 400, Message: "Have already invited this User."}
-			// }
+			var existingInvitation models.Invitation
+			err := initializers.DB.Where("user_id=? AND organization_id=? AND status=0", user.ID, parsedOrganizationID).First(&existingInvitation).Error
+			if err == nil {
+				return &fiber.Error{Code: 400, Message: "Have already invited this User."}
+			}
 
-			// var invitation models.ProjectInvitation
-			// invitation.ProjectID = parsedProjectID
-			// invitation.UserID = user.ID
-			// invitation.Title = reqBody.Title
+			var invitation models.Invitation
+			invitation.OrganizationID = &parsedOrganizationID
+			invitation.UserID = user.ID
+			invitation.Title = string(models.Member)
 
-			// result := initializers.DB.Create(&invitation)
+			result := initializers.DB.Create(&invitation)
 
-			// if result.Error != nil {
-			// 	return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-			// }
+			if result.Error != nil {
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			}
 
-			// invitation.User = user
+			invitation.User = user
 
 			return c.Status(201).JSON(fiber.Map{
-				"status":  "success",
-				"message": "Invitation sent to the user.",
+				"status":     "success",
+				"message":    "Invitation sent to the user.",
+				"invitation": invitation,
 			})
 		}
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
