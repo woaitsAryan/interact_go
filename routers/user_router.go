@@ -28,5 +28,5 @@ func UserRouter(app *fiber.App) {
 	userRoutes.Patch("/me", controllers.UpdateMe)
 	userRoutes.Patch("/me/achievements", controllers.AddAchievement)
 	userRoutes.Delete("/me/achievements/:achievementID", controllers.DeleteAchievement)
-	userRoutes.Delete("/me", controllers.DeleteMe)
+	userRoutes.Delete("/me", controllers.DeactivateMe)
 }

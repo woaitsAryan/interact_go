@@ -6,6 +6,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+//TODO have separate routers and controllers for project group n organization chats
+
 func MessagingRouter(app *fiber.App) {
 	messagingRoutes := app.Group("/messaging", middlewares.Protect)
 
@@ -13,7 +15,7 @@ func MessagingRouter(app *fiber.App) {
 
 	messagingRoutes.Get("/", controllers.GetUserChats)
 	messagingRoutes.Get("/:chatID", controllers.GetChat)
-	messagingRoutes.Get("/project/:projectChatID", controllers.GetProjectChat)
+	messagingRoutes.Get("/group/:groupChat", controllers.GetGroupChat)
 
 	messagingRoutes.Get("/accept/:chatID", controllers.AcceptChat)
 
@@ -22,20 +24,18 @@ func MessagingRouter(app *fiber.App) {
 	messagingRoutes.Post("/project/:projectID", controllers.AddProjectChat)
 
 	// messagingRoutes.Patch("/group/:chatID", controllers.EditGroupChat)
-	messagingRoutes.Patch("/project/:projectChatID", controllers.EditProjectChat)
+	messagingRoutes.Patch("/group/:chatID", controllers.EditGroupChat)
 
 	messagingRoutes.Delete("/:chatID", controllers.DeleteChat)
 	messagingRoutes.Delete("/group/:chatID", controllers.DeleteGroupChat)
-	messagingRoutes.Delete("/project/:projectChatID", controllers.DeleteProjectChat)
 
-	messagingRoutes.Delete("/project/membership/:membershipID", controllers.LeaveProjectChat)
+	messagingRoutes.Delete("/group/:chatID", controllers.LeaveGroupChat)
 
 	messagingRoutes.Get("/content/:chatID", controllers.GetMessages)
-	messagingRoutes.Get("/content/group/:ChatID", controllers.GetMessages)
-	messagingRoutes.Get("/content/project/:projectChatID", controllers.GetProjectChatMessages)
+	messagingRoutes.Get("/content/group/:ChatID", controllers.GetGroupChatMessages)
 
 	messagingRoutes.Post("/content", controllers.AddMessage)
-	messagingRoutes.Post("/content/project", controllers.AddProjectChatMessage)
+	messagingRoutes.Post("/content/group", controllers.AddGroupChatMessage)
 
 	messagingRoutes.Delete("/content/:messageID", controllers.DeleteMessage)
 	messagingRoutes.Delete("/content/project/:messageID", controllers.DeleteMessage)

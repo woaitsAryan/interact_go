@@ -102,7 +102,7 @@ func GetWorkSpaceProject(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	var chats []models.ProjectChat
+	var chats []models.GroupChat
 	if err := initializers.DB.Find(&chats, "project_id = ? ", parsedProjectID).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}

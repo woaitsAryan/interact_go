@@ -46,32 +46,19 @@ func GetMessages(c *fiber.Ctx) error {
 	})
 }
 
-func GetProjectChatMessages(c *fiber.Ctx) error {
-	chatID := c.Params("projectChatID")
+func GetGroupChatMessages(c *fiber.Ctx) error {
+	chatID := c.Params("chatID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
-
-	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
 	paginatedDB := API.Paginator(c)(initializers.DB)
 
-	var memberships []models.ProjectChatMembership
-	if err := initializers.DB.Where("project_chat_id=?", chatID).Find(&memberships).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-	}
-	check := false
-
-	for _, membership := range memberships {
-		if membership.UserID == parsedLoggedInUserID {
-			check = true
-		}
-	}
-
-	if !check {
+	var membership models.GroupChatMembership
+	if err := initializers.DB.Where("project_chat_id=? AND user_id = ?", chatID, loggedInUserID).First(&membership).Error; err != nil {
 		return &fiber.Error{Code: 403, Message: "Do not have the permission to perform this action."}
 	}
 
-	var messages []models.ProjectChatMessage
-	if err := paginatedDB.Preload("User").Where("project_chat_id = ? ", chatID).Order("created_at DESC").Find(&messages).Error; err != nil {
+	var messages []models.GroupChatMessage
+	if err := paginatedDB.Preload("User").Where("chat_id = ? ", chatID).Order("created_at DESC").Find(&messages).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 	return c.Status(200).JSON(fiber.Map{
@@ -124,7 +111,7 @@ func AddMessage(c *fiber.Ctx) error {
 	})
 }
 
-func AddProjectChatMessage(c *fiber.Ctx) error {
+func AddGroupChatMessage(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedUserID, _ := uuid.Parse(loggedInUserID)
 
@@ -136,25 +123,16 @@ func AddProjectChatMessage(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
 	}
 
+	//TODO add role checks
+
 	chatID := reqBody.ChatID
 
-	// var memberships []models.ProjectChatMembership
-	// if err := initializers.DB.Where("project_chat_id=?", chatID).Find(&memberships).Error; err != nil {
-	// 	return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-	// }
-	// check := false
+	var membership models.GroupChatMembership
+	if err := initializers.DB.Preload("User").Preload("GroupChat").Where("chat_id=? AND user_id = ?", chatID, loggedInUserID).First(&membership).Error; err != nil {
+		return &fiber.Error{Code: 403, Message: "Do not have the permission to perform this action."}
+	}
 
-	// for _, membership := range memberships {
-	// 	if membership.UserID == parsedUserID {
-	// 		check = true
-	// 	}
-	// }
-
-	// if !check {
-	// 	return &fiber.Error{Code: 403, Message: "Do not have the permission to perform this action."}
-	// }
-
-	message := models.ProjectChatMessage{
+	message := models.GroupChatMessage{
 		UserID:  parsedUserID,
 		Content: reqBody.Content,
 	}
@@ -164,22 +142,14 @@ func AddProjectChatMessage(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid ID."}
 	}
 
-	var chat models.ProjectChat
-	if err := initializers.DB.First(&chat, "id=?", parsedChatID).Error; err != nil {
-		return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
-	}
-	message.ProjectChatID = parsedChatID
-	message.ProjectID = chat.ProjectID
+	message.ChatID = parsedChatID
 
 	result := initializers.DB.Create(&message)
-
 	if result.Error != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	if err := initializers.DB.Preload("User").First(&message).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-	}
+	message.User = membership.User
 
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",

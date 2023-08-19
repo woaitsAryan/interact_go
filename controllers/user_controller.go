@@ -93,7 +93,13 @@ func GetMyLikes(c *fiber.Ctx) error {
 
 	var likeIDs []string
 	for _, like := range likes {
-		likeIDs = append(likeIDs, like.ID.String())
+		if like.PostID != nil {
+			likeIDs = append(likeIDs, like.PostID.String())
+		} else if like.ProjectID != nil {
+			likeIDs = append(likeIDs, like.ProjectID.String())
+		} else if like.CommentID != nil {
+			likeIDs = append(likeIDs, like.CommentID.String())
+		}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -130,6 +136,7 @@ func UpdateMe(c *fiber.Ctx) error {
 	}
 	reqBody.CoverPic = coverName
 
+	//TODO  make a routine for this
 	if reqBody.ProfilePic != "" {
 		err := utils.DeleteFile("user/profilePics", user.ProfilePic)
 		if err != nil {
@@ -169,8 +176,10 @@ func UpdateMe(c *fiber.Ctx) error {
 	})
 }
 
-func DeleteMe(c *fiber.Ctx) error {
+func DeactivateMe(c *fiber.Ctx) error {
 	userID := c.GetRespHeader("loggedInUserID")
+
+	//TODO send email for verification
 
 	var user models.User
 	if err := initializers.DB.First(&user, "id = ?", userID).Error; err != nil {
@@ -188,7 +197,7 @@ func DeleteMe(c *fiber.Ctx) error {
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",
-		"message": "User deleted successfully",
+		"message": "User deactivated successfully",
 	})
 }
 
