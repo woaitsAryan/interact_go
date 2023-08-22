@@ -20,6 +20,7 @@ Status Codes:
 *8 - You were removed from the project
 *9 - Chat request
 *10 - Accepted Project Invitation
+*11 - Accepted Org Invitation
 */
 
 type Notification struct {

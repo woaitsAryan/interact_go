@@ -14,7 +14,7 @@ func ExploreRouter(app *fiber.App) {
 
 	exploreRoutes.Get("/posts", controllers.GetTrendingPosts)
 
-	exploreRoutes.Get("/openings", controllers.GetTrendingOpenings)
+	exploreRoutes.Get("/openings/recommended", controllers.GetTrendingOpenings)
 	exploreRoutes.Get("/openings/:projectID", controllers.GetProjectOpenings)
 
 	exploreRoutes.Get("/projects/trending", controllers.GetTrendingProjects)
@@ -26,9 +26,9 @@ func ExploreRouter(app *fiber.App) {
 	exploreRoutes.Get("/users/trending", controllers.GetTrendingUsers)
 	exploreRoutes.Get("/users/recommended", middlewares.PartialProtect, controllers.GetRecommendedUsers)
 
-	exploreRoutes.Get("/users/similar/:userID", controllers.GetSimilarUsers)
-	exploreRoutes.Get("/projects/similar/:projectID", controllers.GetSimilarProjects)
+	exploreRoutes.Get("/users/similar/:username", controllers.GetSimilarUsers)
+	exploreRoutes.Get("/projects/similar/:slug", controllers.GetSimilarProjects)
 
-	exploreRoutes.Get("/users/:userID", controllers.GetUser)
-	exploreRoutes.Get("/projects/:projectID", controllers.GetProject)
+	exploreRoutes.Get("/users/:username", controllers.GetUser)
+	exploreRoutes.Get("/projects/:slug", controllers.GetProject)
 }

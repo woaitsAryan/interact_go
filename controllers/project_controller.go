@@ -13,19 +13,15 @@ import (
 	"github.com/Pratham-Mishra04/interact/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/gosimple/slug"
 	"gorm.io/gorm"
 )
 
 func GetProject(c *fiber.Ctx) error {
-	projectID := c.Params("projectID")
-
-	parsedProjectID, err := uuid.Parse(projectID)
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid ID"}
-	}
+	slug := c.Params("slug")
 
 	var project models.Project
-	if err := initializers.DB.Omit("private_links").Preload("User").Preload("Openings").First(&project, "id = ?", parsedProjectID).Error; err != nil {
+	if err := initializers.DB.Omit("private_links").Preload("User").Preload("Openings").First(&project, "slug = ?", slug).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
 		}
@@ -33,7 +29,7 @@ func GetProject(c *fiber.Ctx) error {
 	}
 
 	var memberships []models.Membership
-	if err := initializers.DB.Preload("User").Find(&memberships, "project_id = ?", parsedProjectID).Error; err != nil {
+	if err := initializers.DB.Preload("User").Find(&memberships, "project_id = ?", project.ID).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
@@ -42,11 +38,11 @@ func GetProject(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedLoggedInUserID, err := uuid.Parse(loggedInUserID)
 
-	if err == nil {
+	if err == nil && parsedLoggedInUserID != project.UserID {
 		go routines.UpdateLastViewed(parsedLoggedInUserID, project.ID)
 	}
 
-	_, count, err := utils.GetProjectViews(parsedProjectID)
+	_, count, err := utils.GetProjectViews(project.ID)
 	if err != nil {
 		return err
 	}
@@ -61,13 +57,8 @@ func GetProject(c *fiber.Ctx) error {
 }
 
 func GetWorkSpaceProject(c *fiber.Ctx) error {
-	projectID := c.Params("projectID")
+	slug := c.Params("slug")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
-
-	parsedProjectID, err := uuid.Parse(projectID)
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid ID"}
-	}
 
 	parsedLoggedInUserID, err := uuid.Parse(loggedInUserID)
 	if err != nil {
@@ -75,7 +66,7 @@ func GetWorkSpaceProject(c *fiber.Ctx) error {
 	}
 
 	var project models.Project
-	if err := initializers.DB.Preload("User").First(&project, "id = ?", parsedProjectID).Error; err != nil {
+	if err := initializers.DB.Preload("User").First(&project, "slug = ?", slug).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
 		}
@@ -83,7 +74,7 @@ func GetWorkSpaceProject(c *fiber.Ctx) error {
 	}
 
 	var memberships []models.Membership
-	if err := initializers.DB.Preload("User").Find(&memberships, "project_id = ?", parsedProjectID).Error; err != nil {
+	if err := initializers.DB.Preload("User").Find(&memberships, "project_id = ?", project.ID).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
@@ -98,16 +89,16 @@ func GetWorkSpaceProject(c *fiber.Ctx) error {
 	}
 
 	var invitations []models.Invitation
-	if err := initializers.DB.Preload("User").Find(&invitations, "project_id = ? AND (status = 0 OR status = -1)", parsedProjectID).Error; err != nil {
+	if err := initializers.DB.Preload("User").Find(&invitations, "project_id = ? AND (status = 0 OR status = -1)", project.ID).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	var chats []models.GroupChat
-	if err := initializers.DB.Find(&chats, "project_id = ? ", parsedProjectID).Error; err != nil {
+	if err := initializers.DB.Find(&chats, "project_id = ? ", project.ID).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	_, count, err := utils.GetProjectViews(parsedProjectID)
+	_, count, err := utils.GetProjectViews(project.ID)
 	if err != nil {
 		return err
 	}
@@ -213,47 +204,58 @@ func AddProject(c *fiber.Ctx) error {
 		return err
 	}
 
-	parsedID, err := uuid.Parse(c.GetRespHeader("loggedInUserID"))
-	if err != nil {
-		return &fiber.Error{Code: 500, Message: "Error Parsing the Loggedin User ID."}
-	}
+	slug := slug.Make(reqBody.Title)
 
-	var user models.User
-	if err := initializers.DB.Where("id=?", parsedID).First(&user).Error; err != nil {
+	var existingProject models.Project
+	if err := initializers.DB.Where("slug=?", slug).First(&existingProject).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			parsedID, err := uuid.Parse(c.GetRespHeader("loggedInUserID"))
+			if err != nil {
+				return &fiber.Error{Code: 500, Message: "Error Parsing the Loggedin User ID."}
+			}
+
+			var user models.User
+			if err := initializers.DB.Where("id=?", parsedID).First(&user).Error; err != nil {
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			}
+			if !user.Verified && initializers.CONFIG.ENV == "production" {
+				return &fiber.Error{Code: 401, Message: config.VERIFICATION_ERROR}
+			}
+
+			picName, err := utils.SaveFile(c, "coverPic", "project/coverPics", true, 900, 400)
+			if err != nil {
+				return err
+			}
+
+			newProject := models.Project{
+				UserID:      parsedID,
+				Title:       reqBody.Title,
+				Slug:        slug,
+				Tagline:     reqBody.Tagline,
+				CoverPic:    picName,
+				Description: reqBody.Description,
+				Tags:        reqBody.Tags,
+				Category:    reqBody.Category,
+				IsPrivate:   reqBody.IsPrivate,
+				Links:       reqBody.Links,
+			}
+
+			result := initializers.DB.Create(&newProject)
+
+			if result.Error != nil {
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			}
+
+			return c.Status(201).JSON(fiber.Map{
+				"status":  "success",
+				"message": "Project Added",
+				"project": newProject,
+			})
+		}
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	} else {
+		return &fiber.Error{Code: 400, Message: "This title is not available."}
 	}
-	if !user.Verified && initializers.CONFIG.ENV == "production" {
-		return &fiber.Error{Code: 401, Message: config.VERIFICATION_ERROR}
-	}
-
-	picName, err := utils.SaveFile(c, "coverPic", "project/coverPics", true, 900, 400)
-	if err != nil {
-		return err
-	}
-
-	newProject := models.Project{
-		UserID:      parsedID,
-		Title:       reqBody.Title,
-		Tagline:     reqBody.Tagline,
-		CoverPic:    picName,
-		Description: reqBody.Description,
-		Tags:        reqBody.Tags,
-		Category:    reqBody.Category,
-		IsPrivate:   reqBody.IsPrivate,
-		Links:       reqBody.Links,
-	}
-
-	result := initializers.DB.Create(&newProject)
-
-	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-	}
-
-	return c.Status(201).JSON(fiber.Map{
-		"status":  "success",
-		"message": "Project Added",
-		"project": newProject,
-	})
 }
 
 func UpdateProject(c *fiber.Ctx) error {

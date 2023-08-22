@@ -56,7 +56,7 @@ func GetMe(c *fiber.Ctx) error {
 }
 
 func GetUser(c *fiber.Ctx) error {
-	userID := c.Params("userID")
+	username := c.Params("username")
 
 	var user models.User
 	initializers.DB.
@@ -65,7 +65,7 @@ func GetUser(c *fiber.Ctx) error {
 		Preload("Posts").
 		Preload("Memberships").
 		Preload("Memberships.Project").
-		First(&user, "id = ?", userID)
+		First(&user, "username = ?", username)
 
 	if user.ID == uuid.Nil {
 		return &fiber.Error{Code: 400, Message: "No user of this ID found."}
@@ -289,8 +289,8 @@ func UpdatePhoneNo(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Validation Failed"}
 	}
 
-	var emailCheckUser models.User
-	if err := initializers.DB.First(&emailCheckUser, "phone_no = ?", reqBody.PhoneNo).Error; err == nil {
+	var phoneNoCheckUser models.User
+	if err := initializers.DB.First(&phoneNoCheckUser, "phone_no = ?", reqBody.PhoneNo).Error; err == nil {
 		return &fiber.Error{Code: 400, Message: "Phone Number Already In Use."}
 	}
 

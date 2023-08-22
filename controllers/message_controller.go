@@ -132,6 +132,10 @@ func AddGroupChatMessage(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 403, Message: "Do not have the permission to perform this action."}
 	}
 
+	if membership.GroupChat.AdminOnly && membership.Role == models.ChatMember {
+		return &fiber.Error{Code: 403, Message: "Only admins can send message in this chat."}
+	}
+
 	message := models.GroupChatMessage{
 		UserID:  parsedUserID,
 		Content: reqBody.Content,

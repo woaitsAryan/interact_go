@@ -23,10 +23,10 @@ func MessagingRouter(app *fiber.App) {
 	messagingRoutes.Post("/group", controllers.AddGroupChat)
 	messagingRoutes.Post("/project/:projectID", controllers.AddProjectChat)
 
-	// messagingRoutes.Patch("/group/:chatID", controllers.EditGroupChat)
 	messagingRoutes.Patch("/group/:chatID", controllers.EditGroupChat)
 
 	messagingRoutes.Delete("/:chatID", controllers.DeleteChat)
+
 	messagingRoutes.Delete("/group/:chatID", controllers.DeleteGroupChat)
 
 	messagingRoutes.Delete("/group/:chatID", controllers.LeaveGroupChat)

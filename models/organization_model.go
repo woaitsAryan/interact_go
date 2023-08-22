@@ -12,6 +12,7 @@ type Organization struct {
 	User              User                     `gorm:"" json:"user"`
 	OrganizationTitle string                   `gorm:"unique" json:"title"`
 	Memberships       []OrganizationMembership `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE" json:"memberships"`
+	History           []OrganizationHistory    `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE" json:"history"`
 	CreatedAt         time.Time                `gorm:"default:current_timestamp" json:"createdAt"`
 }
 
@@ -36,4 +37,21 @@ type OrganizationMembership struct {
 	User           User             `gorm:"" json:"user"`
 	Role           OrganizationRole `gorm:"type:text" json:"role"`
 	CreatedAt      time.Time        `gorm:"default:current_timestamp" json:"createdAt"`
+}
+
+type OrganizationHistory struct {
+	ID             uuid.UUID   `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	OrganizationID uuid.UUID   `gorm:"type:uuid;not null" json:"organizationID"`
+	HistoryType    int         `json:"historyType"`
+	UserID         uuid.UUID   `gorm:"type:uuid;not null" json:"userID"`
+	User           User        `json:"user"`
+	PostID         *uuid.UUID  `gorm:"type:uuid" json:"postID"`
+	Post           Post        `json:"post"`
+	ProjectID      *uuid.UUID  `gorm:"type:uuid" json:"projectID"`
+	Project        Project     `json:"project"`
+	OpeningID      *uuid.UUID  `gorm:"type:uuid" json:"openingID"`
+	Opening        Opening     `json:"opening"`
+	ApplicationID  *uuid.UUID  `gorm:"type:uuid" json:"applicationID"`
+	Application    Application `json:"application"`
+	CreatedAt      time.Time   `gorm:"default:current_timestamp" json:"createdAt"`
 }

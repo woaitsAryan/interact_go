@@ -228,37 +228,37 @@ func GetRecommendedUsers(c *fiber.Ctx) error {
 }
 
 func GetSimilarUsers(c *fiber.Ctx) error {
-	userID := c.Params("userID")
+	username := c.Params("username")
 
 	var user models.User
 	initializers.DB.
-		First(&user, "id = ?", userID)
+		First(&user, "username = ?", username)
 
-	var users []models.User
+	var similarUsers []models.User
 	if err := initializers.DB.
 		Where("active=?", true).
 		Where("organization_status=?", false).
-		Where("id <> ?", userID).
-		Where("tags && ?", pq.StringArray(user.Tags)).Limit(10).Find(&users).Error; err != nil {
+		Where("id <> ?", username).
+		Where("tags && ?", pq.StringArray(user.Tags)).Limit(10).Find(&similarUsers).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 	return c.Status(200).JSON(fiber.Map{
 		"status": "success",
-		"users":  users,
+		"users":  similarUsers,
 	})
 }
 
 func GetSimilarProjects(c *fiber.Ctx) error {
-	projectID := c.Params("projectID")
+	slug := c.Params("slug")
 
 	var project models.Project
 	initializers.DB.
-		First(&project, "id = ?", projectID)
+		First(&project, "slug = ?", slug)
 
 	var projects []models.Project
 	if err := initializers.DB.
 		Omit("private_links").
-		Where("id <> ?", projectID).
+		Where("id <> ?", project.ID).
 		Where("category LIKE ?", "%"+project.Category+"%").
 		Where("tags && ?", pq.StringArray(project.Tags)).Limit(10).Find(&projects).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}

@@ -25,8 +25,9 @@ type GroupChat struct {
 	ID              uuid.UUID             `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	Title           string                `gorm:"type:varchar(50);" json:"title"`
 	Description     string                `gorm:"type:text" json:"description"`
-	UserID          uuid.UUID             `gorm:"type:uuid;not null" json:"createdByID"`
-	User            User                  `gorm:"" json:"createdBy"`
+	AdminOnly       bool                  `gorm:"default:false" json:"adminOnly"`
+	UserID          uuid.UUID             `gorm:"type:uuid;not null" json:"userID"`
+	User            User                  `gorm:"" json:"user"`
 	OrganizationID  *uuid.UUID            `gorm:"type:uuid;" json:"organizationID"`
 	Organization    Organization          `gorm:"constraint:OnDelete:CASCADE" json:"organization"`
 	ProjectID       *uuid.UUID            `gorm:"type:uuid;" json:"projectID"`
@@ -38,11 +39,20 @@ type GroupChat struct {
 	LatestMessage   *GroupChatMessage     `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE" json:"latestMessage"`
 	Invitations     []Invitation          `gorm:"foreignKey:GroupChatID;constraint:OnDelete:CASCADE" json:"invitations"`
 }
+
+type GroupChatRole string
+
+const (
+	ChatMember GroupChatRole = "Member"
+	ChatAdmin  GroupChatRole = "Admin"
+)
+
 type GroupChatMembership struct {
-	ID          uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	UserID      uuid.UUID `gorm:"type:uuid;not null" json:"userID"`
-	User        User      `gorm:"" json:"user"`
-	GroupChatID uuid.UUID `gorm:"type:uuid;not null" json:"chatID"`
-	GroupChat   GroupChat `gorm:"" json:"chat"`
-	CreatedAt   time.Time `gorm:"default:current_timestamp" json:"createdAt"`
+	ID          uuid.UUID     `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	UserID      uuid.UUID     `gorm:"type:uuid;not null" json:"userID"`
+	User        User          `gorm:"" json:"user"`
+	Role        GroupChatRole `gorm:"type:text" json:"role"`
+	GroupChatID uuid.UUID     `gorm:"type:uuid;not null" json:"chatID"`
+	GroupChat   GroupChat     `gorm:"" json:"chat"`
+	CreatedAt   time.Time     `gorm:"default:current_timestamp" json:"createdAt"`
 }

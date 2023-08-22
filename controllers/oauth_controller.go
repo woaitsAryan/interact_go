@@ -151,6 +151,10 @@ func GoogleCallback(c *fiber.Ctx) error {
 			}
 		}
 
+		// if user.OrganizationStatus {
+		// 	return &fiber.Error{Code: 403, Message: "Cannot Sign in to organizational accounts."}
+		// }
+
 		if user.OAuth.ID == uuid.Nil || user.OAuth.OnBoardingCompleted {
 			return RedirectToLogin(c, user)
 		}

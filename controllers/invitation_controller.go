@@ -75,6 +75,17 @@ func AcceptInvitation(c *fiber.Ctx) error {
 		if result.Error != nil {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 		}
+	} else if invitation.GroupChatID != nil {
+		membership := models.GroupChatMembership{
+			UserID:      invitation.UserID,
+			GroupChatID: *invitation.GroupChatID,
+			Role:        models.ChatMember,
+		}
+
+		result := initializers.DB.Create(&membership)
+		if result.Error != nil {
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		}
 	}
 
 	result := initializers.DB.Save(&invitation)

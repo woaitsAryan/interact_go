@@ -173,18 +173,23 @@ func EditGroupChat(c *fiber.Ctx) error {
 	}
 
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
-	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
 	groupChatID := c.Params("groupChatID")
 
-	var groupChat models.GroupChat
-	err := initializers.DB.Preload("Project").First(&groupChat, "id = ?", groupChatID).Error
+	var chatMembership models.GroupChatMembership
+	err := initializers.DB.First(&chatMembership, "group_chat_id = ? AND user_id = ?", groupChatID, loggedInUserID).Error
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "No chat of this id found."}
 	}
 
-	if groupChat.Project.UserID != parsedLoggedInUserID {
+	if chatMembership.Role != models.ChatAdmin {
 		return &fiber.Error{Code: 403, Message: "You do not have the permission to perform this action."}
+	}
+
+	var groupChat models.GroupChat
+	err = initializers.DB.First(&groupChat, "id = ?", groupChatID).Error
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "No chat of this id found."}
 	}
 
 	if reqBody.Title != "" {
@@ -196,13 +201,44 @@ func EditGroupChat(c *fiber.Ctx) error {
 
 	result := initializers.DB.Save(&groupChat)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Chat Updated",
 		"chat":    groupChat,
+	})
+}
+
+func EditGroupChatRole(c *fiber.Ctx) error {
+	var reqBody struct {
+		UserID string               `json:"userID"`
+		Role   models.GroupChatRole `json:"role"`
+	}
+	if err := c.BodyParser(&reqBody); err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
+	}
+
+	// loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	groupChatID := c.Params("groupChatID")
+
+	var userChatMembership models.GroupChatMembership
+	err := initializers.DB.First(&userChatMembership, "group_chat_id = ? AND user_id = ?", groupChatID, reqBody.UserID).Error
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "User is not a member of this chat."}
+	}
+
+	userChatMembership.Role = reqBody.Role
+	result := initializers.DB.Save(&userChatMembership)
+	if result.Error != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Membership Updated",
 	})
 }
 
