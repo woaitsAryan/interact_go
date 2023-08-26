@@ -136,6 +136,11 @@ func AddApplication(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "No Opening of this ID found."}
 	}
 
+	var membership models.Membership
+	if err := initializers.DB.Where("project_id=? AND user_id=?", opening.ProjectID, parsedUserID).First(&membership).Error; err == nil {
+		return &fiber.Error{Code: 400, Message: "You already are a collaborator of this project."}
+	}
+
 	newApplication := models.Application{
 		OpeningID: parsedOpeningID,
 		ProjectID: opening.ProjectID,

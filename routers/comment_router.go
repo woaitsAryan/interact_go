@@ -7,16 +7,16 @@ import (
 )
 
 func CommentRouter(app *fiber.App) {
-	CommentRoutes := app.Group("/comments", middlewares.Protect)
+	commentRoutes := app.Group("/comments", middlewares.Protect)
 
-	CommentRoutes.Get("/post/:postID", controllers.GetPostComments)
-	CommentRoutes.Get("/project/:projectID", controllers.GetProjectComments)
+	commentRoutes.Get("/post/:postID", controllers.GetPostComments)
+	commentRoutes.Get("/project/:projectID", controllers.GetProjectComments)
 
-	CommentRoutes.Post("/", controllers.AddComment)
+	commentRoutes.Post("/", controllers.AddComment)
 
-	CommentRoutes.Patch("/:commentID", controllers.UpdateComment)
+	commentRoutes.Patch("/:commentID", controllers.UpdateComment)
 
-	CommentRoutes.Delete("/:commentID", controllers.DeleteComment)
+	commentRoutes.Delete("/:commentID", controllers.DeleteComment)
 
-	CommentRoutes.Get("/like/:commentID", controllers.LikeComment)
+	commentRoutes.Get("/like/:commentID", controllers.LikeComment)
 }

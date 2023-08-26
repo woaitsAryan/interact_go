@@ -114,6 +114,7 @@ func GetTrendingProjects(c *fiber.Ctx) error {
 		Omit("private_links").
 		Select("*, (2 * no_likes + no_comments + 5 * no_shares) AS weighted_average").
 		Order("weighted_average DESC").
+		Where("is_private = ?", false).
 		Find(&projects).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
@@ -131,7 +132,7 @@ func GetRecommendedProjects(c *fiber.Ctx) error {
 
 	searchedDB := API.Search(c, 1)(paginatedDB)
 
-	if err := searchedDB.Omit("private_links").Where("user_id <> ?", loggedInUserID).Find(&projects).Error; err != nil {
+	if err := searchedDB.Omit("private_links").Where("user_id <> ? AND is_private = ?", loggedInUserID, false).Find(&projects).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 	return c.Status(200).JSON(fiber.Map{
@@ -146,7 +147,7 @@ func GetMostLikedProjects(c *fiber.Ctx) error {
 
 	searchedDB := API.Search(c, 1)(paginatedDB)
 
-	if err := searchedDB.Omit("private_links").Order("no_likes DESC").Find(&projects).Error; err != nil {
+	if err := searchedDB.Omit("private_links").Order("no_likes DESC").Where("is_private = ?", false).Find(&projects).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 	return c.Status(200).JSON(fiber.Map{
@@ -161,7 +162,7 @@ func GetRecentlyAddedProjects(c *fiber.Ctx) error {
 
 	searchedDB := API.Search(c, 1)(paginatedDB)
 
-	if err := searchedDB.Omit("private_links").Order("created_at DESC").Find(&projects).Error; err != nil {
+	if err := searchedDB.Omit("private_links").Order("created_at DESC").Where("is_private = ?", false).Find(&projects).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 	return c.Status(200).JSON(fiber.Map{
@@ -183,7 +184,9 @@ func GetLastViewedProjects(c *fiber.Ctx) error {
 	var projects []models.Project
 
 	for _, projectView := range projectViewed {
-		projects = append(projects, projectView.Project)
+		if !projectView.Project.IsPrivate {
+			projects = append(projects, projectView.Project)
+		}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -201,6 +204,8 @@ func GetTrendingUsers(c *fiber.Ctx) error {
 	if err := searchedDB.
 		Where("active=?", true).
 		Where("organization_status=?", false).
+		Omit("phone_no").
+		Omit("email").
 		Select("*, (2 * no_followers - no_following) AS weighted_average").
 		Order("weighted_average DESC").
 		Find(&users).Error; err != nil {
@@ -218,7 +223,12 @@ func GetRecommendedUsers(c *fiber.Ctx) error {
 	searchedDB := API.Search(c, 0)(paginatedDB)
 
 	var users []models.User
-	if err := searchedDB.Where("active=?", true).Where("organization_status=?", false).Order("created_at DESC").Find(&users).Error; err != nil {
+	if err := searchedDB.Where("active=?", true).
+		Where("organization_status=?", false).
+		Omit("phone_no").
+		Omit("email").
+		Order("no_followers DESC").
+		Find(&users).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 	return c.Status(200).JSON(fiber.Map{
@@ -239,7 +249,12 @@ func GetSimilarUsers(c *fiber.Ctx) error {
 		Where("active=?", true).
 		Where("organization_status=?", false).
 		Where("id <> ?", username).
-		Where("tags && ?", pq.StringArray(user.Tags)).Limit(10).Find(&similarUsers).Error; err != nil {
+		Where("tags && ?", pq.StringArray(user.Tags)).
+		Omit("phone_no").
+		Omit("email").
+		Order("no_followers DESC").
+		Limit(10).
+		Find(&similarUsers).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 	return c.Status(200).JSON(fiber.Map{
@@ -257,10 +272,12 @@ func GetSimilarProjects(c *fiber.Ctx) error {
 
 	var projects []models.Project
 	if err := initializers.DB.
-		Omit("private_links").
 		Where("id <> ?", project.ID).
 		Where("category LIKE ?", "%"+project.Category+"%").
-		Where("tags && ?", pq.StringArray(project.Tags)).Limit(10).Find(&projects).Error; err != nil {
+		Where("tags && ?", pq.StringArray(project.Tags)).
+		Omit("private_links").
+		Limit(10).
+		Find(&projects).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 	return c.Status(200).JSON(fiber.Map{

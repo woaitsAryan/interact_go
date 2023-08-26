@@ -168,3 +168,36 @@ func GetFollowing(c *fiber.Ctx) error {
 		"following": followingUsers,
 	})
 }
+
+func GetMutuals(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	userID := c.Params("userID")
+
+	joinQuery := initializers.DB.Joins("JOIN follow_followers AS ff1 ON ff1.follower_id = ? AND ff1.followed_id = follow_followers.follower_id", loggedInUserID).
+		Joins("JOIN follow_followers AS ff2 ON ff2.follower_id = ? AND ff2.followed_id = follow_followers.followed_id", userID)
+
+	var mutualFollowers []models.FollowFollower
+	if err := joinQuery.
+		Preload("Followed").
+		Find(&mutualFollowers).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	var count int64
+	if err := joinQuery.
+		Count(&count).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	var mutuals []models.User
+	for _, followObj := range mutualFollowers {
+		mutuals = append(mutuals, followObj.Followed)
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "",
+		"mutuals": mutuals,
+		"count":   count,
+	})
+}

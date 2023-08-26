@@ -5,7 +5,7 @@ type ProjectCreateSchema struct {
 	Tagline     string   `json:"tagline" validate:"required"`
 	Description string   `json:"description" validate:"required,max=500"`
 	Tags        []string `json:"tags" validate:"dive,alpha"`
-	Category    string   `json:"category" validate:"alpha,required"`
+	Category    string   `json:"category" validate:"required"`
 	IsPrivate   bool     `json:"isPrivate" validate:"boolean"`
 	Links       []string `json:"links" validate:"dive,url"`
 }

@@ -7,7 +7,7 @@ import (
 )
 
 /*
-Status Codes:
+notification type:
 *-1 - Welcome to Interact
 *0 - User started following you
 *1 - User liked your post
