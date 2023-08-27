@@ -19,6 +19,8 @@ type Chat struct {
 	Accepted                         bool      `gorm:"default:false" json:"accepted"`
 	LastReadMessageByCreatingUserID  uuid.UUID `gorm:"type:uuid" json:"lastReadMessageByCreatingUserID"`
 	LastReadMessageByAcceptingUserID uuid.UUID `gorm:"type:uuid" json:"lastReadMessageByAcceptingUserID"`
+	LastReadMessageByCreatingUser    *Message  `gorm:"type:uuid" json:"lastReadMessageByCreatingUser"`
+	LastReadMessageByAcceptingUser   *Message  `gorm:"type:uuid" json:"lastReadMessageByAcceptingUser"`
 }
 
 type GroupChat struct {

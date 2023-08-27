@@ -25,11 +25,18 @@ func GetBookMarks(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
+	var openingBookmarks []models.OpeningBookmark
+	err = initializers.DB.Preload("OpeningItems").Find(&openingBookmarks, "user_id=?", parsedUserID).Error
+	if err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
 	return c.Status(200).JSON(fiber.Map{
 		"status":           "success",
 		"message":          "",
 		"postBookmarks":    postBookmarks,
 		"projectBookmarks": projectBookmarks,
+		"openingBookmarks": openingBookmarks,
 	})
 }
 
@@ -67,6 +74,23 @@ func GetPopulatedProjectBookMarks(c *fiber.Ctx) error {
 	})
 }
 
+func GetPopulatedOpeningBookMarks(c *fiber.Ctx) error {
+	userID := c.GetRespHeader("loggedInUserID")
+	parsedUserID, _ := uuid.Parse(userID)
+
+	var openingBookmarks []models.OpeningBookmark
+	err := initializers.DB.Preload("OpeningItems.Opening").Find(&openingBookmarks, "user_id=?", parsedUserID).Error
+	if err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":    "success",
+		"message":   "",
+		"bookmarks": openingBookmarks,
+	})
+}
+
 func AddPostBookMark(c *fiber.Ctx) error {
 	userID := c.GetRespHeader("loggedInUserID")
 	parsedUserID, _ := uuid.Parse(userID)
@@ -88,7 +112,6 @@ func AddPostBookMark(c *fiber.Ctx) error {
 	if result.Error != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
-
 	return c.Status(201).JSON(fiber.Map{
 		"status":   "success",
 		"message":  "Bookmark Created.",
@@ -96,6 +119,7 @@ func AddPostBookMark(c *fiber.Ctx) error {
 	})
 }
 
+// TODO create a single add, delete bookmark controller which takes in the input for the type of bookmark
 func AddProjectBookMark(c *fiber.Ctx) error {
 	userID := c.GetRespHeader("loggedInUserID")
 	parsedUserID, _ := uuid.Parse(userID)
@@ -113,7 +137,34 @@ func AddProjectBookMark(c *fiber.Ctx) error {
 	}
 
 	result := initializers.DB.Create(&bookmark)
+	if result.Error != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+	}
 
+	return c.Status(201).JSON(fiber.Map{
+		"status":   "success",
+		"message":  "Bookmark Created.",
+		"bookmark": bookmark,
+	})
+}
+
+func AddOpeningBookMark(c *fiber.Ctx) error {
+	userID := c.GetRespHeader("loggedInUserID")
+	parsedUserID, _ := uuid.Parse(userID)
+
+	var reqBody struct {
+		Title string `json:"title"`
+	}
+	if err := c.BodyParser(&reqBody); err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
+	}
+
+	bookmark := models.OpeningBookmark{
+		UserID: parsedUserID,
+		Title:  reqBody.Title,
+	}
+
+	result := initializers.DB.Create(&bookmark)
 	if result.Error != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
@@ -141,9 +192,8 @@ func DeletePostBookMark(c *fiber.Ctx) error {
 	}
 
 	result := initializers.DB.Delete(&bookmark)
-
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
 
 	return c.Status(204).JSON(fiber.Map{
@@ -168,9 +218,34 @@ func DeleteProjectBookMark(c *fiber.Ctx) error {
 	}
 
 	result := initializers.DB.Delete(&bookmark)
-
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+	}
+
+	return c.Status(204).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Bookmark Deleted.",
+	})
+}
+
+func DeleteOpeningBookMark(c *fiber.Ctx) error {
+	bookmarkID := c.Params("bookmarkID")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	parsedBookmarkID, err := uuid.Parse(bookmarkID)
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid ID"}
+	}
+
+	var bookmark models.OpeningBookmark
+	err = initializers.DB.First(&bookmark, "id=? AND user_id=?", parsedBookmarkID, loggedInUserID).Error
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "No Bookmark of this ID found."}
+	}
+
+	result := initializers.DB.Delete(&bookmark)
+	if result.Error != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
 
 	return c.Status(204).JSON(fiber.Map{
