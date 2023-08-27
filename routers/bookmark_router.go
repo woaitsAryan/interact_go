@@ -10,23 +10,23 @@ func BookmarkRouter(app *fiber.App) {
 	bookmarkRoutes := app.Group("/bookmarks", middlewares.Protect)
 	bookmarkRoutes.Get("/", controllers.GetBookMarks)
 
-	bookmarkRoutes.Get("/post", controllers.GetPopulatedPostBookMarks)
-	bookmarkRoutes.Get("/project", controllers.GetPopulatedProjectBookMarks)
-	bookmarkRoutes.Get("/opening", controllers.GetPopulatedOpeningBookMarks)
+	bookmarkRoutes.Get("/post", controllers.GetPopulatedBookMarks("post"))
+	bookmarkRoutes.Get("/project", controllers.GetPopulatedBookMarks("project"))
+	bookmarkRoutes.Get("/opening", controllers.GetPopulatedBookMarks("opening"))
 
-	bookmarkRoutes.Post("/post", controllers.AddPostBookMark)
-	bookmarkRoutes.Post("/project", controllers.AddProjectBookMark)
-	bookmarkRoutes.Post("/opening", controllers.AddOpeningBookMark)
+	bookmarkRoutes.Post("/post", controllers.AddBookMark("post"))
+	bookmarkRoutes.Post("/project", controllers.AddBookMark("project"))
+	bookmarkRoutes.Post("/opening", controllers.AddBookMark("opening"))
 
-	bookmarkRoutes.Delete("/post/:bookmarkID", controllers.DeletePostBookMark)
-	bookmarkRoutes.Delete("/project/:bookmarkID", controllers.DeleteProjectBookMark)
-	bookmarkRoutes.Delete("/opening/:bookmarkID", controllers.DeleteOpeningBookMark)
+	bookmarkRoutes.Delete("/post/:bookmarkID", controllers.DeleteBookMark("post"))
+	bookmarkRoutes.Delete("/project/:bookmarkID", controllers.DeleteBookMark("project"))
+	bookmarkRoutes.Delete("/opening/:bookmarkID", controllers.DeleteBookMark("opening"))
 
-	bookmarkRoutes.Post("/post/item/:bookmarkID", controllers.AddPostBookMarkItem)
-	bookmarkRoutes.Post("/project/item/:bookmarkID", controllers.AddProjectBookMarkItem)
-	bookmarkRoutes.Post("/opening/item/:bookmarkID", controllers.AddOpeningBookMarkItem)
+	bookmarkRoutes.Post("/post/item/:bookmarkID", controllers.AddBookMarkItem("post"))
+	bookmarkRoutes.Post("/project/item/:bookmarkID", controllers.AddBookMarkItem("project"))
+	bookmarkRoutes.Post("/opening/item/:bookmarkID", controllers.AddBookMarkItem("opening"))
 
-	bookmarkRoutes.Delete("/post/item/:bookmarkItemID", controllers.DeletePostBookMarkItem)
-	bookmarkRoutes.Delete("/project/item/:bookmarkItemID", controllers.DeleteProjectBookMarkItem)
-	bookmarkRoutes.Delete("/opening/item/:bookmarkItemID", controllers.DeleteOpeningBookMarkItem)
+	bookmarkRoutes.Delete("/post/item/:bookmarkItemID", controllers.DeleteBookMarkItem("post"))
+	bookmarkRoutes.Delete("/project/item/:bookmarkItemID", controllers.DeleteBookMarkItem("project"))
+	bookmarkRoutes.Delete("/opening/item/:bookmarkItemID", controllers.DeleteBookMarkItem("opening"))
 }
