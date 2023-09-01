@@ -64,7 +64,7 @@ func SignUp(c *fiber.Ctx) error {
 
 	c.BodyParser(&reqBody)
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(reqBody.Password), 10)
+	hash, err := bcrypt.GenerateFromPassword([]byte(reqBody.Password), 12)
 	if err != nil {
 		go helpers.LogServerError("Error while hashing Password.", err, c.Path())
 		return helpers.AppError{Code: 500, Message: config.SERVER_ERROR, Err: err}

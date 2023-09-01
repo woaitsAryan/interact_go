@@ -155,17 +155,33 @@ func DeleteComment(c *fiber.Ctx) error {
 	commentID := c.Params("commentID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
+	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
+
 	parsedCommentID, err := uuid.Parse(commentID)
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
 	}
 
 	var comment models.Comment
-	if err := initializers.DB.First(&comment, "id = ? AND user_id = ?", parsedCommentID, loggedInUserID).Error; err != nil {
+	if err := initializers.DB.Preload("Post").Preload("Project").First(&comment, "id = ?", parsedCommentID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
 		}
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	if comment.UserID != parsedLoggedInUserID {
+		if comment.PostID != nil {
+			if comment.Post.UserID != parsedLoggedInUserID {
+				return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
+			}
+		} else if comment.ProjectID != nil {
+			if comment.Project.UserID != parsedLoggedInUserID {
+				return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
+			}
+		} else {
+			return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
+		}
 	}
 
 	postID := comment.PostID

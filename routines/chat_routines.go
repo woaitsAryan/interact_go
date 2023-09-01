@@ -9,28 +9,28 @@ import (
 
 func UpdateChatLastRead(chatID uuid.UUID, loggedInUserID uuid.UUID) {
 	var chat models.Chat
-	if err := initializers.DB.First(&chat, "id=?", chatID).Error; err != nil {
+	if err := initializers.DB.Preload("Messages").First(&chat, "id=?", chatID).Error; err != nil {
 		helpers.LogDatabaseError("Error while fetching Chat-UpdateChatLastRead", err, "go_routine")
 	}
 
-	// if chat.AcceptingUserID == loggedInUserID { //! Will have to update this for paginated db
-	// 	for _, msg := range messages { // set a primary index on createdAt and fetch the first one
-	// 		if msg.UserID.String() == chat.CreatingUserID.String() {
-	// 			chat.LastReadMessageByAcceptingUserID = msg.ID
-	// 			break
-	// 		}
-	// 	}
-	// } else if chat.CreatingUserID == loggedInUserID { //! Will have to update this for paginated db
-	// 	for _, msg := range messages {
-	// 		if msg.UserID.String() == chat.AcceptingUserID.String() {
-	// 			chat.LastReadMessageByCreatingUserID = msg.ID
-	// 			break
-	// 		}
-	// 	}
-	// }
+	if chat.AcceptingUserID == loggedInUserID {
+		for _, msg := range chat.Messages {
+			if msg.UserID.String() == chat.CreatingUserID.String() {
+				chat.LastReadMessageByAcceptingUserID = msg.ID
+				break
+			}
+		}
+	} else if chat.CreatingUserID == loggedInUserID {
+		for _, msg := range chat.Messages {
+			if msg.UserID.String() == chat.AcceptingUserID.String() {
+				chat.LastReadMessageByCreatingUserID = msg.ID
+				break
+			}
+		}
+	}
 
-	// result := initializers.DB.Save(&chat)
-	// if result.Error != nil {
-	// 	helpers.LogDatabaseError("Error while updating Chat-UpdateChatLastRead", result.Error, "go_routine")
-	// }
+	result := initializers.DB.Save(&chat)
+	if result.Error != nil {
+		helpers.LogDatabaseError("Error while updating Chat-UpdateChatLastRead", result.Error, "go_routine")
+	}
 }

@@ -19,7 +19,7 @@ type Message struct {
 	MessageID *uuid.UUID `gorm:"type:uuid" json:"messageID"` // replied message
 	Message   Project    `json:"message"`
 	Content   string     `gorm:"type:text;not null" json:"content"`
-	CreatedAt time.Time  `gorm:"default:current_timestamp" json:"createdAt"`
+	CreatedAt time.Time  `gorm:"default:current_timestamp;index:idx_created_at,sort:desc" json:"createdAt"`
 	Read      bool       `gorm:"default:false" json:"read"`
 }
 

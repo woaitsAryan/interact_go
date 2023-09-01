@@ -146,12 +146,25 @@ func EditOpening(c *fiber.Ctx) error {
 	}
 	if reqBody.Active != nil {
 		opening.Active = *reqBody.Active
+		if !opening.Active {
+			var pendingApplications []models.Application
+			if err := initializers.DB.Find(&pendingApplications, "opening_id AND (status=0 OR status=1)", parsedOpeningID).Error; err != nil {
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			}
+
+			for _, application := range pendingApplications {
+				application.Status = -1
+				result := initializers.DB.Save(&application)
+				if result.Error != nil {
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				}
+			}
+		}
 	}
 
 	result := initializers.DB.Save(&opening)
-
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
 
 	return c.Status(200).JSON(fiber.Map{

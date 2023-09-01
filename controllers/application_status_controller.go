@@ -54,6 +54,7 @@ func AcceptApplication(c *fiber.Ctx) error {
 func RejectApplication(c *fiber.Ctx) error {
 	applicationID := c.Params("applicationID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
 	parsedApplicationID, err := uuid.Parse(applicationID)
 	if err != nil {
@@ -86,6 +87,7 @@ func RejectApplication(c *fiber.Ctx) error {
 	notification := models.Notification{
 		NotificationType: 7,
 		UserID:           application.UserID,
+		SenderID:         parsedLoggedInUserID,
 		OpeningID:        &application.OpeningID,
 	}
 
