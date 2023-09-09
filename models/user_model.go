@@ -21,6 +21,7 @@ type User struct {
 	Title                     string            `json:"title"`
 	Tagline                   string            `json:"tagline"`
 	Tags                      pq.StringArray    `gorm:"type:text[]" json:"tags"`
+	Links                     pq.StringArray    `gorm:"type:text[]" json:"links"`
 	PasswordResetToken        string            `json:"-"`
 	PasswordResetTokenExpires time.Time         `json:"-"`
 	Views                     int               `json:"views"`

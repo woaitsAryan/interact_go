@@ -14,7 +14,7 @@ func InvitationRouter(app *fiber.App) {
 
 	invitationRoutes.Get("/reject/:invitationID", controllers.RejectInvitation)
 
-	invitationRoutes.Get("/unread", controllers.GetUnreadInvitations)
+	invitationRoutes.Get("/unread/count", controllers.GetUnreadInvitationCount)
 
 	invitationRoutes.Post("/unread", controllers.MarkReadInvitations)
 

@@ -17,7 +17,11 @@ func GetChat(c *fiber.Ctx) error {
 
 	var chat models.Chat
 
-	if err := initializers.DB.Preload("Messages").First(&chat, "id=? AND (creating_user_id = ? OR accepting_user_id = ?)", chatID, loggedInUserID, loggedInUserID).Error; err != nil {
+	if err := initializers.DB.
+		Preload("CreatingUser").
+		Preload("AcceptingUser").
+		Preload("LatestMessage").
+		First(&chat, "id=? AND (creating_user_id = ? OR accepting_user_id = ?)", chatID, loggedInUserID, loggedInUserID).Error; err != nil {
 		return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
 	}
 
@@ -78,6 +82,27 @@ func GetUserChats(c *fiber.Ctx) error {
 		"message":    "",
 		"chats":      chats,
 		"groupChats": groupChats,
+	})
+}
+
+func GetPersonalChats(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	var chats []models.Chat
+	if err := initializers.DB.
+		Preload("CreatingUser").
+		Preload("AcceptingUser").
+		Preload("LatestMessage").
+		Preload("LatestMessage.User").
+		Where("accepted = ? AND (creating_user_id=? OR accepting_user_id = ?)", true, loggedInUserID, loggedInUserID).
+		Find(&chats).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "",
+		"chats":   chats,
 	})
 }
 

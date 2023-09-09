@@ -66,10 +66,11 @@ func GetPopulatedBookMarks(bookmarkType string) func(c *fiber.Ctx) error {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 			}
 			bookmarks = projectBookmarks
-		case "openings":
+		case "opening":
 			var openingBookmarks []models.OpeningBookmark
 			if err := initializers.DB.
 				Preload("OpeningItems.Opening").
+				Preload("OpeningItems.Opening.Project").
 				Where("user_id = ?", loggedInUserID).
 				Find(&openingBookmarks).Error; err != nil {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
@@ -125,7 +126,7 @@ func AddBookMark(bookmarkType string) func(c *fiber.Ctx) error {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 			}
 			bookmark = projectBookmark
-		case "openings":
+		case "opening":
 			openingBookmark := models.OpeningBookmark{
 				UserID: parsedLoggedInUserID,
 				Title:  ReqBody.Title,
@@ -146,6 +147,69 @@ func AddBookMark(bookmarkType string) func(c *fiber.Ctx) error {
 			"status":   "success",
 			"message":  "",
 			"bookmark": bookmark,
+		})
+	}
+}
+
+func UpdateBookMark(bookmarkType string) func(c *fiber.Ctx) error {
+	return func(c *fiber.Ctx) error {
+		bookmarkID := c.Params("bookmarkID")
+		loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+		var ReqBody struct {
+			Title string `json:"title"`
+		}
+		if err := c.BodyParser(&ReqBody); err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
+		}
+
+		switch bookmarkType {
+		case "post":
+			var bookmark models.PostBookmark
+			if err := initializers.DB.First(&bookmark, "id=? AND user_id=?", bookmarkID, loggedInUserID).Error; err != nil {
+				return &fiber.Error{Code: 400, Message: "No Bookmark of this ID found."}
+			}
+
+			bookmark.Title = ReqBody.Title
+
+			result := initializers.DB.Save(&bookmark)
+			if result.Error != nil {
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			}
+		case "project":
+			var bookmark models.ProjectBookmark
+			if err := initializers.DB.First(&bookmark, "id=? AND user_id=?", bookmarkID, loggedInUserID).Error; err != nil {
+				return &fiber.Error{Code: 400, Message: "No Bookmark of this ID found."}
+			}
+
+			bookmark.Title = ReqBody.Title
+
+			result := initializers.DB.Save(&bookmark)
+			if result.Error != nil {
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			}
+		case "opening":
+			var bookmark models.OpeningBookmark
+			if err := initializers.DB.First(&bookmark, "id=? AND user_id=?", bookmarkID, loggedInUserID).Error; err != nil {
+				return &fiber.Error{Code: 400, Message: "No Bookmark of this ID found."}
+			}
+
+			bookmark.Title = ReqBody.Title
+
+			result := initializers.DB.Save(&bookmark)
+			if result.Error != nil {
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			}
+		default:
+			return c.Status(400).JSON(fiber.Map{
+				"status":  "error",
+				"message": "Invalid bookmarkType",
+			})
+		}
+
+		return c.Status(200).JSON(fiber.Map{
+			"status":  "success",
+			"message": "Bookmark Edited.",
 		})
 	}
 }
@@ -176,7 +240,7 @@ func DeleteBookMark(bookmarkType string) func(c *fiber.Ctx) error {
 			if result.Error != nil {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 			}
-		case "openings":
+		case "opening":
 			var bookmark models.OpeningBookmark
 			if err := initializers.DB.First(&bookmark, "id=? AND user_id=?", bookmarkID, loggedInUserID).Error; err != nil {
 				return &fiber.Error{Code: 400, Message: "No Bookmark of this ID found."}

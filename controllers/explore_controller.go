@@ -11,6 +11,7 @@ import (
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
 	"github.com/lib/pq"
+	"gorm.io/gorm"
 )
 
 func GetTrendingSearches(c *fiber.Ctx) error {
@@ -92,10 +93,35 @@ func GetTrendingOpenings(c *fiber.Ctx) error {
 	})
 }
 
-func GetProjectOpenings(c *fiber.Ctx) error {
-	projectID := c.Params("projectID")
+func GetRecommendedOpenings(c *fiber.Ctx) error {
+	paginatedDB := API.Paginator(c)(initializers.DB)
 	var openings []models.Opening
-	if err := initializers.DB.Preload("Project").Where("project_id = ?", projectID).Find(&openings).Order("created_at DESC").Error; err != nil {
+
+	if err := paginatedDB.Preload("Project").Order("created_at DESC").Find(&openings).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+	return c.Status(200).JSON(fiber.Map{
+		"status":   "success",
+		"openings": openings,
+	})
+}
+
+func GetProjectOpenings(c *fiber.Ctx) error {
+	slug := c.Params("slug")
+
+	var project models.Project
+	if err := initializers.DB.Where("slug = ? AND is_private = ?", slug, false).First(&project).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.Status(400).JSON(fiber.Map{
+				"status":  "success",
+				"message": "Project Not Found",
+			})
+		}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	var openings []models.Opening
+	if err := initializers.DB.Preload("Project").Where("project_id = ?", project.ID).Order("created_at DESC").Find(&openings).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 	return c.Status(200).JSON(fiber.Map{
@@ -112,6 +138,7 @@ func GetTrendingProjects(c *fiber.Ctx) error {
 
 	if err := searchedDB.
 		Omit("private_links").
+		Preload("User").
 		Select("*, (2 * no_likes + no_comments + 5 * no_shares) AS weighted_average").
 		Order("weighted_average DESC").
 		Where("is_private = ?", false).
@@ -132,7 +159,11 @@ func GetRecommendedProjects(c *fiber.Ctx) error {
 
 	searchedDB := API.Search(c, 1)(paginatedDB)
 
-	if err := searchedDB.Omit("private_links").Where("user_id <> ? AND is_private = ?", loggedInUserID, false).Find(&projects).Error; err != nil {
+	if err := searchedDB.
+		Omit("private_links").
+		Preload("User").
+		Where("user_id <> ? AND is_private = ?", loggedInUserID, false).
+		Find(&projects).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 	return c.Status(200).JSON(fiber.Map{
@@ -147,7 +178,12 @@ func GetMostLikedProjects(c *fiber.Ctx) error {
 
 	searchedDB := API.Search(c, 1)(paginatedDB)
 
-	if err := searchedDB.Omit("private_links").Order("no_likes DESC").Where("is_private = ?", false).Find(&projects).Error; err != nil {
+	if err := searchedDB.
+		Omit("private_links").
+		Preload("User").
+		Order("no_likes DESC").
+		Where("is_private = ?", false).
+		Find(&projects).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 	return c.Status(200).JSON(fiber.Map{
@@ -162,7 +198,12 @@ func GetRecentlyAddedProjects(c *fiber.Ctx) error {
 
 	searchedDB := API.Search(c, 1)(paginatedDB)
 
-	if err := searchedDB.Omit("private_links").Order("created_at DESC").Where("is_private = ?", false).Find(&projects).Error; err != nil {
+	if err := searchedDB.
+		Omit("private_links").
+		Preload("User").
+		Order("created_at DESC").
+		Where("is_private = ?", false).
+		Find(&projects).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 	return c.Status(200).JSON(fiber.Map{
@@ -177,7 +218,13 @@ func GetLastViewedProjects(c *fiber.Ctx) error {
 	var projectViewed []models.LastViewed
 
 	paginatedDB := API.Paginator(c)(initializers.DB)
-	if err := paginatedDB.Omit("private_links").Order("timestamp DESC").Preload("Project").Where("user_id=?", loggedInUserID).Find(&projectViewed).Error; err != nil {
+	if err := paginatedDB.
+		Omit("private_links").
+		Preload("User").
+		Order("timestamp DESC").
+		Preload("Project").
+		Where("user_id=?", loggedInUserID).
+		Find(&projectViewed).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
@@ -218,16 +265,17 @@ func GetTrendingUsers(c *fiber.Ctx) error {
 }
 
 func GetRecommendedUsers(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	paginatedDB := API.Paginator(c)(initializers.DB)
 
 	searchedDB := API.Search(c, 0)(paginatedDB)
 
 	var users []models.User
 	if err := searchedDB.Where("active=?", true).
-		Where("organization_status=?", false).
 		Omit("phone_no").
 		Omit("email").
 		Order("no_followers DESC").
+		Where("id <> ? AND organization_status = ?", loggedInUserID, false).
 		Find(&users).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}

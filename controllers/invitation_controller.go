@@ -166,7 +166,7 @@ func WithdrawInvitation(c *fiber.Ctx) error {
 	})
 }
 
-func GetUnreadInvitations(c *fiber.Ctx) error {
+func GetUnreadInvitationCount(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var count int64

@@ -44,6 +44,7 @@ func GetMe(c *fiber.Ctx) error {
 		Preload("Achievements").
 		Preload("Projects").
 		Preload("Posts").
+		Preload("Posts.User").
 		Preload("Memberships").
 		Preload("Memberships.Project").
 		First(&user, "id = ?", userID)
@@ -63,12 +64,13 @@ func GetUser(c *fiber.Ctx) error {
 		Preload("Achievements").
 		Preload("Projects").
 		Preload("Posts").
+		Preload("Posts.User").
 		Preload("Memberships").
 		Preload("Memberships.Project").
 		First(&user, "username = ?", username)
 
 	if user.ID == uuid.Nil {
-		return &fiber.Error{Code: 400, Message: "No user of this ID found."}
+		return &fiber.Error{Code: 400, Message: "No user of this username found."}
 	}
 
 	loggedInUserID := c.GetRespHeader("loggedInUserID")

@@ -40,6 +40,33 @@ func GetNotifications(c *fiber.Ctx) error {
 func GetUnreadNotifications(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
+	paginatedDB := API.Paginator(c)(initializers.DB)
+
+	var notifications []models.Notification
+	if err := paginatedDB.
+		Preload("User").
+		Preload("Sender").
+		Preload("Post").
+		Preload("Project").
+		Preload("Opening").
+		Preload("Application").
+		Where("user_id=? AND read=?", loggedInUserID, false).
+		Order("created_at DESC").
+		Find(&notifications).
+		Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":        "success",
+		"message":       "",
+		"notifications": notifications,
+	})
+}
+
+func GetUnreadNotificationCount(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
 	var count int64
 	if err := initializers.DB.
 		Model(models.Notification{}).

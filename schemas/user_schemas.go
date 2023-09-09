@@ -16,6 +16,7 @@ type UserUpdateSchema struct {
 	Title      string   `json:"title"`
 	Tagline    string   `json:"tagline"`
 	Tags       []string `json:"tags" validate:"dive,alpha"`
+	Links      []string `json:"links" validate:"dive,url"`
 }
 
 type AchievementCreateSchema struct {
