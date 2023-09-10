@@ -18,6 +18,8 @@ type Post struct {
 	NoShares      int                `gorm:"default:0" json:"noShares"`
 	NoLikes       int                `gorm:"default:0" json:"noLikes"`
 	NoComments    int                `gorm:"default:0" json:"noComments"`
+	RePostID      *uuid.UUID         `gorm:"type:uuid" json:"rePostID"`
+	RePost        *Post              `gorm:"foreignKey:RePostID;constraint:OnDelete:CASCADE" json:"rePost"`
 	Tags          pq.StringArray     `gorm:"type:text[]" json:"tags"`
 	Edited        bool               `gorm:"default:false" json:"edited"`
 	Comments      []Comment          `gorm:"foreignKey:PostID;constraint:OnDelete:CASCADE" json:"comments"`

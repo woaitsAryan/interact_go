@@ -23,7 +23,7 @@ func GetPost(c *fiber.Ctx) error {
 	}
 
 	var post models.Post
-	if err := initializers.DB.Preload("User").First(&post, "id = ?", parsedPostID).Error; err != nil {
+	if err := initializers.DB.Preload("RePost").Preload("User").First(&post, "id = ?", parsedPostID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Post of this ID found."}
 		}
@@ -43,7 +43,7 @@ func GetUserPosts(c *fiber.Ctx) error {
 	paginatedDB := API.Paginator(c)(initializers.DB)
 
 	var posts []models.Post
-	if err := paginatedDB.Preload("User").Where("user_id = ?", userID).Find(&posts).Error; err != nil {
+	if err := paginatedDB.Preload("RePost").Preload("User").Where("user_id = ?", userID).Find(&posts).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
@@ -60,7 +60,7 @@ func GetMyPosts(c *fiber.Ctx) error {
 	paginatedDB := API.Paginator(c)(initializers.DB)
 
 	var posts []models.Post
-	if err := paginatedDB.Preload("User").Where("user_id = ?", loggedInUserID).Find(&posts).Error; err != nil {
+	if err := paginatedDB.Preload("RePost").Preload("User").Where("user_id = ?", loggedInUserID).Find(&posts).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
@@ -126,6 +126,14 @@ func AddPost(c *fiber.Ctx) error {
 		Tags:    reqBody.Tags,
 	}
 
+	if reqBody.RePostID != "" {
+		parsedRePostID, err := uuid.Parse(reqBody.RePostID)
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid Post ID in rePost"}
+		}
+		newPost.RePostID = &parsedRePostID
+	}
+
 	result := initializers.DB.Create(&newPost)
 	if result.Error != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
@@ -149,7 +157,7 @@ func AddPost(c *fiber.Ctx) error {
 	}
 
 	var post models.Post
-	if err := initializers.DB.Preload("User").First(&post, "id = ?", newPost.ID).Error; err != nil {
+	if err := initializers.DB.Preload("User").Preload("RePost").First(&post, "id = ?", newPost.ID).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 

@@ -24,6 +24,10 @@ func GetMessages(c *fiber.Ctx) error {
 		Preload("Chat").
 		Preload("User").
 		Preload("Post").
+		Preload("Profile").
+		Preload("Opening").
+		Preload("Opening.Project").
+		Preload("Post.User").
 		Preload("Project").
 		Where("chat_id = ?", chatID).
 		Order("created_at DESC").
@@ -73,10 +77,8 @@ func AddMessage(c *fiber.Ctx) error {
 	parsedUserID, _ := uuid.Parse(loggedInUserID)
 
 	var reqBody struct {
-		Content   string `json:"content"`
-		ChatID    string `json:"chatID"`
-		PostID    string `json:"postID"`
-		ProjectID string `json:"projectID"`
+		Content string `json:"content"`
+		ChatID  string `json:"chatID"`
 	}
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}

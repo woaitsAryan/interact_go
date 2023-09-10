@@ -56,7 +56,7 @@ func AddBookMarkItem(bookmarkType string) func(c *fiber.Ctx) error {
 			}
 
 			bookmarkItem = projectBookmarkItem
-		case "openings":
+		case "opening":
 			openingBookmarkItem := models.OpeningBookmarkItem{
 				OpeningBookmarkID: parsedBookmarkID,
 				OpeningID:         parsedItemID,
@@ -110,7 +110,7 @@ func DeleteBookMarkItem(bookmarkType string) func(c *fiber.Ctx) error {
 			if result.Error != nil {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 			}
-		case "openings":
+		case "opening":
 			var bookmarkItem models.OpeningBookmarkItem
 			err := initializers.DB.First(&bookmarkItem, "id=?", bookmarkItemID).Error
 			if err != nil {

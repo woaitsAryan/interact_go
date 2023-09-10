@@ -16,6 +16,10 @@ type Message struct {
 	Post      Post       `json:"post"`
 	ProjectID *uuid.UUID `gorm:"type:uuid" json:"projectID"` // shared project
 	Project   Project    `json:"project"`
+	OpeningID *uuid.UUID `gorm:"type:uuid" json:"openingID"` // shared opening
+	Opening   Opening    `json:"opening"`
+	ProfileID *uuid.UUID `gorm:"type:uuid" json:"profileID"` // shared profile
+	Profile   Project    `gorm:"foreignKey:ProfileID;" json:"profile"`
 	MessageID *uuid.UUID `gorm:"type:uuid" json:"messageID"` // replied message
 	Message   Project    `json:"message"`
 	Content   string     `gorm:"type:text;not null" json:"content"`
