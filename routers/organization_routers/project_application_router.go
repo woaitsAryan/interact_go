@@ -8,7 +8,7 @@ import (
 )
 
 func ProjectApplicationRouter(app *fiber.App) {
-	applicationRoutes := app.Group("/org/project/applications", middlewares.OrgProtect, middlewares.RoleAuthorization(models.Manager))
+	applicationRoutes := app.Group("/org/project/applications", middlewares.OrgProtect, middlewares.OrgRoleAuthorization(models.Manager))
 
 	applicationRoutes.Get("/:applicationID", controllers.GetApplication)
 

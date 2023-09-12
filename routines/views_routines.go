@@ -3,6 +3,7 @@ package routines
 import (
 	"time"
 
+	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/google/uuid"
@@ -42,4 +43,11 @@ func UpdateProjectViews(project *models.Project) { //TODO Creator and Member Che
 		projectView.Count++
 		initializers.DB.Save(&projectView)
 	}
+
+	project.TotalNoViews++
+	result := initializers.DB.Save(project)
+	if result.Error != nil {
+		helpers.LogDatabaseError("Error while updating Project-UpdateProjectViews", result.Error, "go_routine")
+	}
+
 }

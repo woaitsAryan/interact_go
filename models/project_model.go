@@ -23,6 +23,7 @@ type Project struct {
 	NoLikes       int                   `json:"noLikes"`
 	NoShares      int                   `json:"noShares"`
 	NoComments    int                   `gorm:"default:0" json:"noComments"`
+	TotalNoViews  int                   `gorm:"default:0" json:"totalNoViews"`
 	Category      string                `gorm:"type:varchar(255);not null" json:"category"`
 	IsPrivate     bool                  `gorm:"default:false" json:"isPrivate"`
 	TRatio        int                   `json:"-"`

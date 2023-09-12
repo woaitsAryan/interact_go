@@ -3,6 +3,7 @@ package routers
 import (
 	"github.com/Pratham-Mishra04/interact/controllers"
 	"github.com/Pratham-Mishra04/interact/middlewares"
+	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -22,7 +23,7 @@ func MessagingRouter(app *fiber.App) {
 
 	messagingRoutes.Post("/chat", controllers.AddChat)
 	messagingRoutes.Post("/group", controllers.AddGroupChat)
-	messagingRoutes.Post("/project/:projectID", controllers.AddProjectChat)
+	messagingRoutes.Post("/project/:projectID", middlewares.ProjectRoleAuthorization(models.ProjectManager), controllers.AddProjectChat)
 
 	messagingRoutes.Patch("/group/:chatID", controllers.EditGroupChat)
 

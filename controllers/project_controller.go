@@ -21,7 +21,7 @@ func GetProject(c *fiber.Ctx) error {
 	slug := c.Params("slug")
 
 	var project models.Project
-	if err := initializers.DB.Omit("private_links").Preload("User").Preload("Openings").First(&project, "slug = ? AND is_private = ? ", slug, false).Error; err != nil {
+	if err := initializers.DB.Omit("private_links").Preload("User").Preload("Openings").Preload("Memberships").First(&project, "slug = ? AND is_private = ? ", slug, false).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
 		}
@@ -222,7 +222,7 @@ func AddProject(c *fiber.Ctx) error {
 				return &fiber.Error{Code: 401, Message: config.VERIFICATION_ERROR}
 			}
 
-			picName, err := utils.SaveFile(c, "coverPic", "project/coverPics", true, 900, 400)
+			picName, err := utils.SaveFile(c, "coverPic", "project/coverPics", true, 1080, 1080)
 			if err != nil {
 				return err
 			}
@@ -278,7 +278,7 @@ func UpdateProject(c *fiber.Ctx) error {
 	var reqBody schemas.ProjectUpdateSchema
 	c.BodyParser(&reqBody)
 
-	picName, err := utils.SaveFile(c, "coverPic", "project/coverPics", true, 900, 400)
+	picName, err := utils.SaveFile(c, "coverPic", "project/coverPics", true, 1080, 1080)
 	if err != nil {
 		return err
 	}

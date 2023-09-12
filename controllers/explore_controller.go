@@ -10,6 +10,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/models"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
@@ -87,6 +88,7 @@ func GetTrendingOpenings(c *fiber.Ctx) error {
 	if err := searchedDB.Preload("Project").Order("created_at DESC").Find(&openings).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
+
 	return c.Status(200).JSON(fiber.Map{
 		"status":   "success",
 		"openings": openings,
@@ -94,15 +96,26 @@ func GetTrendingOpenings(c *fiber.Ctx) error {
 }
 
 func GetRecommendedOpenings(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
+
 	paginatedDB := API.Paginator(c)(initializers.DB)
 	var openings []models.Opening
 
 	if err := paginatedDB.Preload("Project").Order("created_at DESC").Find(&openings).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
+
+	var filteredOpenings []models.Opening
+	for _, opening := range openings {
+		if opening.Project.UserID != parsedLoggedInUserID {
+			filteredOpenings = append(filteredOpenings, opening)
+		}
+	}
+
 	return c.Status(200).JSON(fiber.Map{
 		"status":   "success",
-		"openings": openings,
+		"openings": filteredOpenings,
 	})
 }
 

@@ -156,7 +156,7 @@ func ChangeMemberRole(c *fiber.Ctx) error {
 	}
 
 	var reqBody struct {
-		Role string
+		Role models.ProjectRole
 	}
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
