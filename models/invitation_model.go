@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type Invitation struct {
+type Invitation struct { //TODO add accepting project invitations field on user model
 	ID             uuid.UUID    `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	UserID         uuid.UUID    `gorm:"type:uuid;not null" json:"userID"`
 	User           User         `gorm:"constraint:OnDelete:CASCADE" json:"user"`

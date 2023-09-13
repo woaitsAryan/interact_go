@@ -11,4 +11,5 @@ func WorkspaceRouter(app *fiber.App) {
 	workspaceRoutes.Get("/my", controllers.GetMyProjects)
 	workspaceRoutes.Get("/contributing", controllers.GetMyContributingProjects)
 	workspaceRoutes.Get("/applications", controllers.GetMyApplications)
+	workspaceRoutes.Get("/memberships", controllers.GetMyMemberships)
 }

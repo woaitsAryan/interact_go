@@ -54,7 +54,7 @@ func CreateMembershipAndSendNotification(application *models.Application) {
 	membership := models.Membership{
 		ProjectID: application.Opening.ProjectID,
 		UserID:    application.UserID,
-		Role:      "",
+		Role:      models.ProjectMember,
 		Title:     application.Opening.Title,
 	}
 

@@ -13,8 +13,8 @@ func ProjectRouter(app *fiber.App) {
 	projectRoutes.Post("/", controllers.AddProject)
 	projectRoutes.Get("/me", controllers.GetMyProjects)
 	projectRoutes.Get("/me/likes", controllers.GetMyLikedProjects)
-	projectRoutes.Get("/:slug", controllers.GetWorkSpaceProject)
-	projectRoutes.Patch("/:projectID", middlewares.ProjectRoleAuthorization(models.ProjectEditor), controllers.UpdateProject)
+	projectRoutes.Get("/:slug", middlewares.ProjectRoleAuthorization(models.ProjectMember), controllers.GetWorkSpaceProject)
+	projectRoutes.Patch("/:slug", middlewares.ProjectRoleAuthorization(models.ProjectEditor), controllers.UpdateProject)
 	projectRoutes.Delete("/:projectID", controllers.DeleteProject)
 	projectRoutes.Get("/like/:projectID", controllers.LikeProject)
 }

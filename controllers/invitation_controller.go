@@ -57,7 +57,7 @@ func AcceptInvitation(c *fiber.Ctx) error {
 			UserID:    invitation.UserID,
 			ProjectID: *invitation.ProjectID,
 			Title:     invitation.Title,
-			Role:      "Member",
+			Role:      models.ProjectMember,
 		}
 
 		result := initializers.DB.Create(&membership)

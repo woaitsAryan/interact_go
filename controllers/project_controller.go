@@ -58,15 +58,15 @@ func GetProject(c *fiber.Ctx) error {
 
 func GetWorkSpaceProject(c *fiber.Ctx) error {
 	slug := c.Params("slug")
-	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	// loggedInUserID := c.GetRespHeader("loggedInUserID")
 
-	parsedLoggedInUserID, err := uuid.Parse(loggedInUserID)
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid ID"}
-	}
+	// parsedLoggedInUserID, err := uuid.Parse(loggedInUserID)
+	// if err != nil {
+	// 	return &fiber.Error{Code: 400, Message: "Invalid ID"}
+	// }
 
 	var project models.Project
-	if err := initializers.DB.Preload("User").First(&project, "slug = ?", slug).Error; err != nil {
+	if err := initializers.DB.Preload("User").Preload("Openings").First(&project, "slug = ?", slug).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
 		}
@@ -78,15 +78,15 @@ func GetWorkSpaceProject(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	var membershipCheck bool
-	for _, membership := range memberships {
-		if (membership.UserID) == parsedLoggedInUserID {
-			membershipCheck = true
-		}
-	}
-	if !membershipCheck && project.UserID != parsedLoggedInUserID {
-		return &fiber.Error{Code: 403, Message: "Cannot perform this action."}
-	}
+	// var membershipCheck bool
+	// for _, membership := range memberships {
+	// 	if (membership.UserID) == parsedLoggedInUserID {
+	// 		membershipCheck = true
+	// 	}
+	// }
+	// if !membershipCheck && project.UserID != parsedLoggedInUserID {
+	// 	return &fiber.Error{Code: 403, Message: "Cannot perform this action."}
+	// }
 
 	var invitations []models.Invitation
 	if err := initializers.DB.Preload("User").Find(&invitations, "project_id = ? AND (status = 0 OR status = -1)", project.ID).Error; err != nil {
@@ -104,8 +104,8 @@ func GetWorkSpaceProject(c *fiber.Ctx) error {
 	}
 	project.Views = count
 	project.Memberships = memberships
-	project.Invitations = invitations
-	project.Chats = chats
+	project.Invitations = invitations //TODO remove if not required
+	project.Chats = chats             //TODO only include chats you are part of
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
@@ -222,7 +222,7 @@ func AddProject(c *fiber.Ctx) error {
 				return &fiber.Error{Code: 401, Message: config.VERIFICATION_ERROR}
 			}
 
-			picName, err := utils.SaveFile(c, "coverPic", "project/coverPics", true, 1080, 1080)
+			picName, err := utils.SaveFile(c, "coverPic", "project/coverPics", true, 2560, 2560)
 			if err != nil {
 				return err
 			}
@@ -259,16 +259,11 @@ func AddProject(c *fiber.Ctx) error {
 }
 
 func UpdateProject(c *fiber.Ctx) error {
-	projectID := c.Params("projectID")
+	slug := c.Params("slug")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
-	parsedProjectID, err := uuid.Parse(projectID)
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid ID"}
-	}
-
 	var project models.Project
-	if err := initializers.DB.Where("id = ? AND user_id = ?", parsedProjectID, loggedInUserID).First(&project).Error; err != nil {
+	if err := initializers.DB.Where("slug = ? AND user_id = ?", slug, loggedInUserID).First(&project).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
 		}
@@ -278,7 +273,7 @@ func UpdateProject(c *fiber.Ctx) error {
 	var reqBody schemas.ProjectUpdateSchema
 	c.BodyParser(&reqBody)
 
-	picName, err := utils.SaveFile(c, "coverPic", "project/coverPics", true, 1080, 1080)
+	picName, err := utils.SaveFile(c, "coverPic", "project/coverPics", true, 2560, 2560)
 	if err != nil {
 		return err
 	}
@@ -306,6 +301,12 @@ func UpdateProject(c *fiber.Ctx) error {
 		if projectField.IsValid() && projectField.CanSet() {
 			projectField.Set(fieldValue)
 		}
+	}
+
+	if reqBody.IsPrivate {
+		project.IsPrivate = true
+	} else {
+		project.IsPrivate = false
 	}
 
 	if err := initializers.DB.Save(&project).Error; err != nil {

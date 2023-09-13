@@ -67,29 +67,53 @@ func OrgRoleAuthorization(Role models.OrganizationRole) func(*fiber.Ctx) error {
 func ProjectRoleAuthorization(Role models.ProjectRole) func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		loggedInUserID := c.GetRespHeader("loggedInUserID")
+		slug := c.Params("slug")
 		projectID := c.Params("projectID")
+		openingID := c.Params("openingID")
+		applicationID := c.Params("applicationID")
 
-		var membership models.Membership
-		if err := initializers.DB.Preload("Project").First(membership, "projectID = ? AND user_id=?", projectID, loggedInUserID).Error; err != nil {
-			if err == gorm.ErrRecordNotFound {
-				var project models.Project
-				if err := initializers.DB.First(project, "user_id=?", loggedInUserID).Error; err != nil {
-					if err == gorm.ErrRecordNotFound {
-						return &fiber.Error{Code: 403, Message: "Cannot access this project"}
-					}
-					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-				}
-				return c.Next()
+		var project models.Project
+		if slug != "" {
+			if err := initializers.DB.Preload("Memberships").First(&project, "slug = ?", slug).Error; err != nil {
+				return &fiber.Error{Code: 400, Message: "Invalid Project."}
 			}
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		} else if projectID != "" {
+			if err := initializers.DB.Preload("Memberships").First(&project, "id = ?", projectID).Error; err != nil {
+				return &fiber.Error{Code: 400, Message: "Invalid Project."}
+			}
+		} else if openingID != "" {
+			var opening models.Opening
+			if err := initializers.DB.Preload("Project").Preload("Project.Memberships").First(&opening, "id = ?", openingID).Error; err != nil {
+				return &fiber.Error{Code: 400, Message: "Invalid Project."}
+			}
+			project = opening.Project
+		} else if applicationID != "" {
+			var application models.Application
+			if err := initializers.DB.Preload("Project").Preload("Project.Memberships").First(&application, "id = ?", applicationID).Error; err != nil {
+				return &fiber.Error{Code: 400, Message: "Invalid Project."}
+			}
+			project = application.Project
 		}
 
-		if !checkProjectAccess(membership.Role, Role) {
-			return &fiber.Error{Code: 403, Message: "You don't have the Permission to perform this action."}
+		if project.UserID.String() == loggedInUserID {
+			return c.Next()
 		}
 
-		c.Set("projectMemberID", c.GetRespHeader("loggedInUserID"))
-		c.Set("loggedInUserID", membership.Project.UserID.String())
+		var check bool
+		for _, membership := range project.Memberships {
+			if membership.UserID.String() == loggedInUserID {
+				if !checkProjectAccess(membership.Role, Role) {
+					return &fiber.Error{Code: 403, Message: "You don't have the Permission to perform this action."}
+				}
+				c.Set("projectMemberID", c.GetRespHeader("loggedInUserID"))
+				c.Set("loggedInUserID", membership.Project.UserID.String())
+				check = true
+				break
+			}
+		}
+		if !check {
+			return &fiber.Error{Code: 403, Message: "Cannot access this project"}
+		}
 
 		return c.Next()
 	}

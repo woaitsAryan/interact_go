@@ -60,3 +60,18 @@ func GetMyApplications(c *fiber.Ctx) error {
 		"applications": applications,
 	})
 }
+
+func GetMyMemberships(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	var memberships []models.Membership
+	if err := initializers.DB.Where("user_id = ?", loggedInUserID).Find(&memberships).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":      "success",
+		"message":     "",
+		"memberships": memberships,
+	})
+}

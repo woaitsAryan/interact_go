@@ -36,10 +36,9 @@ func GetOpening(c *fiber.Ctx) error {
 
 func GetAllOpeningsOfProject(c *fiber.Ctx) error {
 	projectID := c.Params("projectID")
-	userID := c.GetRespHeader("loggedInUserID")
 
 	var project models.Project
-	if err := initializers.DB.Where("id=? and user_id=?", projectID, userID).First(&project).Error; err != nil {
+	if err := initializers.DB.Where("id=?", projectID).First(&project).Error; err != nil {
 		return &fiber.Error{Code: 500, Message: "Cannot perform this action"}
 	}
 
@@ -144,7 +143,7 @@ func EditOpening(c *fiber.Ctx) error {
 	if reqBody.Tags != nil {
 		opening.Tags = reqBody.Tags
 	}
-	if reqBody.Active != nil {
+	if reqBody.Active != nil { //TODO have different manager route for this
 		opening.Active = *reqBody.Active
 		if !opening.Active {
 			var pendingApplications []models.Application

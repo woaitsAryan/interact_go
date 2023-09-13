@@ -5,10 +5,40 @@ import (
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
+
+func GetNonMembers(c *fiber.Ctx) error {
+	projectID := c.Params("projectID")
+
+	var project models.Project
+	if err := initializers.DB.Where("id = ?", projectID).Preload("Memberships").First(&project).Error; err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid Project ID"}
+	}
+
+	var membershipUserIDs []string
+
+	for _, membership := range project.Memberships {
+		membershipUserIDs = append(membershipUserIDs, membership.UserID.String())
+	}
+
+	membershipUserIDs = append(membershipUserIDs, project.UserID.String())
+
+	searchedDB := API.Search(c, 0)(initializers.DB)
+
+	var users []models.User
+	if err := searchedDB.Where("id NOT IN (?)", membershipUserIDs).Limit(10).Find(&users).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status": "success",
+		"users":  users,
+	})
+}
 
 func AddMember(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")

@@ -11,10 +11,10 @@ func OpeningRouter(app *fiber.App) {
 
 	app.Get("/openings/:openingID", controllers.GetOpening)
 
-	openingRoutes := app.Group("/openings", middlewares.Protect, middlewares.ProjectRoleAuthorization(models.ProjectManager))
+	openingRoutes := app.Group("/openings", middlewares.Protect)
 	openingRoutes.Get("/project/:projectID", controllers.GetAllOpeningsOfProject)
-	openingRoutes.Get("/applications/:openingID", controllers.GetAllApplicationsOfOpening)
-	openingRoutes.Post("/:projectID", controllers.AddOpening)
-	openingRoutes.Patch("/:openingID", controllers.EditOpening)
-	openingRoutes.Delete("/:openingID", controllers.DeleteOpening)
+	openingRoutes.Get("/applications/:openingID", middlewares.ProjectRoleAuthorization(models.ProjectManager), controllers.GetAllApplicationsOfOpening)
+	openingRoutes.Post("/:projectID", middlewares.ProjectRoleAuthorization(models.ProjectManager), controllers.AddOpening)
+	openingRoutes.Patch("/:openingID", middlewares.ProjectRoleAuthorization(models.ProjectEditor), controllers.EditOpening)
+	openingRoutes.Delete("/:openingID", middlewares.ProjectRoleAuthorization(models.ProjectManager), controllers.DeleteOpening)
 }

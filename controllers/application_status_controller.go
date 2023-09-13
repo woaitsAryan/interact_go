@@ -101,7 +101,7 @@ func RejectApplication(c *fiber.Ctx) error {
 	})
 }
 
-func SetApplicationUnderReview(c *fiber.Ctx) error {
+func SetApplicationReviewStatus(c *fiber.Ctx) error {
 	applicationID := c.Params("applicationID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
@@ -122,11 +122,15 @@ func SetApplicationUnderReview(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 403, Message: "Do not have the permission to perform this action."}
 	}
 
-	if application.Status != 0 {
-		return &fiber.Error{Code: 400, Message: "Cannot Set Under Review Now."}
+	if application.Status != 0 && application.Status != 1 {
+		return &fiber.Error{Code: 400, Message: "Cannot perform this action now Now."}
 	}
 
-	application.Status = 1
+	if application.Status == 0 {
+		application.Status = 1
+	} else {
+		application.Status = 0
+	}
 	result := initializers.DB.Save(&application)
 
 	if result.Error != nil {
@@ -135,6 +139,6 @@ func SetApplicationUnderReview(c *fiber.Ctx) error {
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
-		"message": "Application Under Review.",
+		"message": "Application Under/Out of Review.",
 	})
 }
