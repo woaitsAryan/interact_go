@@ -14,10 +14,11 @@ func MessagingRouter(app *fiber.App) {
 
 	messagingRoutes.Get("/me", controllers.GetUserNonPopulatedChats)
 
-	messagingRoutes.Get("/", controllers.GetUserChats)
-	messagingRoutes.Get("/personal", controllers.GetUserChats)
+	messagingRoutes.Get("/personal", controllers.GetPersonalChats)
+	messagingRoutes.Get("/group", controllers.GetGroupChats)
+
 	messagingRoutes.Get("/:chatID", controllers.GetChat)
-	messagingRoutes.Get("/group/:groupChat", controllers.GetGroupChat)
+	messagingRoutes.Get("/group/:chatID", controllers.GetGroupChat)
 
 	messagingRoutes.Get("/accept/:chatID", controllers.AcceptChat)
 
@@ -25,16 +26,19 @@ func MessagingRouter(app *fiber.App) {
 	messagingRoutes.Post("/group", controllers.AddGroupChat)
 	messagingRoutes.Post("/project/:projectID", middlewares.ProjectRoleAuthorization(models.ProjectManager), controllers.AddProjectChat)
 
-	messagingRoutes.Patch("/group/:chatID", controllers.EditGroupChat)
+	messagingRoutes.Post("/group/members/add/:chatID", middlewares.GroupChatAdminAuthorization(), controllers.AddGroupChatMembers)
+	messagingRoutes.Post("/group/members/remove/:chatID", middlewares.GroupChatAdminAuthorization(), controllers.RemoveGroupChatMember)
+
+	messagingRoutes.Patch("/group/:chatID", middlewares.GroupChatAdminAuthorization(), controllers.EditGroupChat)
+	messagingRoutes.Patch("/group/role/:chatID", middlewares.GroupChatAdminAuthorization(), controllers.EditGroupChatRole)
 
 	messagingRoutes.Delete("/:chatID", controllers.DeleteChat)
+	messagingRoutes.Delete("/group/:chatID", middlewares.GroupChatAdminAuthorization(), controllers.DeleteGroupChat)
 
-	messagingRoutes.Delete("/group/:chatID", controllers.DeleteGroupChat)
-
-	messagingRoutes.Delete("/group/:chatID", controllers.LeaveGroupChat)
+	// messagingRoutes.Delete("/group/:chatID", controllers.LeaveGroupChat)
 
 	messagingRoutes.Get("/content/:chatID", controllers.GetMessages)
-	messagingRoutes.Get("/content/group/:ChatID", controllers.GetGroupChatMessages)
+	messagingRoutes.Get("/content/group/:chatID", controllers.GetGroupChatMessages)
 
 	messagingRoutes.Post("/content", controllers.AddMessage)
 	messagingRoutes.Post("/content/group", controllers.AddGroupChatMessage)

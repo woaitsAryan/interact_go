@@ -11,7 +11,7 @@ import (
 )
 
 func GetGroupChat(c *fiber.Ctx) error {
-	chatID := c.Params("groupChatID")
+	chatID := c.Params("chatID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
@@ -19,6 +19,8 @@ func GetGroupChat(c *fiber.Ctx) error {
 	err := initializers.DB.
 		Preload("Memberships").
 		Preload("Memberships.User").
+		Preload("Invitations").
+		Preload("Invitations.User").
 		Preload("Project").
 		Where("id = ?", chatID).
 		First(&chat).Error
@@ -77,10 +79,23 @@ func AddGroupChat(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
 
+	chatMembership := models.GroupChatMembership{
+		UserID:      parsedLoggedInUserID,
+		GroupChatID: chat.ID,
+		Role:        models.ChatAdmin,
+	}
+	result = initializers.DB.Create(&chatMembership)
+	if result.Error != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+	}
+
 	for _, chatUserID := range chatUserIDs {
 		parsedUserID, err := uuid.Parse(chatUserID)
 		if err != nil {
 			return &fiber.Error{Code: 500, Message: "Error Parsing the User ID."}
+		}
+		if parsedUserID == parsedLoggedInUserID {
+			continue
 		}
 		invitation := models.Invitation{
 			UserID:      parsedUserID,
@@ -162,8 +177,100 @@ func AddProjectChat(c *fiber.Ctx) error {
 	})
 }
 
+func AddGroupChatMembers(c *fiber.Ctx) error {
+	var reqBody struct {
+		UserIDs []string `json:"userIDs"`
+	}
+	if err := c.BodyParser(&reqBody); err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
+	}
+	chatUserIDs := reqBody.UserIDs
+
+	groupChatID := c.Params("chatID")
+	userID := c.GetRespHeader("loggedInUserID")
+	parsedLoggedInUserID, err := uuid.Parse(userID)
+	if err != nil {
+		return &fiber.Error{Code: 500, Message: "Error Parsing the LoggedIn User ID."}
+	}
+
+	var chat models.GroupChat
+	err = initializers.DB.First(&chat, "id = ?", groupChatID).Error
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "No chat of this id found."}
+	}
+
+	for _, chatUserID := range chatUserIDs {
+		parsedUserID, err := uuid.Parse(chatUserID)
+		if err != nil {
+			return &fiber.Error{Code: 500, Message: "Error Parsing the User ID."}
+		}
+		if parsedUserID == parsedLoggedInUserID {
+			continue
+		}
+
+		var existingMembership models.GroupChatMembership
+		err = initializers.DB.First(&existingMembership, "group_chat_id = ? AND user_id = ?", groupChatID, parsedUserID).Error
+		if err == nil {
+			continue
+		}
+
+		var existingInvitation models.Invitation
+		err = initializers.DB.First(&existingInvitation, "group_chat_id = ? AND user_id = ?", groupChatID, parsedUserID).Error
+		if err == nil {
+			continue
+		}
+
+		invitation := models.Invitation{
+			UserID:      parsedUserID,
+			GroupChatID: &chat.ID,
+		}
+		result := initializers.DB.Create(&invitation)
+
+		if result.Error != nil {
+			return &fiber.Error{Code: 500, Message: "Internal Server Error while creating invitations"}
+		}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Invitations Sent",
+	})
+}
+
+func RemoveGroupChatMember(c *fiber.Ctx) error {
+	chatID := c.Params("chatID")
+
+	var reqBody struct {
+		UserID []string `json:"userID"`
+	}
+	if err := c.BodyParser(&reqBody); err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
+	}
+
+	parsedChatID, err := uuid.Parse(chatID)
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid ID"}
+	}
+
+	var chatMembership models.GroupChatMembership
+	if err := initializers.DB.First(&chatMembership, "user_id = ? AND group_chat_id=?", reqBody.UserID, parsedChatID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
+		}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	if err := initializers.DB.Delete(&chatMembership).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return c.Status(204).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Chat deleted successfully",
+	})
+}
+
 func EditGroupChat(c *fiber.Ctx) error {
-	//TODO add admins only validation
 	var reqBody struct {
 		Title       string `json:"title"`
 		Description string `json:"description"`
@@ -172,22 +279,10 @@ func EditGroupChat(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
 	}
 
-	loggedInUserID := c.GetRespHeader("loggedInUserID")
-
-	groupChatID := c.Params("groupChatID")
-
-	var chatMembership models.GroupChatMembership
-	err := initializers.DB.First(&chatMembership, "group_chat_id = ? AND user_id = ?", groupChatID, loggedInUserID).Error
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "No chat of this id found."}
-	}
-
-	if chatMembership.Role != models.ChatAdmin {
-		return &fiber.Error{Code: 403, Message: "You do not have the permission to perform this action."}
-	}
+	groupChatID := c.Params("chatID")
 
 	var groupChat models.GroupChat
-	err = initializers.DB.First(&groupChat, "id = ?", groupChatID).Error
+	err := initializers.DB.First(&groupChat, "id = ?", groupChatID).Error
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "No chat of this id found."}
 	}
@@ -220,9 +315,7 @@ func EditGroupChatRole(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
 	}
 
-	// loggedInUserID := c.GetRespHeader("loggedInUserID")
-
-	groupChatID := c.Params("groupChatID")
+	groupChatID := c.Params("chatID")
 
 	var userChatMembership models.GroupChatMembership
 	err := initializers.DB.First(&userChatMembership, "group_chat_id = ? AND user_id = ?", groupChatID, reqBody.UserID).Error

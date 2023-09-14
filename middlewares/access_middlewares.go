@@ -118,3 +118,22 @@ func ProjectRoleAuthorization(Role models.ProjectRole) func(*fiber.Ctx) error {
 		return c.Next()
 	}
 }
+
+func GroupChatAdminAuthorization() func(*fiber.Ctx) error {
+	return func(c *fiber.Ctx) error {
+		groupChatID := c.Params("chatID")
+		loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+		var chatMembership models.GroupChatMembership
+		err := initializers.DB.First(&chatMembership, "group_chat_id = ? AND user_id = ?", groupChatID, loggedInUserID).Error
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "No chat of this id found."}
+		}
+
+		if chatMembership.Role != models.ChatAdmin {
+			return &fiber.Error{Code: 403, Message: "You do not have the permission to perform this action."}
+		}
+
+		return c.Next()
+	}
+}

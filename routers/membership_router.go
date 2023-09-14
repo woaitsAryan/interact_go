@@ -11,7 +11,7 @@ func MembershipRouter(app *fiber.App) {
 	membershipRoutes := app.Group("/membership", middlewares.Protect)
 	membershipRoutes.Get("/non_members/:projectID", controllers.GetNonMembers)
 	membershipRoutes.Post("/project/:projectID", middlewares.ProjectRoleAuthorization(models.ProjectManager), controllers.AddMember)
-	membershipRoutes.Patch("/:membershipID", middlewares.ProjectRoleAuthorization(models.ProjectManager), controllers.ChangeMemberRole)
+	membershipRoutes.Patch("/:membershipID", controllers.ChangeMemberRole) //* Access handling in controller only
 	membershipRoutes.Delete("project/:projectID", controllers.LeaveProject)
 	membershipRoutes.Delete("/:membershipID", middlewares.ProjectRoleAuthorization(models.ProjectManager), controllers.RemoveMember)
 }

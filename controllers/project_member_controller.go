@@ -200,16 +200,31 @@ func ChangeMemberRole(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	if membership.Project.UserID != parsedLoggedInUserID {
-		return &fiber.Error{Code: 403, Message: "You do not have the permission to perform this action."}
+	if parsedLoggedInUserID != membership.Project.UserID {
+		var updatingUserMembership models.Membership
+		if err := initializers.DB.Preload("Project").First(&updatingUserMembership, "project_id = ? AND user_id = ?", membership.ProjectID, parsedLoggedInUserID).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return &fiber.Error{Code: 403, Message: "You are not a part of this project."}
+			}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		}
+
+		if updatingUserMembership.Role != models.ProjectManager {
+			return &fiber.Error{Code: 403, Message: "Cannot perform this action."}
+		}
+		if membership.Role == models.ProjectManager {
+			return &fiber.Error{Code: 403, Message: "Cannot perform this action."}
+		}
+		if reqBody.Role == models.ProjectManager {
+			return &fiber.Error{Code: 403, Message: "Cannot perform this action."}
+		}
 	}
 
 	membership.Role = reqBody.Role
 
 	result := initializers.DB.Save(&membership)
-
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
 
 	return c.Status(200).JSON(fiber.Map{

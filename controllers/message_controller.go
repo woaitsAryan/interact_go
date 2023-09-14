@@ -57,7 +57,7 @@ func GetGroupChatMessages(c *fiber.Ctx) error {
 	paginatedDB := API.Paginator(c)(initializers.DB)
 
 	var membership models.GroupChatMembership
-	if err := initializers.DB.Where("project_chat_id=? AND user_id = ?", chatID, loggedInUserID).First(&membership).Error; err != nil {
+	if err := initializers.DB.Where("group_chat_id=? AND user_id = ?", chatID, loggedInUserID).First(&membership).Error; err != nil {
 		return &fiber.Error{Code: 403, Message: "Do not have the permission to perform this action."}
 	}
 

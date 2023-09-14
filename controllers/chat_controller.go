@@ -40,37 +40,8 @@ func GetUserNonPopulatedChats(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	return c.Status(200).JSON(fiber.Map{
-		"status":  "success",
-		"message": "",
-		"chats":   chats,
-	})
-}
-
-// TODO separate get personal chats and group chats
-func GetUserChats(c *fiber.Ctx) error {
-	loggedInUserID := c.GetRespHeader("loggedInUserID")
-
-	var chats []models.Chat
-	if err := initializers.DB.
-		Preload("CreatingUser").
-		Preload("AcceptingUser").
-		Preload("LatestMessage").
-		Preload("LatestMessage.User").
-		Where("creating_user_id=?", loggedInUserID).
-		Or("accepting_user_id = ?", loggedInUserID).
-		Find(&chats).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-	}
-
 	var groupChats []models.GroupChat
 	if err := initializers.DB.
-		Preload("Project").
-		Preload("Organization").
-		Preload("LatestMessage").
-		Preload("LatestMessage.User").
-		Preload("Memberships").
-		Preload("Memberships.User").
 		Joins("JOIN group_chat_memberships ON group_chat_memberships.group_chat_id = group_chats.id").
 		Where("group_chat_memberships.user_id = ?", loggedInUserID).
 		Find(&groupChats).Error; err != nil {
@@ -103,6 +74,30 @@ func GetPersonalChats(c *fiber.Ctx) error {
 		"status":  "success",
 		"message": "",
 		"chats":   chats,
+	})
+}
+
+func GetGroupChats(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	var groupChats []models.GroupChat
+	if err := initializers.DB.
+		Preload("Project").
+		Preload("Organization").
+		Preload("LatestMessage").
+		Preload("LatestMessage.User").
+		Preload("Memberships").
+		Preload("Memberships.User").
+		Joins("JOIN group_chat_memberships ON group_chat_memberships.group_chat_id = group_chats.id").
+		Where("group_chat_memberships.user_id = ?", loggedInUserID).
+		Find(&groupChats).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "",
+		"chats":   groupChats,
 	})
 }
 
