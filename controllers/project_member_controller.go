@@ -118,7 +118,7 @@ func AddMember(c *fiber.Ctx) error {
 	}
 }
 
-func RemoveMember(c *fiber.Ctx) error {
+func RemoveMember(c *fiber.Ctx) error { //TODO add manager cannot remove manager
 	membershipID := c.Params("membershipID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)

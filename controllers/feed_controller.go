@@ -28,6 +28,7 @@ func GetFeed(c *fiber.Ctx) error {
 	var posts []models.Post
 	if err := paginatedDB.
 		Preload("User").
+		Preload("RePost").
 		Joins("JOIN users ON posts.user_id = users.id AND users.active = ?", true).
 		Where("user_id = ? OR user_id IN (?)", loggedInUserID, followingIDs).
 		Order("created_at DESC").

@@ -16,6 +16,7 @@ func MessagingRouter(app *fiber.App) {
 
 	messagingRoutes.Get("/personal", controllers.GetPersonalChats)
 	messagingRoutes.Get("/group", controllers.GetGroupChats)
+	messagingRoutes.Get("/project", controllers.GetProjectChats)
 
 	messagingRoutes.Get("/:chatID", controllers.GetChat)
 	messagingRoutes.Get("/group/:chatID", controllers.GetGroupChat)
@@ -24,7 +25,7 @@ func MessagingRouter(app *fiber.App) {
 
 	messagingRoutes.Post("/chat", controllers.AddChat)
 	messagingRoutes.Post("/group", controllers.AddGroupChat)
-	messagingRoutes.Post("/project/:projectID", middlewares.ProjectRoleAuthorization(models.ProjectManager), controllers.AddProjectChat)
+	messagingRoutes.Post("/project/:projectID", middlewares.ProjectRoleAuthorization(models.ProjectEditor), controllers.AddProjectChat)
 
 	messagingRoutes.Post("/group/members/add/:chatID", middlewares.GroupChatAdminAuthorization(), controllers.AddGroupChatMembers)
 	messagingRoutes.Post("/group/members/remove/:chatID", middlewares.GroupChatAdminAuthorization(), controllers.RemoveGroupChatMember)
@@ -35,7 +36,7 @@ func MessagingRouter(app *fiber.App) {
 	messagingRoutes.Delete("/:chatID", controllers.DeleteChat)
 	messagingRoutes.Delete("/group/:chatID", middlewares.GroupChatAdminAuthorization(), controllers.DeleteGroupChat)
 
-	// messagingRoutes.Delete("/group/:chatID", controllers.LeaveGroupChat)
+	messagingRoutes.Delete("/group/leave/:chatID", controllers.LeaveGroupChat)
 
 	messagingRoutes.Get("/content/:chatID", controllers.GetMessages)
 	messagingRoutes.Get("/content/group/:chatID", controllers.GetGroupChatMessages)
@@ -45,4 +46,13 @@ func MessagingRouter(app *fiber.App) {
 
 	messagingRoutes.Delete("/content/:messageID", controllers.DeleteMessage)
 	messagingRoutes.Delete("/content/project/:messageID", controllers.DeleteMessage)
+
+	messagingRoutes.Post("/group/project/members/add/:chatID", middlewares.ProjectRoleAuthorization(models.ProjectManager), controllers.AddProjectChatMembers)
+	messagingRoutes.Post("/group/project/members/remove/:chatID", middlewares.ProjectRoleAuthorization(models.ProjectManager), controllers.RemoveGroupChatMember)
+
+	messagingRoutes.Patch("/group/project/:chatID", middlewares.ProjectRoleAuthorization(models.ProjectManager), controllers.EditGroupChat)
+	messagingRoutes.Patch("/group/project/role/:chatID", middlewares.ProjectRoleAuthorization(models.ProjectManager), controllers.EditGroupChatRole)
+
+	messagingRoutes.Delete("/group/project/:chatID", middlewares.ProjectRoleAuthorization(models.ProjectManager), controllers.DeleteGroupChat)
+
 }

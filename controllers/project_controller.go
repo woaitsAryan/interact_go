@@ -58,13 +58,6 @@ func GetProject(c *fiber.Ctx) error {
 
 func GetWorkSpaceProject(c *fiber.Ctx) error {
 	slug := c.Params("slug")
-	// loggedInUserID := c.GetRespHeader("loggedInUserID")
-
-	// parsedLoggedInUserID, err := uuid.Parse(loggedInUserID)
-	// if err != nil {
-	// 	return &fiber.Error{Code: 400, Message: "Invalid ID"}
-	// }
-
 	var project models.Project
 	if err := initializers.DB.Preload("User").Preload("Openings").First(&project, "slug = ?", slug).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -77,16 +70,6 @@ func GetWorkSpaceProject(c *fiber.Ctx) error {
 	if err := initializers.DB.Preload("User").Find(&memberships, "project_id = ?", project.ID).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
-
-	// var membershipCheck bool
-	// for _, membership := range memberships {
-	// 	if (membership.UserID) == parsedLoggedInUserID {
-	// 		membershipCheck = true
-	// 	}
-	// }
-	// if !membershipCheck && project.UserID != parsedLoggedInUserID {
-	// 	return &fiber.Error{Code: 403, Message: "Cannot perform this action."}
-	// }
 
 	var invitations []models.Invitation
 	if err := initializers.DB.Preload("User").Find(&invitations, "project_id = ? AND (status = 0 OR status = -1)", project.ID).Error; err != nil {
@@ -111,6 +94,25 @@ func GetWorkSpaceProject(c *fiber.Ctx) error {
 		"status":  "success",
 		"message": "",
 		"project": project,
+	})
+}
+
+func GetWorkSpaceProjectChats(c *fiber.Ctx) error {
+	projectID := c.Params("projectID")
+
+	var chats []models.GroupChat
+	if err := initializers.DB.
+		Preload("User").
+		Preload("Memberships").
+		Preload("Memberships.User").
+		Find(&chats, "project_id = ? ", projectID).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "",
+		"chats":   chats,
 	})
 }
 

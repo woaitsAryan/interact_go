@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type User struct {
+type User struct { //! Add numProjects field to display on user explore card
 	ID                        uuid.UUID         `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	Name                      string            `gorm:"varchar(25);not null" json:"name"`
 	Username                  string            `gorm:"varchar(10);unique;not null" json:"username"`

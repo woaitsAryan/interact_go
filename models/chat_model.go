@@ -23,7 +23,7 @@ type Chat struct {
 	LastReadMessageByAcceptingUser   *Message  `gorm:"type:uuid" json:"lastReadMessageByAcceptingUser"`
 }
 
-type GroupChat struct {
+type GroupChat struct { //TODO store number of members in model to show in invitation
 	ID              uuid.UUID             `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	Title           string                `gorm:"type:varchar(50);" json:"title"`
 	Description     string                `gorm:"type:text" json:"description"`

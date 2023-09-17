@@ -82,14 +82,12 @@ func GetGroupChats(c *fiber.Ctx) error {
 
 	var groupChats []models.GroupChat
 	if err := initializers.DB.
-		Preload("Project").
-		Preload("Organization").
 		Preload("LatestMessage").
 		Preload("LatestMessage.User").
 		Preload("Memberships").
 		Preload("Memberships.User").
 		Joins("JOIN group_chat_memberships ON group_chat_memberships.group_chat_id = group_chats.id").
-		Where("group_chat_memberships.user_id = ?", loggedInUserID).
+		Where("group_chat_memberships.user_id = ? AND group_chats.project_id IS NULL", loggedInUserID).
 		Find(&groupChats).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
@@ -98,6 +96,45 @@ func GetGroupChats(c *fiber.Ctx) error {
 		"status":  "success",
 		"message": "",
 		"chats":   groupChats,
+	})
+}
+
+func GetProjectChats(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	var groupChats []models.GroupChat
+	if err := initializers.DB.
+		Preload("Project").
+		Preload("LatestMessage").
+		Preload("LatestMessage.User").
+		Preload("Memberships").
+		Preload("Memberships.User").
+		Joins("JOIN group_chat_memberships ON group_chat_memberships.group_chat_id = group_chats.id").
+		Where("group_chat_memberships.user_id = ? AND group_chats.project_id IS NOT NULL", loggedInUserID).
+		Find(&groupChats).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	var projects []models.Project
+
+	for _, chat := range groupChats {
+		check := false
+		for _, project := range projects {
+			if *chat.ProjectID == project.ID {
+				check = true
+				break
+			}
+		}
+		if !check {
+			projects = append(projects, chat.Project)
+		}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":   "success",
+		"message":  "",
+		"chats":    groupChats,
+		"projects": projects,
 	})
 }
 

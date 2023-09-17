@@ -71,6 +71,8 @@ func ProjectRoleAuthorization(Role models.ProjectRole) func(*fiber.Ctx) error {
 		projectID := c.Params("projectID")
 		openingID := c.Params("openingID")
 		applicationID := c.Params("applicationID")
+		chatID := c.Params("chatID")
+		membershipID := c.Params("membershipID")
 
 		var project models.Project
 		if slug != "" {
@@ -93,6 +95,18 @@ func ProjectRoleAuthorization(Role models.ProjectRole) func(*fiber.Ctx) error {
 				return &fiber.Error{Code: 400, Message: "Invalid Project."}
 			}
 			project = application.Project
+		} else if chatID != "" {
+			var chat models.GroupChat
+			if err := initializers.DB.Preload("Project").Preload("Project.Memberships").First(&chat, "id = ?", chatID).Error; err != nil {
+				return &fiber.Error{Code: 400, Message: "Invalid Project."}
+			}
+			project = chat.Project
+		} else if membershipID != "" {
+			var membership models.Membership
+			if err := initializers.DB.Preload("Project").Preload("Project.Memberships").First(&membership, "id = ?", membershipID).Error; err != nil {
+				return &fiber.Error{Code: 400, Message: "Invalid Project."}
+			}
+			project = membership.Project
 		}
 
 		if project.UserID.String() == loggedInUserID {

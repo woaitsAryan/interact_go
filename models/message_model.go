@@ -19,12 +19,12 @@ type Message struct {
 	OpeningID *uuid.UUID `gorm:"type:uuid" json:"openingID"` // shared opening
 	Opening   Opening    `json:"opening"`
 	ProfileID *uuid.UUID `gorm:"type:uuid" json:"profileID"` // shared profile
-	Profile   Project    `gorm:"foreignKey:ProfileID;" json:"profile"`
-	MessageID *uuid.UUID `gorm:"type:uuid" json:"messageID"` // replied message
-	Message   Project    `json:"message"`
-	Content   string     `gorm:"type:text;not null" json:"content"`
-	CreatedAt time.Time  `gorm:"default:current_timestamp;index:idx_created_at,sort:desc" json:"createdAt"`
-	Read      bool       `gorm:"default:false" json:"read"`
+	Profile   User       `gorm:"foreignKey:ProfileID;" json:"profile"`
+	// MessageID *uuid.UUID `gorm:"type:uuid" json:"messageID"` // replied message
+	// Message   Message    `json:"message"`
+	Content   string    `gorm:"type:text;not null" json:"content"`
+	CreatedAt time.Time `gorm:"default:current_timestamp;index:idx_created_at,sort:desc" json:"createdAt"`
+	Read      bool      `gorm:"default:false" json:"read"`
 }
 
 type GroupChatMessage struct {
@@ -41,9 +41,9 @@ type GroupChatMessage struct {
 	OpeningID *uuid.UUID `gorm:"type:uuid" json:"openingID"` // shared opening
 	Opening   Opening    `json:"opening"`
 	ProfileID *uuid.UUID `gorm:"type:uuid" json:"profileID"` // shared profile
-	Profile   Project    `gorm:"foreignKey:ProfileID;" json:"profile"`
-	MessageID *uuid.UUID `gorm:"type:uuid" json:"messageID"` // replied message
-	Message   Project    `json:"message"`
+	Profile   User       `gorm:"foreignKey:ProfileID;" json:"profile"`
+	// MessageID *uuid.UUID `gorm:"type:uuid" json:"messageID"` // replied message
+	// Message   Project    `json:"message"`
 	// Read      bool       `gorm:"default:false" json:"read"`
 	// ReadBy    []User     `gorm:"many2many:message_read_by;constraint:OnDelete:CASCADE" json:"readBy"`
 	CreatedAt time.Time `gorm:"default:current_timestamp" json:"createdAt"`
