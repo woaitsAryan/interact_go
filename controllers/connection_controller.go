@@ -136,9 +136,9 @@ func GetFollowers(c *fiber.Ctx) error {
 	}
 
 	return c.Status(200).JSON(fiber.Map{
-		"status":    "success",
-		"message":   "",
-		"followers": followerUsers,
+		"status":  "success",
+		"message": "",
+		"users":   followerUsers,
 	})
 }
 
@@ -163,9 +163,9 @@ func GetFollowing(c *fiber.Ctx) error {
 	}
 
 	return c.Status(200).JSON(fiber.Map{
-		"status":    "success",
-		"message":   "",
-		"following": followingUsers,
+		"status":  "success",
+		"message": "",
+		"users":   followingUsers,
 	})
 }
 

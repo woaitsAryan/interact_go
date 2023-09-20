@@ -65,15 +65,31 @@ func GetPersonalChats(c *fiber.Ctx) error {
 		Preload("AcceptingUser").
 		Preload("LatestMessage").
 		Preload("LatestMessage.User").
-		Where("accepted = ? AND (creating_user_id=? OR accepting_user_id = ?)", true, loggedInUserID, loggedInUserID).
+		Where("creating_user_id=? OR accepting_user_id = ?", loggedInUserID, loggedInUserID).
 		Find(&chats).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
+	var filteredChats []models.Chat
+	var requests []models.Chat
+
+	for _, chat := range chats {
+		if chat.Accepted {
+			filteredChats = append(filteredChats, chat)
+		} else {
+			if chat.CreatingUserID.String() == loggedInUserID {
+				filteredChats = append(filteredChats, chat)
+			} else {
+				requests = append(requests, chat)
+			}
+		}
+	}
+
 	return c.Status(200).JSON(fiber.Map{
-		"status":  "success",
-		"message": "",
-		"chats":   chats,
+		"status":   "success",
+		"message":  "",
+		"chats":    filteredChats,
+		"requests": requests,
 	})
 }
 

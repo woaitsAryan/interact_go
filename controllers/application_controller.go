@@ -123,12 +123,12 @@ func AddApplication(c *fiber.Ctx) error {
 	}
 
 	if err := helpers.Validate[schemas.ApplicationCreateSchema](reqBody); err != nil {
-		return err
+		return &fiber.Error{Code: 400, Message: err.Error()}
 	}
 
 	resumePath, err := utils.SaveFile(c, "resume", "project/openings/applications", false, 0, 0)
 	if err != nil {
-		return err
+		return &fiber.Error{Code: 500, Message: "Internal Server Error."}
 	}
 
 	var opening models.Opening

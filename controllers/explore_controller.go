@@ -66,7 +66,9 @@ func GetTrendingPosts(c *fiber.Ctx) error {
 
 	if err := searchedDB.
 		Preload("User").
-		// Joins("JOIN users ON posts.user_id = users.id AND users.active = ?", true).
+		Preload("RePost").
+		Preload("RePost.User").
+		Joins("JOIN users ON posts.user_id = users.id AND users.active = ?", true).
 		Select("*, (2 * no_likes + no_comments + 5 * no_shares) AS weighted_average").
 		Order("weighted_average DESC").
 		Find(&posts).Error; err != nil {

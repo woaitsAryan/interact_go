@@ -24,4 +24,4 @@ func RATE_LIMITER() fiber.Handler {
 	})
 }
 
-const BODY_LIMIT = 5 * 1024 * 1024 // 5 MB
+const BODY_LIMIT = 10 * 1024 * 1024 // 5 MB

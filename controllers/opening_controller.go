@@ -82,7 +82,7 @@ func AddOpening(c *fiber.Ctx) error {
 	}
 
 	if err := helpers.Validate[schemas.OpeningCreateSchema](reqBody); err != nil {
-		return err
+		return &fiber.Error{Code: 400, Message: err.Error()}
 	}
 
 	newOpening := models.Opening{
@@ -126,7 +126,7 @@ func EditOpening(c *fiber.Ctx) error {
 	}
 
 	if err := helpers.Validate[schemas.OpeningEditSchema](reqBody); err != nil {
-		return err
+		return &fiber.Error{Code: 400, Message: err.Error()}
 	}
 
 	var opening models.Opening

@@ -203,7 +203,7 @@ func AddProject(c *fiber.Ctx) error {
 	}
 
 	if err := helpers.Validate[schemas.ProjectCreateSchema](reqBody); err != nil {
-		return err
+		return &fiber.Error{Code: 400, Message: err.Error()}
 	}
 
 	slug := slug.Make(reqBody.Title)

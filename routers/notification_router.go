@@ -13,7 +13,6 @@ func NotificationRouter(app *fiber.App) {
 	notificationRoutes.Get("/unread/count", controllers.GetUnreadNotificationCount)
 
 	notificationRoutes.Get("/unread", controllers.GetUnreadNotifications)
-	notificationRoutes.Post("/unread", controllers.MarkReadNotifications)
 
 	notificationRoutes.Delete("/:notificationID", controllers.DeleteNotification)
 }

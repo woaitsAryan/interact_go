@@ -1,5 +1,7 @@
 package schemas
 
+import "github.com/lib/pq"
+
 type UserCreateSchema struct {
 	Name            string `json:"name" validate:"required"`
 	Username        string `json:"username" validate:"alphanum,required"`
@@ -9,14 +11,14 @@ type UserCreateSchema struct {
 }
 
 type UserUpdateSchema struct {
-	Name       string   `json:"name" validate:"alpha"`
-	ProfilePic string   `json:"profilePic" validate:"image"`
-	CoverPic   string   `json:"coverPic" validate:"image"`
-	Bio        string   `json:"bio"`
-	Title      string   `json:"title"`
-	Tagline    string   `json:"tagline"`
-	Tags       []string `json:"tags" validate:"dive,alpha"`
-	Links      []string `json:"links" validate:"dive,url"`
+	Name       string         `json:"name" validate:"alpha"`
+	ProfilePic string         `json:"profilePic" validate:"image"`
+	CoverPic   string         `json:"coverPic" validate:"image"`
+	Bio        string         `json:"bio"`
+	Title      string         `json:"title"`
+	Tagline    string         `json:"tagline"`
+	Tags       pq.StringArray `json:"tags" validate:"dive,alpha"`
+	Links      pq.StringArray `json:"links" validate:"dive,url"`
 }
 
 type AchievementCreateSchema struct {

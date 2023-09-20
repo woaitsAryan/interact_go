@@ -41,3 +41,20 @@ func SendInvitationAcceptedNotification(creatorID uuid.UUID, acceptorID uuid.UUI
 		helpers.LogDatabaseError("Error whiling creating notification-AddWelcomeNotification", result.Error, "go_routine")
 	}
 }
+
+func MarkReadNotifications(UnreadNotifications []uuid.UUID) {
+	for _, unreadNotificationID := range UnreadNotifications {
+		var notification models.Notification
+		if err := initializers.DB.
+			Where("id=?", unreadNotificationID).
+			First(&notification).
+			Error; err != nil {
+			helpers.LogDatabaseError("Error whiling creating notification-AddWelcomeNotification", err, "go_routine")
+		}
+		notification.Read = true
+		result := initializers.DB.Save(&notification)
+		if result.Error != nil {
+			helpers.LogDatabaseError("Error whiling creating notification-AddWelcomeNotification", result.Error, "go_routine")
+		}
+	}
+}

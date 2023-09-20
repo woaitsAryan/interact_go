@@ -111,7 +111,7 @@ func AddPost(c *fiber.Ctx) error {
 	}
 
 	if err := helpers.Validate[schemas.PostCreateSchema](reqBody); err != nil {
-		return err
+		return &fiber.Error{Code: 400, Message: err.Error()}
 	}
 
 	images, err := utils.SaveMultipleFiles(c, "images", "post", true, 1280, 720)

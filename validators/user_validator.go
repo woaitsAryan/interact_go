@@ -17,7 +17,7 @@ func UserCreateValidator(c *fiber.Ctx) error {
 	}
 
 	if err := helpers.Validate[schemas.UserCreateSchema](reqBody); err != nil {
-		return err
+		return &fiber.Error{Code: 400, Message: err.Error()}
 	}
 
 	if reqBody.Password != reqBody.ConfirmPassword {

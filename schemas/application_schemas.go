@@ -1,6 +1,8 @@
 package schemas
 
+import "github.com/lib/pq"
+
 type ApplicationCreateSchema struct {
-	Content string   `json:"content" validate:"max=500"`
-	Links   []string `json:"links" validate:"url,dive"`
+	Content string         `json:"content" validate:"max=500"`
+	Links   pq.StringArray `json:"links" validate:"url,dive"`
 }
