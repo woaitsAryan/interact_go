@@ -157,7 +157,7 @@ func AddPost(c *fiber.Ctx) error {
 	}
 
 	var post models.Post
-	if err := initializers.DB.Preload("User").Preload("RePost").First(&post, "id = ?", newPost.ID).Error; err != nil {
+	if err := initializers.DB.Preload("User").Preload("RePost").Preload("RePost.User").First(&post, "id = ?", newPost.ID).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 

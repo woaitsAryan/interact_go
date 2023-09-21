@@ -97,12 +97,12 @@ func OAuthSignUp(c *fiber.Ctx) error {
 	c.BodyParser(&reqBody)
 
 	var user models.User
-	if err := initializers.DB.First(&user, "id = ?", loggedInUserID).Error; err != nil {
+	if err := initializers.DB.Session(&gorm.Session{SkipHooks: true}).First(&user, "username = ?", reqBody.Username).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	var existingUser models.User
-	initializers.DB.First(&existingUser, "username = ?", reqBody.Username)
+	initializers.DB.Session(&gorm.Session{SkipHooks: true}).First(&user, "username = ?", reqBody.Username)
 	if existingUser.ID != uuid.Nil {
 		return &fiber.Error{Code: 400, Message: "User with this Username already exists"}
 	}

@@ -7,6 +7,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/schemas"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 func UserCreateValidator(c *fiber.Ctx) error {
@@ -25,12 +26,12 @@ func UserCreateValidator(c *fiber.Ctx) error {
 	}
 
 	var user models.User
-	initializers.DB.First(&user, "email = ?", reqBody.Email)
+	initializers.DB.Session(&gorm.Session{SkipHooks: true}).First(&user, "email = ?", reqBody.Email)
 	if user.ID != uuid.Nil {
 		return &fiber.Error{Code: 400, Message: "User with this Email ID already exists"}
 	}
 
-	initializers.DB.First(&user, "username = ?", reqBody.Username)
+	initializers.DB.Session(&gorm.Session{SkipHooks: true}).First(&user, "username = ?", reqBody.Username)
 	if user.ID != uuid.Nil {
 		return &fiber.Error{Code: 400, Message: "User with this Username already exists"}
 	}

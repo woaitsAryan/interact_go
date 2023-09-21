@@ -69,6 +69,8 @@ func (u *User) AfterFind(tx *gorm.DB) error {
 		u.Projects = nil
 		u.Posts = nil
 	}
+	u.Email = ""
+	u.PhoneNo = ""
 	return nil
 }
 
