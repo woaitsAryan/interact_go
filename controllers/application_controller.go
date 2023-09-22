@@ -117,20 +117,6 @@ func AddApplication(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "You already have applied for this opening."}
 	}
 
-	var reqBody schemas.ApplicationCreateSchema
-	if err := c.BodyParser(&reqBody); err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
-	}
-
-	if err := helpers.Validate[schemas.ApplicationCreateSchema](reqBody); err != nil {
-		return &fiber.Error{Code: 400, Message: err.Error()}
-	}
-
-	resumePath, err := utils.SaveFile(c, "resume", "project/openings/applications", false, 0, 0)
-	if err != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error."}
-	}
-
 	var opening models.Opening
 	if err := initializers.DB.Where("id = ? AND active=true", parsedOpeningID).First(&opening).Error; err != nil {
 		return &fiber.Error{Code: 400, Message: "No Opening of this ID found."}
@@ -143,6 +129,20 @@ func AddApplication(c *fiber.Ctx) error {
 	var membership models.Membership
 	if err := initializers.DB.Where("project_id=? AND user_id=?", opening.ProjectID, parsedUserID).First(&membership).Error; err == nil {
 		return &fiber.Error{Code: 400, Message: "You already are a collaborator of this project."}
+	}
+
+	var reqBody schemas.ApplicationCreateSchema
+	if err := c.BodyParser(&reqBody); err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
+	}
+
+	if err := helpers.Validate[schemas.ApplicationCreateSchema](reqBody); err != nil {
+		return &fiber.Error{Code: 400, Message: err.Error()}
+	}
+
+	resumePath, err := utils.SaveFile(c, "resume", "project/openings/applications", false, 0, 0)
+	if err != nil {
+		return &fiber.Error{Code: 500, Message: "Internal Server Error."}
 	}
 
 	newApplication := models.Application{

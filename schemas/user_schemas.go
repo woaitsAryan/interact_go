@@ -4,19 +4,19 @@ import "github.com/lib/pq"
 
 type UserCreateSchema struct {
 	Name            string `json:"name" validate:"required"`
-	Username        string `json:"username" validate:"alphanum,required"`
+	Username        string `json:"username" validate:"required"` //alphanum+_
 	Email           string `json:"email" validate:"required,email"`
 	Password        string `json:"password" validate:"required,min=8"`
 	ConfirmPassword string `json:"confirmPassword" validate:"required,min=8"`
 }
 
 type UserUpdateSchema struct {
-	Name       string         `json:"name" validate:"alpha"`
+	Name       string         `json:"name"`
 	ProfilePic string         `json:"profilePic" validate:"image"`
 	CoverPic   string         `json:"coverPic" validate:"image"`
-	Bio        string         `json:"bio"`
+	Bio        string         `json:"bio" validate:"max=300"`
 	Title      string         `json:"title"`
-	Tagline    string         `json:"tagline"`
+	Tagline    string         `json:"tagline" validate:"max=25"`
 	Tags       pq.StringArray `json:"tags" validate:"dive,alpha"`
 	Links      pq.StringArray `json:"links" validate:"dive,url"`
 }

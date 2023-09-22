@@ -4,7 +4,7 @@ import "github.com/lib/pq"
 
 type ProjectCreateSchema struct {
 	Title       string         `json:"title" validate:"required,max=20"`
-	Tagline     string         `json:"tagline" validate:"required"`
+	Tagline     string         `json:"tagline" validate:"required,max=40"`
 	Description string         `json:"description" validate:"required,max=500"`
 	Tags        pq.StringArray `json:"tags" validate:"dive,alpha"`
 	Category    string         `json:"category" validate:"required"`
@@ -13,12 +13,12 @@ type ProjectCreateSchema struct {
 }
 
 type ProjectUpdateSchema struct {
-	Tagline      string         `json:"tagline" validate:"alphanum,max=40"`
+	Tagline      string         `json:"tagline" validate:"max=40"`
 	CoverPic     string         `json:"coverPic" validate:"image"`
-	Description  string         `json:"description" validate:"alphanum,max=500"`
+	Description  string         `json:"description" validate:"max=500"`
 	Page         string         `json:"page"`
 	Tags         pq.StringArray `json:"tags" validate:"alpha,dive"`
 	IsPrivate    bool           `json:"isPrivate" validate:"boolean"`
-	Links        pq.StringArray `json:"links" validate:"url,dive"`
-	PrivateLinks pq.StringArray `json:"privateLinks" validate:"url,dive"`
+	Links        pq.StringArray `json:"links" validate:"dive,url"`
+	PrivateLinks pq.StringArray `json:"privateLinks" validate:"dive,url"`
 }

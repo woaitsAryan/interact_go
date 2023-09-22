@@ -20,15 +20,14 @@ func Validate[T any](payload T) error {
 
 		for _, fieldError := range validationErrors {
 			field := fieldError.Field()
-			tag := fieldError.Tag()
-			errorMessage := fmt.Sprintf("Validation failed for field %s with tag '%s'\n", field, tag)
+			// tag := fieldError.Tag()
+			errorMessage := fmt.Sprintf("Invalid %s \n", field)
 			errorsBuilder.WriteString(errorMessage)
 		}
 
 		errorsString := errorsBuilder.String()
 
-		return &fiber.Error{Code: 400, Message: "Request Body Validation Failed: " + errorsString}
-
+		return &fiber.Error{Code: 400, Message: errorsString}
 	}
 	return nil
 }

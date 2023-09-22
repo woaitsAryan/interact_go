@@ -215,6 +215,7 @@ func Refresh(c *fiber.Ctx) error {
 	})
 
 	if err != nil && !errors.Is(err, jwt.ErrTokenExpired) {
+		initializers.Logger.Infow("Token Expiration: ", "Error", err)
 		return &fiber.Error{Code: 400, Message: config.TOKEN_EXPIRED_ERROR}
 	}
 
@@ -237,6 +238,7 @@ func Refresh(c *fiber.Ctx) error {
 
 		refresh_token_string := c.Cookies("refresh_token")
 		if refresh_token_string == "" {
+			initializers.Logger.Infow("Token Expiration: ", "Error", err)
 			return &fiber.Error{Code: 401, Message: config.TOKEN_EXPIRED_ERROR}
 		}
 
@@ -247,7 +249,8 @@ func Refresh(c *fiber.Ctx) error {
 			return []byte(initializers.CONFIG.JWT_SECRET), nil
 		})
 
-		if err != nil && !errors.Is(err, jwt.ErrTokenExpired) {
+		if err != nil {
+			initializers.Logger.Infow("Token Expiration: ", "Error", err)
 			return &fiber.Error{Code: 400, Message: config.TOKEN_EXPIRED_ERROR}
 		}
 
@@ -258,10 +261,12 @@ func Refresh(c *fiber.Ctx) error {
 			}
 
 			if refresh_token_userID != access_token_userID {
+				initializers.Logger.Warnw("Mismatched Tokens: ", "Access Token User ID", access_token_userID, "Refresh Token User ID", refresh_token_userID)
 				return &fiber.Error{Code: 401, Message: "Mismatched Tokens."}
 			}
 
 			if time.Now().After(time.Unix(int64(refresh_token_claims["exp"].(float64)), 0)) {
+				initializers.Logger.Infow("Token Expiration: ", "Error", err)
 				return &fiber.Error{Code: 401, Message: config.TOKEN_EXPIRED_ERROR}
 			}
 

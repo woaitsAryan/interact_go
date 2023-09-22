@@ -197,7 +197,7 @@ func GetMutuals(c *fiber.Ctx) error {
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "",
-		"mutuals": mutuals,
+		"users":   mutuals,
 		"count":   count,
 	})
 }
