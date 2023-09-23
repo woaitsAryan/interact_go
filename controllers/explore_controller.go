@@ -87,7 +87,9 @@ func GetTrendingOpenings(c *fiber.Ctx) error {
 
 	searchedDB := API.Search(c, 3)(paginatedDB)
 
-	if err := searchedDB.Preload("Project").Order("created_at DESC").Find(&openings).Error; err != nil {
+	if err := searchedDB.Preload("Project").
+		Joins("JOIN projects ON openings.project_id = projects.id AND projects.is_private = ?", false).
+		Order("created_at DESC").Find(&openings).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
@@ -104,7 +106,9 @@ func GetRecommendedOpenings(c *fiber.Ctx) error {
 	paginatedDB := API.Paginator(c)(initializers.DB)
 	var openings []models.Opening
 
-	if err := paginatedDB.Preload("Project").Order("created_at DESC").Find(&openings).Error; err != nil {
+	if err := paginatedDB.Preload("Project").
+		Joins("JOIN projects ON openings.project_id = projects.id AND projects.is_private = ?", false).
+		Order("created_at DESC").Find(&openings).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
@@ -152,9 +156,8 @@ func GetTrendingProjects(c *fiber.Ctx) error {
 	searchedDB := API.Search(c, 1)(paginatedDB)
 
 	if err := searchedDB.
-		Omit("private_links").
 		Preload("User").
-		Select("*, (2 * no_likes + no_comments + 5 * no_shares) AS weighted_average").
+		Select("*, (total_no_views + 3 * no_likes + 2 * no_comments + 5 * no_shares) AS weighted_average").
 		Order("weighted_average DESC").
 		Where("is_private = ?", false).
 		Find(&projects).Error; err != nil {
@@ -175,8 +178,9 @@ func GetRecommendedProjects(c *fiber.Ctx) error {
 	searchedDB := API.Search(c, 1)(paginatedDB)
 
 	if err := searchedDB.
-		Omit("private_links").
 		Preload("User").
+		Select("*, (total_no_views + 3 * no_likes + 2 * no_comments + 5 * no_shares) AS weighted_average").
+		Order("weighted_average DESC").
 		Where("user_id <> ? AND is_private = ?", loggedInUserID, false).
 		Find(&projects).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
@@ -194,7 +198,6 @@ func GetMostLikedProjects(c *fiber.Ctx) error {
 	searchedDB := API.Search(c, 1)(paginatedDB)
 
 	if err := searchedDB.
-		Omit("private_links").
 		Preload("User").
 		Order("no_likes DESC").
 		Where("is_private = ?", false).
@@ -214,7 +217,6 @@ func GetRecentlyAddedProjects(c *fiber.Ctx) error {
 	searchedDB := API.Search(c, 1)(paginatedDB)
 
 	if err := searchedDB.
-		Omit("private_links").
 		Preload("User").
 		Order("created_at DESC").
 		Where("is_private = ?", false).
@@ -234,7 +236,6 @@ func GetLastViewedProjects(c *fiber.Ctx) error {
 
 	paginatedDB := API.Paginator(c)(initializers.DB)
 	if err := paginatedDB.
-		Omit("private_links").
 		Preload("User").
 		Order("timestamp DESC").
 		Preload("Project").
@@ -338,7 +339,7 @@ func GetSimilarProjects(c *fiber.Ctx) error {
 		Where("id <> ?", project.ID).
 		Where("category LIKE ?", "%"+project.Category+"%").
 		Where("tags && ?", pq.StringArray(project.Tags)).
-		Omit("private_links").
+		Where("is_private=?", false).
 		Limit(10).
 		Find(&projects).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}

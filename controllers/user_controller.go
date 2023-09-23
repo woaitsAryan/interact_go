@@ -49,6 +49,22 @@ func GetMe(c *fiber.Ctx) error {
 		Preload("Memberships.Project").
 		First(&user, "id = ?", userID)
 
+	var projects []models.Project
+	for _, project := range user.Projects {
+		if !project.IsPrivate {
+			projects = append(projects, project)
+		}
+	}
+	user.Projects = projects
+
+	var memberships []models.Membership
+	for _, membership := range user.Memberships {
+		if !membership.Project.IsPrivate {
+			memberships = append(memberships, membership)
+		}
+	}
+	user.Memberships = memberships
+
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "",
@@ -72,6 +88,22 @@ func GetUser(c *fiber.Ctx) error {
 	if user.ID == uuid.Nil {
 		return &fiber.Error{Code: 400, Message: "No user of this username found."}
 	}
+
+	var projects []models.Project
+	for _, project := range user.Projects {
+		if !project.IsPrivate {
+			projects = append(projects, project)
+		}
+	}
+	user.Projects = projects
+
+	var memberships []models.Membership
+	for _, membership := range user.Memberships {
+		if !membership.Project.IsPrivate {
+			memberships = append(memberships, membership)
+		}
+	}
+	user.Memberships = memberships
 
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 

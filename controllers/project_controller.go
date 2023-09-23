@@ -21,7 +21,7 @@ func GetProject(c *fiber.Ctx) error {
 	slug := c.Params("slug")
 
 	var project models.Project
-	if err := initializers.DB.Omit("private_links").Preload("User").Preload("Openings").Preload("Memberships").First(&project, "slug = ? AND is_private = ? ", slug, false).Error; err != nil {
+	if err := initializers.DB.Preload("User").Preload("Openings").Preload("Memberships").First(&project, "slug = ? AND is_private = ? ", slug, false).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
 		}
@@ -91,9 +91,10 @@ func GetWorkSpaceProject(c *fiber.Ctx) error {
 	project.Chats = chats             //TODO only include chats you are part of
 
 	return c.Status(200).JSON(fiber.Map{
-		"status":  "success",
-		"message": "",
-		"project": project,
+		"status":       "success",
+		"message":      "",
+		"project":      project,
+		"privateLinks": project.PrivateLinks,
 	})
 }
 
@@ -161,7 +162,9 @@ func GetUserContributingProjects(c *fiber.Ctx) error {
 
 	var projects []models.Project
 	for _, membership := range memberships {
-		projects = append(projects, membership.Project)
+		if !membership.Project.IsPrivate {
+			projects = append(projects, membership.Project)
+		}
 	}
 
 	return c.Status(200).JSON(fiber.Map{

@@ -20,6 +20,7 @@ func ExploreRouter(app *fiber.App) {
 
 	exploreRoutes.Get("/projects/trending", controllers.GetTrendingProjects)
 	exploreRoutes.Get("/projects/recommended", middlewares.PartialProtect, controllers.GetRecommendedProjects)
+
 	exploreRoutes.Get("/projects/most_liked", controllers.GetMostLikedProjects)
 	exploreRoutes.Get("/projects/recently_added", middlewares.Protect, controllers.GetRecentlyAddedProjects)
 	exploreRoutes.Get("/projects/last_viewed", middlewares.Protect, controllers.GetLastViewedProjects)

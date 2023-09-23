@@ -57,7 +57,7 @@ func GetPopulatedBookMarks(bookmarkType string) func(c *fiber.Ctx) error {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 			}
 			bookmarks = postBookmarks
-		case "project": //! gives private projects too (also on user projects in explore), also have a same check on openings, both in explore and bookmarks
+		case "project":
 			var projectBookmarks []models.ProjectBookmark
 			if err := initializers.DB.
 				Preload("ProjectItems.Project").
@@ -65,6 +65,7 @@ func GetPopulatedBookMarks(bookmarkType string) func(c *fiber.Ctx) error {
 				Find(&projectBookmarks).Error; err != nil {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 			}
+			var filteredBookmarks []models.ProjectBookmark
 
 			for _, bookmark := range projectBookmarks {
 				var projectItems []models.ProjectBookmarkItem
@@ -74,9 +75,10 @@ func GetPopulatedBookMarks(bookmarkType string) func(c *fiber.Ctx) error {
 					}
 				}
 				bookmark.ProjectItems = projectItems
+				filteredBookmarks = append(filteredBookmarks, bookmark)
 			}
 
-			bookmarks = projectBookmarks
+			bookmarks = filteredBookmarks
 		case "opening":
 			var openingBookmarks []models.OpeningBookmark
 			if err := initializers.DB.

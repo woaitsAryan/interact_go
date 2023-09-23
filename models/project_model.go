@@ -29,7 +29,7 @@ type Project struct {
 	TRatio        int                   `json:"-"`
 	Views         int                   `json:"views"`
 	Links         pq.StringArray        `gorm:"type:text[]" json:"links"`
-	PrivateLinks  pq.StringArray        `gorm:"type:text[]" json:"privateLinks"`
+	PrivateLinks  pq.StringArray        `gorm:"type:text[]" json:"-"`
 	Comments      []Comment             `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"comments"`
 	Openings      []Opening             `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"openings"`
 	Chats         []GroupChat           `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"chats"`

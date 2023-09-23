@@ -126,7 +126,7 @@ func GetFollowers(c *fiber.Ctx) error {
 	searchDB := API.Search(c, 0)(paginatedDB)
 
 	var followers []models.FollowFollower
-	if err := searchDB.Preload("Follower").Select("follower_id").Where("followed_id = ?", userID).Find(&followers).Error; err != nil {
+	if err := searchDB.Preload("Follower").Where("followed_id = ?", userID).Find(&followers).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
