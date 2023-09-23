@@ -290,7 +290,7 @@ func AddProjectChatMembers(c *fiber.Ctx) error {
 		}
 
 		var projectMembership models.Membership
-		err = initializers.DB.First(&projectMembership, "project_id = ? AND user_id = ? AND status=0", chat.ProjectID, parsedUserID).Error
+		err = initializers.DB.First(&projectMembership, "project_id = ? AND user_id = ?", chat.ProjectID, parsedUserID).Error
 		if err != nil {
 			continue
 		}
