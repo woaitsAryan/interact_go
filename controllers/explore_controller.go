@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"strings"
-	"time"
 
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
@@ -17,22 +16,21 @@ import (
 
 func GetTrendingSearches(c *fiber.Ctx) error {
 	var trendingSearches []string
-	timeWindow := time.Now().Add(-10 * 24 * time.Hour)
+	// timeWindow := time.Now().Add(-10 * 24 * time.Hour)
 
-	// Count the frequency of each normalized search query within the time window
 	var searchCounts []struct {
 		Query  string
 		Counts int
 	}
-	initializers.DB.Table("search_queries").
+	searchedDB := API.Search(c, 4)(initializers.DB)
+	searchedDB.Table("search_queries").
 		Select("LOWER(query) as query, COUNT(*) as counts"). // Ensure lowercase comparison
-		Where("timestamp > ?", timeWindow).
+		// Where("timestamp > ?", timeWindow).
 		Group("LOWER(query)"). // Ensure grouping with lowercase
 		Order("counts DESC").
-		Limit(10). // You can adjust the number of trending searches you want to display
+		Limit(15).
 		Scan(&searchCounts)
 
-	// Extract the search queries from the results
 	for _, searchCount := range searchCounts {
 		trendingSearches = append(trendingSearches, searchCount.Query)
 	}
@@ -82,20 +80,32 @@ func GetTrendingPosts(c *fiber.Ctx) error {
 }
 
 func GetTrendingOpenings(c *fiber.Ctx) error {
+	//TODO add openings of the matched project name
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
+
 	paginatedDB := API.Paginator(c)(initializers.DB)
 	var openings []models.Opening
 
 	searchedDB := API.Search(c, 3)(paginatedDB)
 
 	if err := searchedDB.Preload("Project").
-		Joins("JOIN projects ON openings.project_id = projects.id AND projects.is_private = ?", false).
-		Order("created_at DESC").Find(&openings).Error; err != nil {
+		Order("no_of_applications DESC").
+		Where("active=true").
+		Find(&openings).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	var filteredOpenings []models.Opening
+	for _, opening := range openings {
+		if opening.Project.UserID != parsedLoggedInUserID && !opening.Project.IsPrivate {
+			filteredOpenings = append(filteredOpenings, opening)
+		}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":   "success",
-		"openings": openings,
+		"openings": filteredOpenings,
 	})
 }
 
@@ -107,14 +117,14 @@ func GetRecommendedOpenings(c *fiber.Ctx) error {
 	var openings []models.Opening
 
 	if err := paginatedDB.Preload("Project").
-		Joins("JOIN projects ON openings.project_id = projects.id AND projects.is_private = ?", false).
+		Where("active=true").
 		Order("created_at DESC").Find(&openings).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	var filteredOpenings []models.Opening
 	for _, opening := range openings {
-		if opening.Project.UserID != parsedLoggedInUserID {
+		if opening.Project.UserID != parsedLoggedInUserID && !opening.Project.IsPrivate {
 			filteredOpenings = append(filteredOpenings, opening)
 		}
 	}
@@ -140,7 +150,11 @@ func GetProjectOpenings(c *fiber.Ctx) error {
 	}
 
 	var openings []models.Opening
-	if err := initializers.DB.Preload("Project").Where("project_id = ?", project.ID).Order("created_at DESC").Find(&openings).Error; err != nil {
+	if err := initializers.DB.
+		Preload("Project").
+		Where("project_id = ? AND active=true", project.ID).
+		Order("created_at DESC").
+		Find(&openings).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 	return c.Status(200).JSON(fiber.Map{
