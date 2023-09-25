@@ -14,6 +14,7 @@ services:
       - .env
     volumes:
       - pics:/app/public/
+      - logs:/app/log/
 
   postgres:
     image: postgres

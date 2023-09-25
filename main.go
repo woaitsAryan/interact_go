@@ -29,6 +29,7 @@ func main() {
 	app.Use(logger.New())
 	app.Use(config.CORS())
 	app.Use(config.RATE_LIMITER())
+	// app.Use(config.API_CHECKER)
 
 	app.Static("/", "./public")
 

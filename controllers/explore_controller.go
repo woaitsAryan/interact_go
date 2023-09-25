@@ -57,6 +57,8 @@ func AddSearchQuery(c *fiber.Ctx) error {
 }
 
 func GetTrendingPosts(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
 	paginatedDB := API.Paginator(c)(initializers.DB)
 	var posts []models.Post
 
@@ -66,6 +68,7 @@ func GetTrendingPosts(c *fiber.Ctx) error {
 		Preload("User").
 		Preload("RePost").
 		Preload("RePost.User").
+		Where("user_id <> ?", loggedInUserID).
 		Joins("JOIN users ON posts.user_id = users.id AND users.active = ?", true).
 		Select("*, posts.id, posts.created_at, (2 * no_likes + no_comments + 5 * no_shares) AS weighted_average").
 		Order("weighted_average DESC").
@@ -281,6 +284,7 @@ func GetTrendingUsers(c *fiber.Ctx) error {
 	if err := searchedDB.
 		Where("active=?", true).
 		Where("organization_status=?", false).
+		Where("username != email").
 		Omit("phone_no").
 		Omit("email").
 		Select("*, (2 * no_followers - no_following) AS weighted_average").
@@ -302,9 +306,12 @@ func GetRecommendedUsers(c *fiber.Ctx) error {
 
 	var users []models.User
 	if err := searchedDB.Where("active=?", true).
+		Where("organization_status=?", false).
+		Where("username != email").
 		Omit("phone_no").
 		Omit("email").
-		Order("no_followers DESC").
+		Select("*, (2 * no_followers - no_following) AS weighted_average").
+		Order("weighted_average DESC").
 		Where("id <> ? AND organization_status = ?", loggedInUserID, false).
 		Find(&users).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}

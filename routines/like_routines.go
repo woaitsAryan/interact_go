@@ -28,7 +28,7 @@ func IncrementPostLikesAndSendNotification(postID uuid.UUID, loggedInUserID uuid
 	if loggedInUserID != post.UserID {
 
 		notification := models.Notification{
-			NotificationType: 3,
+			NotificationType: 1,
 			UserID:           post.UserID,
 			SenderID:         loggedInUserID,
 			PostID:           &post.ID,
@@ -78,7 +78,7 @@ func IncrementProjectLikesAndSendNotification(projectID uuid.UUID, loggedInUserI
 	if loggedInUserID != project.UserID {
 
 		notification := models.Notification{
-			NotificationType: 1,
+			NotificationType: 3,
 			UserID:           project.UserID,
 			SenderID:         loggedInUserID,
 			ProjectID:        &project.ID,

@@ -22,6 +22,7 @@ type Config struct {
 	ENV                  Environment `mapstructure:"ENV"`
 	FRONTEND_URL         string      `mapstructure:"FRONTEND_URL"`
 	BACKEND_URL          string      `mapstructure:"BACKEND_URL"`
+	API_TOKEN            string      `mapstructure:"API_TOKEN"`
 	SENDGRID_KEY         string      `mapstructure:"SENDGRID_KEY"`
 	GOOGLE_CLIENT_ID     string      `mapstructure:"GOOGLE_CLIENT_ID"`
 	GOOGLE_CLIENT_SECRET string      `mapstructure:"GOOGLE_CLIENT_SECRET"`

@@ -14,3 +14,11 @@ func CORS() fiber.Handler {
 		AllowCredentials: true,
 	})
 }
+
+func API_CHECKER(c *fiber.Ctx) error {
+	REQ_TOKEN := c.Get("Authentication")
+	if REQ_TOKEN != initializers.CONFIG.API_TOKEN {
+		return &fiber.Error{Code: 403, Message: "Cannot access the API"}
+	}
+	return c.Next()
+}
