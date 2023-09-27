@@ -88,17 +88,17 @@ func SignUp(c *fiber.Ctx) error {
 
 	c.Set("loggedInUserID", newUser.ID.String())
 
-	picName, err := utils.SaveFile(c, "profilePic", "user/profilePics", true, 500, 500)
+	picName, err := utils.SaveFile(c, "profilePic", "user/profilePics", false, 500, 500)
 	if err != nil {
-		return err
-	}
+		initializers.Logger.Warnw("Error in Saving Profile Pic on Sign Up", "Err", err)
+	} else {
+		if picName != "" {
+			newUser.ProfilePic = picName
 
-	if picName != "" {
-		newUser.ProfilePic = picName
-
-		result = initializers.DB.Save(&newUser)
-		if result.Error != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			result = initializers.DB.Save(&newUser)
+			if result.Error != nil {
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			}
 		}
 	}
 
@@ -147,17 +147,17 @@ func OAuthSignUp(c *fiber.Ctx) error {
 
 	c.Set("loggedInUserID", user.ID.String())
 
-	picName, err := utils.SaveFile(c, "profilePic", "user/profilePics", true, 500, 500)
+	picName, err := utils.SaveFile(c, "profilePic", "user/profilePics", false, 500, 500)
 	if err != nil {
-		return err
-	}
+		initializers.Logger.Warnw("Error in Saving Profile Pic on Sign Up", "Err", err)
+	} else {
+		if picName != "" {
+			user.ProfilePic = picName
 
-	if picName != "" {
-		user.ProfilePic = picName
-
-		result = initializers.DB.Save(&user)
-		if result.Error != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			result = initializers.DB.Save(&user)
+			if result.Error != nil {
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			}
 		}
 	}
 
