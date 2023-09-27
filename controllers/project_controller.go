@@ -284,13 +284,6 @@ func UpdateProject(c *fiber.Ctx) error {
 	}
 	reqBody.CoverPic = picName
 
-	if reqBody.CoverPic != "" {
-		err := utils.DeleteFile("project/coverPics", project.CoverPic)
-		if err != nil {
-			log.Printf("Error while deleting project cover pic: %e", err)
-		}
-	}
-
 	projectValue := reflect.ValueOf(&project).Elem()
 	reqBodyValue := reflect.ValueOf(reqBody)
 
@@ -314,8 +307,17 @@ func UpdateProject(c *fiber.Ctx) error {
 		project.IsPrivate = false
 	}
 
+	oldProjectPic := project.CoverPic
+
 	if err := initializers.DB.Save(&project).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	if reqBody.CoverPic != "" {
+		err := utils.DeleteFile("project/coverPics", oldProjectPic)
+		if err != nil {
+			initializers.Logger.Warnw("Error while deleting project cover pic", "Error", err)
+		}
 	}
 
 	return c.Status(200).JSON(fiber.Map{

@@ -5,6 +5,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/Pratham-Mishra04/interact/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -72,10 +73,19 @@ func AddGroupChat(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Error Parsing the Loggedin User ID."}
 	}
 
+	picName, err := utils.SaveFile(c, "coverPic", "chat", true, 720, 720)
+	if err != nil {
+		return err
+	}
+
 	chat := models.GroupChat{
 		UserID:      parsedLoggedInUserID,
 		Title:       reqBody.Title,
 		Description: reqBody.Description,
+	}
+
+	if picName != "" {
+		chat.CoverPic = picName
 	}
 
 	result := initializers.DB.Create(&chat)
@@ -147,11 +157,20 @@ func AddProjectChat(c *fiber.Ctx) error { //! check for project membership
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
+	picName, err := utils.SaveFile(c, "coverPic", "chat", true, 720, 720)
+	if err != nil {
+		return err
+	}
+
 	groupChat := models.GroupChat{
 		UserID:      parsedLoggedInUserID,
 		Title:       reqBody.Title,
 		Description: reqBody.Description,
 		ProjectID:   &project.ID,
+	}
+
+	if picName != "" {
+		groupChat.CoverPic = picName
 	}
 
 	result := initializers.DB.Create(&groupChat)
@@ -373,9 +392,27 @@ func EditGroupChat(c *fiber.Ctx) error {
 		groupChat.Description = reqBody.Description
 	}
 
+	picName, err := utils.SaveFile(c, "coverPic", "chat", true, 720, 720)
+	if err != nil {
+		return err
+	}
+
+	oldGroupPic := groupChat.CoverPic
+
+	if picName != "" {
+		groupChat.CoverPic = picName
+	}
+
 	result := initializers.DB.Save(&groupChat)
 	if result.Error != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+	}
+
+	if picName != "" {
+		err := utils.DeleteFile("chat", oldGroupPic)
+		if err != nil {
+			initializers.Logger.Warnw("Error while deleting group cover pic", "Error", err)
+		}
 	}
 
 	return c.Status(200).JSON(fiber.Map{

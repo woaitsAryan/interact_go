@@ -130,7 +130,7 @@ func AddGroupChatMessage(c *fiber.Ctx) error {
 	chatID := reqBody.ChatID
 
 	var membership models.GroupChatMembership
-	if err := initializers.DB.Preload("User").Preload("GroupChat").Where("chat_id=? AND user_id = ?", chatID, loggedInUserID).First(&membership).Error; err != nil {
+	if err := initializers.DB.Preload("User").Preload("GroupChat").Where("group_chat_id=? AND user_id = ?", chatID, loggedInUserID).First(&membership).Error; err != nil {
 		return &fiber.Error{Code: 403, Message: "Do not have the permission to perform this action."}
 	}
 

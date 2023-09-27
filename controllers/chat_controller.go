@@ -98,6 +98,7 @@ func GetGroupChats(c *fiber.Ctx) error {
 
 	var groupChats []models.GroupChat
 	if err := initializers.DB.
+		Preload("User").
 		Preload("LatestMessage").
 		Preload("LatestMessage.User").
 		Preload("Memberships").
@@ -120,6 +121,7 @@ func GetProjectChats(c *fiber.Ctx) error {
 
 	var groupChats []models.GroupChat
 	if err := initializers.DB.
+		Preload("User").
 		Preload("Project").
 		Preload("LatestMessage").
 		Preload("LatestMessage.User").
