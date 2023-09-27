@@ -82,6 +82,29 @@ func GetTrendingPosts(c *fiber.Ctx) error {
 	})
 }
 
+func GetLatestPosts(c *fiber.Ctx) error {
+	paginatedDB := API.Paginator(c)(initializers.DB)
+	var posts []models.Post
+
+	searchedDB := API.Search(c, 2)(paginatedDB)
+
+	if err := searchedDB.
+		Preload("User").
+		Preload("RePost").
+		Preload("RePost.User").
+		Joins("JOIN users ON posts.user_id = users.id AND users.active = ?", true).
+		Select("*, posts.id, posts.created_at").
+		Order("posts.created_at DESC").
+		Find(&posts).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status": "success",
+		"posts":  posts,
+	})
+}
+
 func GetTrendingOpenings(c *fiber.Ctx) error {
 	//TODO add openings of the matched project name
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
@@ -287,7 +310,7 @@ func GetTrendingUsers(c *fiber.Ctx) error {
 		Where("username != email").
 		Omit("phone_no").
 		Omit("email").
-		Select("*, (2 * no_followers - no_following) AS weighted_average").
+		Select("*, (3 * no_followers - no_following) AS weighted_average").
 		Order("weighted_average DESC").
 		Find(&users).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
@@ -307,6 +330,7 @@ func GetRecommendedUsers(c *fiber.Ctx) error {
 	var users []models.User
 	if err := searchedDB.Where("active=?", true).
 		Where("organization_status=?", false).
+		Where("verified=?", true).
 		Where("username != email").
 		Omit("phone_no").
 		Omit("email").

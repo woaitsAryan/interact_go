@@ -12,7 +12,8 @@ func ExploreRouter(app *fiber.App) {
 	exploreRoutes.Get("/trending_searches", controllers.GetTrendingSearches)
 	exploreRoutes.Post("/search", controllers.AddSearchQuery)
 
-	exploreRoutes.Get("/posts", middlewares.PartialProtect, controllers.GetTrendingPosts)
+	exploreRoutes.Get("/posts/trending", middlewares.PartialProtect, controllers.GetTrendingPosts)
+	exploreRoutes.Get("/posts/latest", controllers.GetLatestPosts)
 
 	exploreRoutes.Get("/openings/recommended", middlewares.PartialProtect, controllers.GetRecommendedOpenings)
 	exploreRoutes.Get("/openings/trending", controllers.GetTrendingOpenings)

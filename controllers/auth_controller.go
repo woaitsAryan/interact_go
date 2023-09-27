@@ -11,6 +11,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/schemas"
+	"github.com/Pratham-Mishra04/interact/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
@@ -85,6 +86,22 @@ func SignUp(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
 
+	c.Set("loggedInUserID", newUser.ID.String())
+
+	picName, err := utils.SaveFile(c, "profilePic", "user/profilePics", true, 500, 500)
+	if err != nil {
+		return err
+	}
+
+	if picName != "" {
+		newUser.ProfilePic = picName
+
+		result = initializers.DB.Save(&newUser)
+		if result.Error != nil {
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		}
+	}
+
 	go routines.SendWelcomeNotification(newUser.ID)
 
 	return CreateSendToken(c, newUser, 201, "Account Created")
@@ -126,6 +143,22 @@ func OAuthSignUp(c *fiber.Ctx) error {
 	result = initializers.DB.Save(&oauth)
 	if result.Error != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+	}
+
+	c.Set("loggedInUserID", user.ID.String())
+
+	picName, err := utils.SaveFile(c, "profilePic", "user/profilePics", true, 500, 500)
+	if err != nil {
+		return err
+	}
+
+	if picName != "" {
+		user.ProfilePic = picName
+
+		result = initializers.DB.Save(&user)
+		if result.Error != nil {
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		}
 	}
 
 	go routines.SendWelcomeNotification(user.ID)

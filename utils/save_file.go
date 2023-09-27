@@ -21,7 +21,10 @@ func SaveFile(c *fiber.Ctx, fieldName string, path string, resize bool, d1 int, 
 
 	filePath := "public/" + path + "/" + c.GetRespHeader("loggedInUserID") + "-" + file.Filename
 
-	c.SaveFile(file, filePath)
+	err = c.SaveFile(file, filePath)
+	if err != nil {
+		return "", err
+	}
 
 	if resize {
 		picName, err := ResizeImage(filePath, d1, d2)
