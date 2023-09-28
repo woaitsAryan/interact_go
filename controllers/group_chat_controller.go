@@ -372,6 +372,7 @@ func EditGroupChat(c *fiber.Ctx) error {
 	var reqBody struct {
 		Title       string `json:"title"`
 		Description string `json:"description"`
+		AdminOnly   bool   `json:"adminOnly"`
 	}
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
@@ -391,6 +392,7 @@ func EditGroupChat(c *fiber.Ctx) error {
 	if reqBody.Description != "" {
 		groupChat.Description = reqBody.Description
 	}
+	groupChat.AdminOnly = reqBody.AdminOnly
 
 	picName, err := utils.SaveFile(c, "coverPic", "chat", true, 720, 720)
 	if err != nil {

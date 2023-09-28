@@ -9,6 +9,8 @@ import (
 func ConnectionRouter(app *fiber.App) {
 	connectionRoutes := app.Group("/connection", middlewares.Protect)
 
+	connectionRoutes.Get("/following/me", controllers.GetMyFollowing)
+
 	connectionRoutes.Get("/follow/:userID", controllers.FollowUser)
 	connectionRoutes.Get("/unfollow/:userID", controllers.UnfollowUser)
 	connectionRoutes.Get("/remove_follow/:userID", controllers.RemoveFollow)

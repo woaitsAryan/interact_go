@@ -6,7 +6,6 @@ import (
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
-	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -54,7 +53,7 @@ func GetGroupChatMessages(c *fiber.Ctx) error {
 	chatID := c.Params("chatID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
-	paginatedDB := API.Paginator(c)(initializers.DB)
+	// paginatedDB := API.Paginator(c)(initializers.DB)
 
 	var membership models.GroupChatMembership
 	if err := initializers.DB.Where("group_chat_id=? AND user_id = ?", chatID, loggedInUserID).First(&membership).Error; err != nil {
@@ -62,7 +61,11 @@ func GetGroupChatMessages(c *fiber.Ctx) error {
 	}
 
 	var messages []models.GroupChatMessage
-	if err := paginatedDB.Preload("User").Where("chat_id = ? ", chatID).Order("created_at DESC").Find(&messages).Error; err != nil {
+	if err := initializers.DB.
+		Preload("User").
+		Where("chat_id = ? AND created_at > ?", chatID, membership.CreatedAt).
+		Order("created_at DESC").
+		Find(&messages).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 	return c.Status(200).JSON(fiber.Map{
@@ -124,8 +127,6 @@ func AddGroupChatMessage(c *fiber.Ctx) error {
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
 	}
-
-	//TODO add role checks
 
 	chatID := reqBody.ChatID
 

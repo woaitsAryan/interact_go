@@ -169,6 +169,30 @@ func GetFollowing(c *fiber.Ctx) error {
 	})
 }
 
+func GetMyFollowing(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	userID, err := uuid.Parse(loggedInUserID)
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid ID."}
+	}
+
+	var following []models.FollowFollower
+	if err := initializers.DB.Where("follower_id = ?", userID).Find(&following).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	var followingUserIDs []uuid.UUID
+	for _, followModel := range following {
+		followingUserIDs = append(followingUserIDs, followModel.FollowedID)
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "",
+		"userIDs": followingUserIDs,
+	})
+}
+
 func GetMutuals(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	userID := c.Params("userID")
