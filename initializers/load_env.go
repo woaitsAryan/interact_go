@@ -17,9 +17,16 @@ const (
 
 type Config struct {
 	PORT                 string      `mapstructure:"PORT"`
-	DB_URL               string      `mapstructure:"DB_URL"`
-	JWT_SECRET           string      `mapstructure:"JWT_SECRET"`
 	ENV                  Environment `mapstructure:"ENV"`
+	DB_URL               string      `mapstructure:"DB_URL"`
+	DB_HOST              string      `mapstructure:"DB_HOST"`
+	DB_PORT              string      `mapstructure:"DB_PORT"`
+	DB_NAME              string      `mapstructure:"DB_NAME"`
+	DB_USER              string      `mapstructure:"DB_USER"`
+	DB_PASSWORD          string      `mapstructure:"DB_PASSWORD"`
+	BACKUP_DIR           string      `mapstructure:"BACKUP_DIR"`
+	REDIS_PASSWORD       string      `mapstructure:"REDIS_PASSWORD"`
+	JWT_SECRET           string      `mapstructure:"JWT_SECRET"`
 	FRONTEND_URL         string      `mapstructure:"FRONTEND_URL"`
 	BACKEND_URL          string      `mapstructure:"BACKEND_URL"`
 	API_TOKEN            string      `mapstructure:"API_TOKEN"`
