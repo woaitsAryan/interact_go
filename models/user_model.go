@@ -27,6 +27,7 @@ type User struct { //! Add numProjects field to display on user explore card
 	Views                     int               `json:"views"`
 	NoFollowing               int               `gorm:"default:0" json:"noFollowing"`
 	NoFollowers               int               `gorm:"default:0" json:"noFollowers"`
+	TotalNoViews              int               `gorm:"default:0" json:"totalNoViews"`
 	PasswordChangedAt         time.Time         `gorm:"default:current_timestamp" json:"-"`
 	DeactivatedAt             time.Time         `gorm:"" json:"-"`
 	Admin                     bool              `gorm:"default:false" json:"-"`
@@ -34,7 +35,7 @@ type User struct { //! Add numProjects field to display on user explore card
 	OrganizationStatus        bool              `gorm:"default:false" json:"isOrganization"`
 	LastLoggedIn              time.Time         `gorm:"default:current_timestamp" json:"-"`
 	Active                    bool              `gorm:"default:true" json:"-"`
-	CreatedAt                 time.Time         `gorm:"default:current_timestamp" json:"-"`
+	CreatedAt                 time.Time         `gorm:"default:current_timestamp;index:idx_created_at,sort:desc" json:"-"`
 	OAuth                     OAuth             `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"-"`
 	Projects                  []Project         `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"projects"`
 	Posts                     []Post            `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"posts"`

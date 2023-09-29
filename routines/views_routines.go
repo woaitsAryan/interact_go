@@ -25,6 +25,12 @@ func UpdateProfileViews(user *models.User) {
 		profileView.Count++
 		initializers.DB.Save(&profileView)
 	}
+
+	user.TotalNoViews++
+	result := initializers.DB.Save(user)
+	if result.Error != nil {
+		helpers.LogDatabaseError("Error while updating User-UpdateProfileViews", result.Error, "go_routine")
+	}
 }
 
 func UpdateProjectViews(project *models.Project) { //TODO Creator and Member Check

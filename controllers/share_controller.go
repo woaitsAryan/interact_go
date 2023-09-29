@@ -75,7 +75,7 @@ func ShareItem(shareType string) func(c *fiber.Ctx) error {
 
 			result := initializers.DB.Create(&message)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 			}
 		}
 		return c.Status(200).JSON(fiber.Map{

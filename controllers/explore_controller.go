@@ -70,8 +70,8 @@ func GetTrendingPosts(c *fiber.Ctx) error {
 		Preload("RePost.User").
 		Where("user_id <> ?", loggedInUserID).
 		Joins("JOIN users ON posts.user_id = users.id AND users.active = ?", true).
-		Select("*, posts.id, posts.created_at, (2 * no_likes + no_comments + 5 * no_shares) AS weighted_average").
-		Order("weighted_average DESC").
+		Select("*, posts.id, posts.created_at, (2 * no_likes + no_comments + 5 * no_shares) / (1 + EXTRACT(EPOCH FROM age(NOW(), posts.created_at)) / 3600 / 24 / 7) AS weighted_average"). //! 7 days
+		Order("weighted_average DESC, posts.created_at ASC").
 		Find(&posts).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
@@ -110,10 +110,10 @@ func GetTrendingOpenings(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
-	paginatedDB := API.Paginator(c)(initializers.DB)
+	// paginatedDB := API.Paginator(c)(initializers.DB)
 	var openings []models.Opening
 
-	searchedDB := API.Search(c, 3)(paginatedDB)
+	searchedDB := API.Search(c, 3)(initializers.DB)
 
 	if err := searchedDB.Preload("Project").
 		Order("no_of_applications DESC").
@@ -190,10 +190,10 @@ func GetProjectOpenings(c *fiber.Ctx) error {
 }
 
 func GetTrendingProjects(c *fiber.Ctx) error {
-	paginatedDB := API.Paginator(c)(initializers.DB)
+	// paginatedDB := API.Paginator(c)(initializers.DB)
 	var projects []models.Project
 
-	searchedDB := API.Search(c, 1)(paginatedDB)
+	searchedDB := API.Search(c, 1)(initializers.DB)
 
 	if err := searchedDB.
 		Preload("User").
@@ -299,9 +299,9 @@ func GetLastViewedProjects(c *fiber.Ctx) error {
 }
 
 func GetTrendingUsers(c *fiber.Ctx) error {
-	paginatedDB := API.Paginator(c)(initializers.DB)
+	// paginatedDB := API.Paginator(c)(initializers.DB)
 
-	searchedDB := API.Search(c, 0)(paginatedDB)
+	searchedDB := API.Search(c, 0)(initializers.DB)
 
 	var users []models.User
 	if err := searchedDB.
@@ -310,8 +310,8 @@ func GetTrendingUsers(c *fiber.Ctx) error {
 		Where("username != email").
 		Omit("phone_no").
 		Omit("email").
-		Select("*, (3 * no_followers - no_following) AS weighted_average").
-		Order("weighted_average DESC").
+		Select("*, (0.6 * no_followers - 0.2 * no_following + 0.3 * total_no_views) AS weighted_average").
+		Order("weighted_average DESC, created_at ASC").
 		Find(&users).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
@@ -328,14 +328,15 @@ func GetRecommendedUsers(c *fiber.Ctx) error {
 	searchedDB := API.Search(c, 0)(paginatedDB)
 
 	var users []models.User
-	if err := searchedDB.Where("active=?", true).
+	if err := searchedDB.
+		Where("active=?", true).
 		Where("organization_status=?", false).
 		Where("verified=?", true).
 		Where("username != email").
 		Omit("phone_no").
 		Omit("email").
-		Select("*, (2 * no_followers - no_following) AS weighted_average").
-		Order("weighted_average DESC").
+		Select("*, (0.6 * no_followers - 0.4 * no_following + 0.3 * total_no_views) / (1 + EXTRACT(EPOCH FROM age(NOW(), created_at)) / 3600 / 24 / 21) AS weighted_average"). //! 21 days
+		Order("weighted_average DESC, created_at ASC").
 		Where("id <> ? AND organization_status = ?", loggedInUserID, false).
 		Find(&users).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
