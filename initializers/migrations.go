@@ -9,7 +9,7 @@ import (
 func AutoMigrate() {
 	fmt.Println("Starting Migrations...")
 	DB.AutoMigrate(
-		&models.User{},
+		// &models.User{},
 		// &models.Achievement{},
 		// &models.ProfileView{},
 		// &models.FollowFollower{},
@@ -22,7 +22,7 @@ func AutoMigrate() {
 		// &models.OpeningBookmarkItem{},
 		// &models.Message{},
 		// &models.GroupChatMessage{},
-		// &models.Chat{},
+		&models.Chat{},
 		// &models.GroupChat{},
 		// &models.GroupChatMembership{},
 		// &models.Post{},

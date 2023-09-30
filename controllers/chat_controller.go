@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"time"
+
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
@@ -56,6 +58,27 @@ func GetUserNonPopulatedChats(c *fiber.Ctx) error {
 	})
 }
 
+func GetPersonalUnFilteredChats(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	var chats []models.Chat
+	if err := initializers.DB.
+		Preload("CreatingUser").
+		Preload("AcceptingUser").
+		Preload("LatestMessage").
+		Preload("LatestMessage.User").
+		Where("creating_user_id=? OR accepting_user_id = ?", loggedInUserID, loggedInUserID).
+		Find(&chats).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "",
+		"chats":   chats,
+	})
+}
+
 func GetPersonalChats(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
@@ -75,10 +98,24 @@ func GetPersonalChats(c *fiber.Ctx) error {
 
 	for _, chat := range chats {
 		if chat.Accepted {
-			filteredChats = append(filteredChats, chat)
+			if chat.CreatingUserID.String() == loggedInUserID {
+				if chat.LatestMessage != nil {
+					if chat.LatestMessage.CreatedAt.After(chat.LastResetByCreatingUser) {
+						filteredChats = append(filteredChats, chat)
+					}
+				}
+			} else {
+				if chat.LatestMessage != nil {
+					if chat.LatestMessage.CreatedAt.After(chat.LastResetByAcceptingUser) {
+						filteredChats = append(filteredChats, chat)
+					}
+				}
+			}
 		} else {
 			if chat.CreatingUserID.String() == loggedInUserID {
-				filteredChats = append(filteredChats, chat)
+				if chat.LatestMessage != nil {
+					filteredChats = append(filteredChats, chat)
+				}
 			} else {
 				requests = append(requests, chat)
 			}
@@ -229,6 +266,126 @@ func AddChat(c *fiber.Ctx) error {
 		"status":  "success",
 		"message": "Chat Created",
 		"chat":    chat,
+	})
+}
+
+func BlockChat(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
+
+	var reqBody struct {
+		ChatID string `json:"chatID"`
+	}
+	if err := c.BodyParser(&reqBody); err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
+	}
+
+	chatID := reqBody.ChatID
+
+	parsedChatID, err := uuid.Parse(chatID)
+	if err != nil {
+		return &fiber.Error{Code: 500, Message: "Invalid Chat ID."}
+	}
+
+	var chat models.Chat
+	if err = initializers.DB.Where("id = ? AND (creating_user_id = ? OR accepting_user_id = ?)", parsedChatID, parsedLoggedInUserID, parsedLoggedInUserID).
+		First(&chat).Error; err != nil {
+		return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
+	}
+
+	if parsedLoggedInUserID == chat.AcceptingUserID {
+		chat.BlockedByAcceptingUser = true
+	} else if parsedLoggedInUserID == chat.CreatingUserID {
+		chat.BlockedByCreatingUser = true
+	}
+
+	if err := initializers.DB.Save(&chat).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Chat Blocked",
+	})
+}
+
+func UnblockChat(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
+
+	var reqBody struct {
+		ChatID string `json:"chatID"`
+	}
+	if err := c.BodyParser(&reqBody); err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
+	}
+
+	chatID := reqBody.ChatID
+
+	parsedChatID, err := uuid.Parse(chatID)
+	if err != nil {
+		return &fiber.Error{Code: 500, Message: "Invalid Chat ID."}
+	}
+
+	var chat models.Chat
+	if err = initializers.DB.Where("id = ? AND (creating_user_id = ? OR accepting_user_id = ?)", parsedChatID, parsedLoggedInUserID, parsedLoggedInUserID).
+		First(&chat).Error; err != nil {
+		return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
+	}
+
+	if parsedLoggedInUserID == chat.AcceptingUserID {
+		chat.BlockedByAcceptingUser = false
+	} else if parsedLoggedInUserID == chat.CreatingUserID {
+		chat.BlockedByCreatingUser = false
+	}
+
+	if err := initializers.DB.Save(&chat).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Chat Unblocked",
+	})
+}
+
+func ResetChat(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
+
+	var reqBody struct {
+		ChatID string `json:"chatID"`
+	}
+	if err := c.BodyParser(&reqBody); err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
+	}
+
+	chatID := reqBody.ChatID
+
+	parsedChatID, err := uuid.Parse(chatID)
+	if err != nil {
+		return &fiber.Error{Code: 500, Message: "Invalid Chat ID."}
+	}
+
+	var chat models.Chat
+	if err = initializers.DB.Where("id = ? AND (creating_user_id = ? OR accepting_user_id = ?)", parsedChatID, parsedLoggedInUserID, parsedLoggedInUserID).
+		First(&chat).Error; err != nil {
+		return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
+	}
+
+	if parsedLoggedInUserID == chat.AcceptingUserID {
+		chat.LastResetByAcceptingUser = time.Now()
+	} else if parsedLoggedInUserID == chat.CreatingUserID {
+		chat.LastResetByCreatingUser = time.Now()
+	}
+
+	if err := initializers.DB.Save(&chat).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Chat Reset",
 	})
 }
 

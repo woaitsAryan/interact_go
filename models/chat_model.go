@@ -13,9 +13,13 @@ type Chat struct {
 	AcceptingUserID                  uuid.UUID `gorm:"type:uuid;not null" json:"acceptedByID"`
 	AcceptingUser                    User      `gorm:"" json:"acceptedBy"`
 	CreatedAt                        time.Time `gorm:"default:current_timestamp" json:"createdAt"`
+	LastResetByCreatingUser          time.Time `gorm:"default:current_timestamp" json:"-"`
+	LastResetByAcceptingUser         time.Time `gorm:"default:current_timestamp" json:"-"`
+	BlockedByCreatingUser            bool      `gorm:"default:false" json:"blockedByCreatingUser"`
+	BlockedByAcceptingUser           bool      `gorm:"default:false" json:"blockedByAcceptingUser"`
 	Messages                         []Message `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE" json:"messages"`
 	LatestMessageID                  uuid.UUID `gorm:"type:uuid" json:"latestMessageID"`
-	LatestMessage                    *Message  `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE" json:"latestMessage"`
+	LatestMessage                    *Message  `gorm:"foreignKey:LatestMessageID;constraint:OnDelete:CASCADE" json:"latestMessage"`
 	Accepted                         bool      `gorm:"default:false" json:"accepted"`
 	LastReadMessageByCreatingUserID  uuid.UUID `gorm:"type:uuid" json:"lastReadMessageByCreatingUserID"`
 	LastReadMessageByAcceptingUserID uuid.UUID `gorm:"type:uuid" json:"lastReadMessageByAcceptingUserID"`
@@ -39,7 +43,7 @@ type GroupChat struct { //TODO store number of members in model to show in invit
 	Memberships     []GroupChatMembership `gorm:"constraint:OnDelete:CASCADE" json:"memberships"`
 	Messages        []GroupChatMessage    `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE" json:"messages"`
 	LatestMessageID uuid.UUID             `gorm:"type:uuid" json:"latestMessageID"`
-	LatestMessage   *GroupChatMessage     `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE" json:"latestMessage"`
+	LatestMessage   *GroupChatMessage     `gorm:"foreignKey:LatestMessageID;constraint:OnDelete:CASCADE" json:"latestMessage"`
 	Invitations     []Invitation          `gorm:"foreignKey:GroupChatID;constraint:OnDelete:CASCADE" json:"invitations"`
 }
 

@@ -40,7 +40,21 @@ func ShareItem(shareType string) func(c *fiber.Ctx) error {
 			if err != nil {
 				return &fiber.Error{Code: 400, Message: "Invalid ID."}
 			}
-			message.ChatID = parsedChatID
+
+			var chat models.Chat
+			if err := initializers.DB.Where("id=?", parsedChatID).First(&chat).Error; err != nil {
+				continue
+			}
+
+			if parsedUserID == chat.AcceptingUserID && chat.BlockedByCreatingUser {
+				continue
+			}
+
+			if parsedUserID == chat.CreatingUserID && chat.BlockedByAcceptingUser {
+				continue
+			}
+
+			message.ChatID = chat.ID
 
 			switch shareType {
 			case "post":

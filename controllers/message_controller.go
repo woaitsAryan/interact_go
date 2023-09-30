@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"time"
+
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
@@ -14,13 +16,26 @@ import (
 func GetMessages(c *fiber.Ctx) error {
 	chatID := c.Params("chatID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
+
+	var chat models.Chat
+	if err := initializers.DB.Where("id = ? AND (creating_user_id = ? OR accepting_user_id = ?)", chatID, parsedLoggedInUserID, parsedLoggedInUserID).
+		First(&chat).Error; err != nil {
+		return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
+	}
+
+	timestamp := time.Now()
+	if parsedLoggedInUserID == chat.AcceptingUserID {
+		timestamp = chat.LastResetByAcceptingUser
+	} else if parsedLoggedInUserID == chat.CreatingUserID {
+		timestamp = chat.LastResetByCreatingUser
+	}
 
 	// paginatedDB := API.Paginator(c)(initializers.DB)
 
 	var messages []models.Message
 	// if err := paginatedDB.
 	if err := initializers.DB.
-		Preload("Chat").
 		Preload("User").
 		Preload("Post").
 		Preload("Profile").
@@ -28,18 +43,14 @@ func GetMessages(c *fiber.Ctx) error {
 		Preload("Opening.Project").
 		Preload("Post.User").
 		Preload("Project").
-		Where("chat_id = ?", chatID).
+		Where("chat_id = ? AND created_at > ?", chatID, timestamp).
 		Order("created_at DESC").
 		Find(&messages).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	if len(messages) > 0 {
-		parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
-		if messages[0].Chat.AcceptingUserID != parsedLoggedInUserID && messages[0].Chat.CreatingUserID != parsedLoggedInUserID {
-			return &fiber.Error{Code: 403, Message: "Cannot perform this action."}
-		}
-		go routines.UpdateChatLastRead(messages[0].ChatID, parsedLoggedInUserID)
+		go routines.UpdateChatLastRead(chat.ID, parsedLoggedInUserID)
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -99,6 +110,14 @@ func AddMessage(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
 	}
 
+	if parsedUserID == chat.CreatingUserID && chat.BlockedByAcceptingUser {
+		return &fiber.Error{Code: 400, Message: "You have been blocked."}
+	}
+
+	if parsedUserID == chat.AcceptingUserID && chat.BlockedByCreatingUser {
+		return &fiber.Error{Code: 400, Message: "You have been blocked."}
+	}
+
 	message := models.Message{
 		UserID:  parsedUserID,
 		Content: reqBody.Content,
@@ -106,6 +125,13 @@ func AddMessage(c *fiber.Ctx) error {
 	}
 
 	result := initializers.DB.Create(&message)
+	if result.Error != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	chat.LatestMessageID = message.ID
+
+	result = initializers.DB.Save(&chat)
 	if result.Error != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}

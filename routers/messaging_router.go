@@ -15,6 +15,7 @@ func MessagingRouter(app *fiber.App) {
 	messagingRoutes.Get("/me", controllers.GetUserNonPopulatedChats)
 
 	messagingRoutes.Get("/personal", controllers.GetPersonalChats)
+	messagingRoutes.Get("/personal/unfiltered", controllers.GetPersonalUnFilteredChats)
 	messagingRoutes.Get("/group", controllers.GetGroupChats)
 	messagingRoutes.Get("/project", controllers.GetProjectChats)
 
@@ -26,6 +27,10 @@ func MessagingRouter(app *fiber.App) {
 	messagingRoutes.Post("/chat", controllers.AddChat)
 	messagingRoutes.Post("/group", controllers.AddGroupChat)
 	messagingRoutes.Post("/project/:projectID", middlewares.ProjectRoleAuthorization(models.ProjectEditor), controllers.AddProjectChat)
+
+	messagingRoutes.Post("/chat/block", controllers.BlockChat)
+	messagingRoutes.Post("/chat/unblock", controllers.UnblockChat)
+	messagingRoutes.Post("/chat/reset", controllers.ResetChat)
 
 	messagingRoutes.Post("/group/members/add/:chatID", middlewares.GroupChatAdminAuthorization(), controllers.AddGroupChatMembers)
 	messagingRoutes.Post("/group/members/remove/:chatID", middlewares.GroupChatAdminAuthorization(), controllers.RemoveGroupChatMember)
