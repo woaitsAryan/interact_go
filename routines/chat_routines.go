@@ -7,30 +7,41 @@ import (
 	"github.com/google/uuid"
 )
 
-func UpdateChatLastRead(chatID uuid.UUID, loggedInUserID uuid.UUID) {
+func UpdateChatLastRead(chatID uuid.UUID, messages []models.Message, loggedInUserID uuid.UUID) {
 	var chat models.Chat
-	if err := initializers.DB.Preload("Messages").First(&chat, "id=?", chatID).Error; err != nil {
+	if err := initializers.DB.Preload("LastReadMessageByCreatingUser").
+		Preload("LastReadMessageByAcceptingUser").
+		First(&chat, "id=?", chatID).Error; err != nil {
 		helpers.LogDatabaseError("Error while fetching Chat-UpdateChatLastRead", err, "go_routine")
 	}
 
 	if chat.AcceptingUserID == loggedInUserID {
-		for _, msg := range chat.Messages {
+		for _, msg := range messages {
 			if msg.UserID.String() == chat.CreatingUserID.String() {
-				chat.LastReadMessageByAcceptingUserID = msg.ID
+				if msg.CreatedAt.After(chat.LastReadMessageByAcceptingUser.CreatedAt) {
+					chat.LastReadMessageByAcceptingUserID = msg.ID
+
+					result := initializers.DB.Save(&chat)
+					if result.Error != nil {
+						helpers.LogDatabaseError("Error while updating Chat-UpdateChatLastRead", result.Error, "go_routine")
+					}
+				}
 				break
 			}
 		}
 	} else if chat.CreatingUserID == loggedInUserID {
-		for _, msg := range chat.Messages {
+		for _, msg := range messages {
 			if msg.UserID.String() == chat.AcceptingUserID.String() {
-				chat.LastReadMessageByCreatingUserID = msg.ID
+				if msg.CreatedAt.After(chat.LastReadMessageByCreatingUser.CreatedAt) {
+					chat.LastReadMessageByCreatingUserID = msg.ID
+
+					result := initializers.DB.Save(&chat)
+					if result.Error != nil {
+						helpers.LogDatabaseError("Error while updating Chat-UpdateChatLastRead", result.Error, "go_routine")
+					}
+				}
 				break
 			}
 		}
-	}
-
-	result := initializers.DB.Save(&chat)
-	if result.Error != nil {
-		helpers.LogDatabaseError("Error while updating Chat-UpdateChatLastRead", result.Error, "go_routine")
 	}
 }

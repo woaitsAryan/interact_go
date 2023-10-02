@@ -23,8 +23,8 @@ type Chat struct {
 	Accepted                         bool      `gorm:"default:false" json:"accepted"`
 	LastReadMessageByCreatingUserID  uuid.UUID `gorm:"type:uuid" json:"lastReadMessageByCreatingUserID"`
 	LastReadMessageByAcceptingUserID uuid.UUID `gorm:"type:uuid" json:"lastReadMessageByAcceptingUserID"`
-	LastReadMessageByCreatingUser    *Message  `gorm:"type:uuid" json:"lastReadMessageByCreatingUser"`
-	LastReadMessageByAcceptingUser   *Message  `gorm:"type:uuid" json:"lastReadMessageByAcceptingUser"`
+	LastReadMessageByCreatingUser    *Message  `gorm:"foreignKey:LastReadMessageByCreatingUserID;constraint:OnDelete:SET NULL" json:"lastReadMessageByCreatingUser"`
+	LastReadMessageByAcceptingUser   *Message  `gorm:"foreignKey:LastReadMessageByAcceptingUserID;constraint:OnDelete:SET NULL" json:"lastReadMessageByAcceptingUser"`
 }
 
 type GroupChat struct { //TODO store number of members in model to show in invitation

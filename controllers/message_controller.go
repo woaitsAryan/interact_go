@@ -50,7 +50,7 @@ func GetMessages(c *fiber.Ctx) error {
 	}
 
 	if len(messages) > 0 {
-		go routines.UpdateChatLastRead(chat.ID, parsedLoggedInUserID)
+		go routines.UpdateChatLastRead(chat.ID, messages, parsedLoggedInUserID)
 	}
 
 	return c.Status(200).JSON(fiber.Map{
