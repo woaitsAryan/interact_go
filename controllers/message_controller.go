@@ -7,7 +7,6 @@ import (
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
-	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -19,7 +18,8 @@ func GetMessages(c *fiber.Ctx) error {
 	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
 	var chat models.Chat
-	if err := initializers.DB.Where("id = ? AND (creating_user_id = ? OR accepting_user_id = ?)", chatID, parsedLoggedInUserID, parsedLoggedInUserID).
+	if err := initializers.DB.Preload("LastReadMessageByAcceptingUser").
+		Preload("LastReadMessageByCreatingUser").Where("id = ? AND (creating_user_id = ? OR accepting_user_id = ?)", chatID, parsedLoggedInUserID, parsedLoggedInUserID).
 		First(&chat).Error; err != nil {
 		return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
 	}
@@ -49,9 +49,9 @@ func GetMessages(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	if len(messages) > 0 {
-		go routines.UpdateChatLastRead(chat.ID, messages, parsedLoggedInUserID)
-	}
+	// if len(messages) > 0 {
+	// 	go routines.UpdateChatLastRead(chat.ID, messages, parsedLoggedInUserID)
+	// }
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":   "success",

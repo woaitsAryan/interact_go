@@ -28,6 +28,8 @@ func MessagingRouter(app *fiber.App) {
 	messagingRoutes.Post("/group", controllers.AddGroupChat)
 	messagingRoutes.Post("/project/:projectID", middlewares.ProjectRoleAuthorization(models.ProjectEditor), controllers.AddProjectChat)
 
+	messagingRoutes.Patch("/chat/last_read/:chatID", controllers.UpdateLastRead)
+
 	messagingRoutes.Post("/chat/block", controllers.BlockChat)
 	messagingRoutes.Post("/chat/unblock", controllers.UnblockChat)
 	messagingRoutes.Post("/chat/reset", controllers.ResetChat)

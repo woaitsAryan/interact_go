@@ -18,7 +18,7 @@ func UpdateChatLastRead(chatID uuid.UUID, messages []models.Message, loggedInUse
 	if chat.AcceptingUserID == loggedInUserID {
 		for _, msg := range messages {
 			if msg.UserID.String() == chat.CreatingUserID.String() {
-				if msg.CreatedAt.After(chat.LastReadMessageByAcceptingUser.CreatedAt) {
+				if chat.LastReadMessageByAcceptingUser == nil || msg.CreatedAt.After(chat.LastReadMessageByAcceptingUser.CreatedAt) {
 					chat.LastReadMessageByAcceptingUserID = msg.ID
 
 					result := initializers.DB.Save(&chat)
@@ -32,7 +32,7 @@ func UpdateChatLastRead(chatID uuid.UUID, messages []models.Message, loggedInUse
 	} else if chat.CreatingUserID == loggedInUserID {
 		for _, msg := range messages {
 			if msg.UserID.String() == chat.AcceptingUserID.String() {
-				if msg.CreatedAt.After(chat.LastReadMessageByCreatingUser.CreatedAt) {
+				if chat.LastReadMessageByCreatingUser == nil || msg.CreatedAt.After(chat.LastReadMessageByCreatingUser.CreatedAt) {
 					chat.LastReadMessageByCreatingUserID = msg.ID
 
 					result := initializers.DB.Save(&chat)
@@ -44,4 +44,5 @@ func UpdateChatLastRead(chatID uuid.UUID, messages []models.Message, loggedInUse
 			}
 		}
 	}
+
 }

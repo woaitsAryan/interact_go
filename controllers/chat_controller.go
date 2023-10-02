@@ -23,6 +23,8 @@ func GetChat(c *fiber.Ctx) error {
 		Preload("CreatingUser").
 		Preload("AcceptingUser").
 		Preload("LatestMessage").
+		Preload("LastReadMessageByAcceptingUser").
+		Preload("LastReadMessageByCreatingUser").
 		First(&chat, "id=? AND (creating_user_id = ? OR accepting_user_id = ?)", chatID, loggedInUserID, loggedInUserID).Error; err != nil {
 		return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
 	}
@@ -266,6 +268,44 @@ func AddChat(c *fiber.Ctx) error {
 		"status":  "success",
 		"message": "Chat Created",
 		"chat":    chat,
+	})
+}
+
+func UpdateLastRead(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
+	chatID := c.Params("chatID")
+
+	var chat models.Chat
+	if err := initializers.DB.Where("id = ? AND (creating_user_id = ? OR accepting_user_id = ?)", chatID, parsedLoggedInUserID, parsedLoggedInUserID).
+		First(&chat).Error; err != nil {
+		return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
+	}
+
+	var message models.Message
+
+	if chat.AcceptingUserID == parsedLoggedInUserID {
+		if err := initializers.DB.Where("chat_id=? AND user_id=?", chat.ID, chat.CreatingUserID).
+			Order("created_at DESC").
+			First(&message).Error; err == nil {
+			chat.LastReadMessageByAcceptingUserID = message.ID
+		}
+	} else if chat.CreatingUserID == parsedLoggedInUserID {
+		if err := initializers.DB.Where("chat_id=? AND user_id=?", chat.ID, chat.AcceptingUserID).
+			Order("created_at DESC").
+			First(&message).Error; err == nil {
+			chat.LastReadMessageByCreatingUserID = message.ID
+		}
+	}
+
+	result := initializers.DB.Save(&chat)
+	if result.Error != nil {
+		helpers.LogDatabaseError("Error while updating Chat-UpdateChatLastRead", result.Error, "go_routine")
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Last Read Updated",
 	})
 }
 
