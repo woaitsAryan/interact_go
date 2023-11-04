@@ -7,6 +7,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/Pratham-Mishra04/interact/utils"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -135,16 +136,44 @@ func GetTrendingOpenings(c *fiber.Ctx) error {
 	})
 }
 
+func GetRecommendedPosts(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	recommendations, err := utils.MLReq(loggedInUserID, config.POST_RECOMMENDATION)
+	if err != nil {
+		return err
+	}
+
+	var posts []models.Post
+
+	if err := initializers.DB.
+		Preload("User").
+		Where("id IN ?", recommendations).
+		Find(&posts).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status": "success",
+		"posts":  posts,
+	})
+}
+
 func GetRecommendedOpenings(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
-	paginatedDB := API.Paginator(c)(initializers.DB)
+	recommendations, err := utils.MLReq(loggedInUserID, config.OPENING_RECOMMENDATION)
+	if err != nil {
+		return err
+	}
+
 	var openings []models.Opening
 
-	if err := paginatedDB.Preload("Project").
-		Where("active=true").
-		Order("created_at DESC").Find(&openings).Error; err != nil {
+	if err := initializers.DB.
+		Preload("User").
+		Where("id IN ?", recommendations).
+		Find(&openings).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
@@ -190,26 +219,6 @@ func GetProjectOpenings(c *fiber.Ctx) error {
 }
 
 func GetTrendingProjects(c *fiber.Ctx) error {
-	// paginatedDB := API.Paginator(c)(initializers.DB)
-	var projects []models.Project
-
-	searchedDB := API.Search(c, 1)(initializers.DB)
-
-	if err := searchedDB.
-		Preload("User").
-		Select("*, (total_no_views + 3 * no_likes + 2 * no_comments + 5 * no_shares) AS weighted_average").
-		Order("weighted_average DESC").
-		Where("is_private = ?", false).
-		Find(&projects).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-	}
-	return c.Status(200).JSON(fiber.Map{
-		"status":   "success",
-		"projects": projects,
-	})
-}
-
-func GetRecommendedProjects(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	paginatedDB := API.Paginator(c)(initializers.DB)
@@ -225,6 +234,29 @@ func GetRecommendedProjects(c *fiber.Ctx) error {
 		Find(&projects).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
+	return c.Status(200).JSON(fiber.Map{
+		"status":   "success",
+		"projects": projects,
+	})
+}
+
+func GetRecommendedProjects(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	recommendations, err := utils.MLReq(loggedInUserID, config.PROJECT_RECOMMENDATION)
+	if err != nil {
+		return err
+	}
+
+	var projects []models.Project
+
+	if err := initializers.DB.
+		Preload("User").
+		Where("id IN ?", recommendations).
+		Find(&projects).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
 	return c.Status(200).JSON(fiber.Map{
 		"status":   "success",
 		"projects": projects,
@@ -272,7 +304,7 @@ func GetRecentlyAddedProjects(c *fiber.Ctx) error {
 func GetLastViewedProjects(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
-	var projectViewed []models.LastViewed
+	var projectViewed []models.LastViewedProjects
 
 	paginatedDB := API.Paginator(c)(initializers.DB)
 	if err := paginatedDB.
@@ -307,6 +339,7 @@ func GetTrendingUsers(c *fiber.Ctx) error {
 	if err := searchedDB.
 		Where("active=?", true).
 		Where("organization_status=?", false).
+		Where("verified=?", true).
 		Where("username != email").
 		Omit("phone_no").
 		Omit("email").
@@ -360,6 +393,8 @@ func GetSimilarUsers(c *fiber.Ctx) error {
 		Where("organization_status=?", false).
 		Where("id <> ?", username).
 		Where("tags && ?", pq.StringArray(user.Tags)).
+		Where("verified=?", true).
+		Where("username != email").
 		Omit("phone_no").
 		Omit("email").
 		Order("no_followers DESC").
@@ -377,19 +412,22 @@ func GetSimilarProjects(c *fiber.Ctx) error {
 	slug := c.Params("slug")
 
 	var project models.Project
-	initializers.DB.
-		First(&project, "slug = ?", slug)
+	initializers.DB.First(&project, "slug = ?", slug)
+
+	recommendations, err := utils.MLReq(project.ID.String(), config.PROJECT_SIMILAR)
+	if err != nil {
+		return err
+	}
 
 	var projects []models.Project
+
 	if err := initializers.DB.
-		Where("id <> ?", project.ID).
-		Where("category LIKE ?", "%"+project.Category+"%").
-		Where("tags && ?", pq.StringArray(project.Tags)).
-		Where("is_private=?", false).
-		Limit(10).
+		Preload("User").
+		Where("id IN ?", recommendations).
 		Find(&projects).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
+
 	return c.Status(200).JSON(fiber.Map{
 		"status":   "success",
 		"projects": projects,

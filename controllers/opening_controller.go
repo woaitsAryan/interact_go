@@ -5,6 +5,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/schemas"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -25,6 +26,13 @@ func GetOpening(c *fiber.Ctx) error {
 			return &fiber.Error{Code: 400, Message: "No Opening of this ID found."}
 		}
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	parsedLoggedInUserID, err := uuid.Parse(loggedInUserID)
+
+	if err == nil && parsedLoggedInUserID != opening.UserID && parsedLoggedInUserID != opening.Project.UserID {
+		go routines.UpdateLastViewedOpening(parsedLoggedInUserID, opening.ID)
 	}
 
 	return c.Status(200).JSON(fiber.Map{

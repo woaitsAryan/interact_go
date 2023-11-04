@@ -16,6 +16,7 @@ func MessagingRouter(app *fiber.App) {
 
 	messagingRoutes.Get("/personal", controllers.GetPersonalChats)
 	messagingRoutes.Get("/personal/unfiltered", controllers.GetPersonalUnFilteredChats)
+	messagingRoutes.Get("/personal/unread", controllers.GetUnreadChats)
 	messagingRoutes.Get("/group", controllers.GetGroupChats)
 	messagingRoutes.Get("/project", controllers.GetProjectChats)
 

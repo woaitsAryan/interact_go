@@ -9,7 +9,7 @@ import (
 
 func OpeningRouter(app *fiber.App) {
 
-	app.Get("/openings/:openingID", controllers.GetOpening)
+	app.Get("/openings/:openingID", middlewares.PartialProtect, controllers.GetOpening)
 
 	openingRoutes := app.Group("/openings", middlewares.Protect)
 	openingRoutes.Get("/project/:projectID", controllers.GetAllOpeningsOfProject)

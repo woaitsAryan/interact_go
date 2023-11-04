@@ -39,7 +39,7 @@ func GetProject(c *fiber.Ctx) error {
 	parsedLoggedInUserID, err := uuid.Parse(loggedInUserID)
 
 	if err == nil && parsedLoggedInUserID != project.UserID {
-		go routines.UpdateLastViewed(parsedLoggedInUserID, project.ID)
+		go routines.UpdateLastViewedProject(parsedLoggedInUserID, project.ID)
 	}
 
 	_, count, err := utils.GetProjectViews(project.ID)

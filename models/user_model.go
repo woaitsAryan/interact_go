@@ -9,47 +9,48 @@ import (
 )
 
 type User struct { //! Add numProjects field to display on user explore card
-	ID                        uuid.UUID         `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	Name                      string            `gorm:"type:text;not null" json:"name"`
-	Username                  string            `gorm:"type:text;unique;not null" json:"username"`
-	Email                     string            `gorm:"unique;not null" json:"-"`
-	Password                  string            `json:"-"`
-	ProfilePic                string            `gorm:"default:default.jpg" json:"profilePic"`
-	CoverPic                  string            `gorm:"default:default.jpg" json:"coverPic"`
-	PhoneNo                   string            `json:"-"`
-	Bio                       string            `json:"bio"`
-	Title                     string            `json:"title"`
-	Tagline                   string            `json:"tagline"`
-	Tags                      pq.StringArray    `gorm:"type:text[]" json:"tags"`
-	Links                     pq.StringArray    `gorm:"type:text[]" json:"links"`
-	PasswordResetToken        string            `json:"-"`
-	PasswordResetTokenExpires time.Time         `json:"-"`
-	Views                     int               `json:"views"`
-	NoFollowing               int               `gorm:"default:0" json:"noFollowing"`
-	NoFollowers               int               `gorm:"default:0" json:"noFollowers"`
-	TotalNoViews              int               `gorm:"default:0" json:"totalNoViews"`
-	PasswordChangedAt         time.Time         `gorm:"default:current_timestamp" json:"-"`
-	DeactivatedAt             time.Time         `gorm:"" json:"-"`
-	Admin                     bool              `gorm:"default:false" json:"-"`
-	Verified                  bool              `gorm:"default:false" json:"isVerified"`
-	OrganizationStatus        bool              `gorm:"default:false" json:"isOrganization"`
-	LastLoggedIn              time.Time         `gorm:"default:current_timestamp" json:"-"`
-	Active                    bool              `gorm:"default:true" json:"-"`
-	CreatedAt                 time.Time         `gorm:"default:current_timestamp;index:idx_created_at,sort:desc" json:"-"`
-	OAuth                     OAuth             `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"-"`
-	Projects                  []Project         `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"projects"`
-	Posts                     []Post            `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"posts"`
-	Memberships               []Membership      `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"memberships"`
-	Achievements              []Achievement     `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"achievements"`
-	Applications              []Application     `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"applications"`
-	PostBookmarks             []PostBookmark    `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"postBookmarks"`
-	ProjectBookmarks          []ProjectBookmark `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"projectBookmarks"`
-	Notifications             []Notification    `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"notifications"`
-	LastViewed                []LastViewed      `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"lastViewed"`
-	SendNotifications         []Notification    `gorm:"foreignKey:SenderID;constraint:OnDelete:CASCADE" json:"-"`
-	Followers                 []FollowFollower  `gorm:"foreignKey:FollowerID;constraint:OnDelete:CASCADE" json:"-"`
-	Following                 []FollowFollower  `gorm:"foreignKey:FollowedID;constraint:OnDelete:CASCADE" json:"-"`
-	Verification              UserVerification  `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"-"`
+	ID                        uuid.UUID            `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	Name                      string               `gorm:"type:text;not null" json:"name"`
+	Username                  string               `gorm:"type:text;unique;not null" json:"username"`
+	Email                     string               `gorm:"unique;not null" json:"-"`
+	Password                  string               `json:"-"`
+	ProfilePic                string               `gorm:"default:default.jpg" json:"profilePic"`
+	CoverPic                  string               `gorm:"default:default.jpg" json:"coverPic"`
+	PhoneNo                   string               `json:"-"`
+	Bio                       string               `json:"bio"`
+	Title                     string               `json:"title"`
+	Tagline                   string               `json:"tagline"`
+	Tags                      pq.StringArray       `gorm:"type:text[]" json:"tags"`
+	Links                     pq.StringArray       `gorm:"type:text[]" json:"links"`
+	PasswordResetToken        string               `json:"-"`
+	PasswordResetTokenExpires time.Time            `json:"-"`
+	Views                     int                  `json:"views"`
+	NoFollowing               int                  `gorm:"default:0" json:"noFollowing"`
+	NoFollowers               int                  `gorm:"default:0" json:"noFollowers"`
+	TotalNoViews              int                  `gorm:"default:0" json:"totalNoViews"`
+	PasswordChangedAt         time.Time            `gorm:"default:current_timestamp" json:"-"`
+	DeactivatedAt             time.Time            `gorm:"" json:"-"`
+	Admin                     bool                 `gorm:"default:false" json:"-"`
+	Verified                  bool                 `gorm:"default:false" json:"isVerified"`
+	OrganizationStatus        bool                 `gorm:"default:false" json:"isOrganization"`
+	LastLoggedIn              time.Time            `gorm:"default:current_timestamp" json:"-"`
+	Active                    bool                 `gorm:"default:true" json:"-"`
+	CreatedAt                 time.Time            `gorm:"default:current_timestamp;index:idx_created_at,sort:desc" json:"-"`
+	OAuth                     OAuth                `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"-"`
+	Projects                  []Project            `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"projects"`
+	Posts                     []Post               `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"posts"`
+	Memberships               []Membership         `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"memberships"`
+	Achievements              []Achievement        `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"achievements"`
+	Applications              []Application        `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"applications"`
+	PostBookmarks             []PostBookmark       `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"postBookmarks"`
+	ProjectBookmarks          []ProjectBookmark    `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"projectBookmarks"`
+	Notifications             []Notification       `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"notifications"`
+	LastViewedProjects        []LastViewedProjects `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"lastViewedProjects"`
+	LastViewedOpenings        []LastViewedOpenings `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"lastViewedOpenings"`
+	SendNotifications         []Notification       `gorm:"foreignKey:SenderID;constraint:OnDelete:CASCADE" json:"-"`
+	Followers                 []FollowFollower     `gorm:"foreignKey:FollowerID;constraint:OnDelete:CASCADE" json:"-"`
+	Following                 []FollowFollower     `gorm:"foreignKey:FollowedID;constraint:OnDelete:CASCADE" json:"-"`
+	Verification              UserVerification     `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"-"`
 }
 
 func (u *User) AfterFind(tx *gorm.DB) error {
@@ -110,12 +111,21 @@ type Achievement struct {
 	Skills pq.StringArray `gorm:"type:text[];not null" json:"skills"`
 }
 
-type LastViewed struct {
+type LastViewedProjects struct {
 	ID        uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	UserID    uuid.UUID `gorm:"type:uuid;not null" json:"userID"`
 	User      User      `json:"user"`
 	ProjectID uuid.UUID `gorm:"type:uuid;not null" json:"projectID"`
 	Project   Project   `json:"project"`
+	Timestamp time.Time `gorm:"default:current_timestamp" json:"timestamp"`
+}
+
+type LastViewedOpenings struct {
+	ID        uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	UserID    uuid.UUID `gorm:"type:uuid;not null" json:"userID"`
+	User      User      `json:"user"`
+	OpeningID uuid.UUID `gorm:"type:uuid;not null" json:"openingID"`
+	Opening   Opening   `json:"opening"`
 	Timestamp time.Time `gorm:"default:current_timestamp" json:"timestamp"`
 }
 

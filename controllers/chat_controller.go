@@ -18,7 +18,6 @@ func GetChat(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var chat models.Chat
-
 	if err := initializers.DB.
 		Preload("CreatingUser").
 		Preload("AcceptingUser").
@@ -192,6 +191,46 @@ func GetProjectChats(c *fiber.Ctx) error {
 		"message":  "",
 		"chats":    groupChats,
 		"projects": projects,
+	})
+}
+
+func GetUnreadChats(c *fiber.Ctx) error { //* Personal Only
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
+
+	var chats []models.Chat
+	if err := initializers.DB.
+		Where("creating_user_id=? OR accepting_user_id = ?", loggedInUserID, loggedInUserID).
+		Find(&chats).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	var message models.Message
+	var chatIDs []string
+	for _, chat := range chats {
+		if chat.AcceptingUserID == parsedLoggedInUserID {
+			if err := initializers.DB.Where("chat_id=? AND user_id=?", chat.ID, chat.CreatingUserID).
+				Order("created_at DESC").
+				First(&message).Error; err == nil {
+				if chat.LastReadMessageByAcceptingUserID != message.ID {
+					chatIDs = append(chatIDs, chat.ID.String())
+				}
+			}
+		} else if chat.CreatingUserID == parsedLoggedInUserID {
+			if err := initializers.DB.Where("chat_id=? AND user_id=?", chat.ID, chat.AcceptingUserID).
+				Order("created_at DESC").
+				First(&message).Error; err == nil {
+				if chat.LastReadMessageByCreatingUserID != message.ID {
+					chatIDs = append(chatIDs, chat.ID.String())
+				}
+			}
+		}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "",
+		"chatIDs": chatIDs,
 	})
 }
 
