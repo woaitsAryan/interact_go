@@ -35,7 +35,8 @@ type Project struct {
 	Chats         []GroupChat           `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"chats"`
 	Invitations   []Invitation          `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"invitations"`
 	Memberships   []Membership          `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"memberships"`
-	Notifications []Notification        `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"notifications"`
+	Tasks         []Task                `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"tasks"`
+	Notifications []Notification        `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"-"`
 	LastViews     []LastViewedProjects  `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"-"`
 	Messages      []Message             `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"-"`
 	BookMarkItems []ProjectBookmarkItem `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"-"`
@@ -49,4 +50,29 @@ type ProjectView struct {
 	ProjectID uuid.UUID `gorm:"type:uuid;not null" json:"projectID"`
 	Date      time.Time `json:"date"`
 	Count     int       `json:"count"`
+}
+
+type Task struct {
+	ID          uuid.UUID      `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	ProjectID   uuid.UUID      `gorm:"type:uuid;not null" json:"projectID"`
+	Project     Project        `gorm:"" json:"project"`
+	Deadline    time.Time      `gorm:"default:current_timestamp" json:"deadline"`
+	Title       string         `gorm:"type:text;not null" json:"title"`
+	Description string         `gorm:"type:text" json:"description"`
+	Tags        pq.StringArray `gorm:"type:text[]" json:"tags"`
+	Users       []User         `gorm:"many2many:task_assigned_users" json:"users"`
+	SubTasks    []SubTask      `gorm:"foreignKey:TaskID;constraint:OnDelete:CASCADE" json:"subTasks"`
+	IsCompleted bool           `gorm:"default:false" json:"isCompleted"`
+}
+
+type SubTask struct {
+	ID          uuid.UUID      `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	TaskID      uuid.UUID      `gorm:"type:uuid;not null" json:"taskID"`
+	Task        Task           `gorm:"" json:"task"`
+	Deadline    time.Time      `gorm:"default:current_timestamp" json:"deadline"`
+	Title       string         `gorm:"type:text;not null" json:"title"`
+	Description string         `gorm:"type:text" json:"description"`
+	Tags        pq.StringArray `gorm:"type:text[]" json:"tags"`
+	Users       []User         `gorm:"many2many:sub_task_assigned_users" json:"users"`
+	IsCompleted bool           `gorm:"default:false" json:"isCompleted"`
 }

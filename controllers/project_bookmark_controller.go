@@ -11,7 +11,6 @@ import (
 )
 
 func AddProjectBookmark(c *fiber.Ctx) error {
-
 	userID := c.GetRespHeader("loggedInUserID")
 	parsedUserID, _ := uuid.Parse(userID)
 

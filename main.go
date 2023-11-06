@@ -16,7 +16,7 @@ func init() {
 	initializers.AddLogger()
 	initializers.ConnectToCache()
 	config.InitializeOAuthGoogle()
-	// initializers.AutoMigrate()
+	initializers.AutoMigrate()
 }
 
 func main() {

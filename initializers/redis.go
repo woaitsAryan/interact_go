@@ -2,7 +2,7 @@ package initializers
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -23,6 +23,8 @@ func ConnectToCache() {
 	})
 
 	if err := RedisClient.Ping(ctx).Err(); err != nil {
-		log.Fatalf("Redis connection Error: %v", err.Error())
+		fmt.Printf("Redis connection Error: %v", err.Error())
 	}
+
+	fmt.Println("Connected to redis!")
 }

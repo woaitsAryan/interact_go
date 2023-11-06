@@ -8,7 +8,6 @@ import (
 )
 
 func ProjectRouter(app *fiber.App) {
-
 	projectRoutes := app.Group("/projects", middlewares.Protect)
 	projectRoutes.Post("/", controllers.AddProject)
 	projectRoutes.Get("/me", controllers.GetMyProjects)

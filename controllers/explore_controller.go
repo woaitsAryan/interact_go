@@ -142,11 +142,10 @@ func GetRecommendedPosts(c *fiber.Ctx) error {
 	recommendations, err := utils.MLReq(loggedInUserID, config.POST_RECOMMENDATION)
 	if err != nil {
 		helpers.LogServerError("Error Fetching from ML API", err, c.Path())
-		return err
-		// return c.Status(200).JSON(fiber.Map{
-		// 	"status": "success",
-		// 	"posts":  nil,
-		// })
+		return c.Status(200).JSON(fiber.Map{
+			"status": "success",
+			"posts":  nil,
+		})
 	}
 
 	var posts []models.Post
@@ -170,7 +169,11 @@ func GetRecommendedOpenings(c *fiber.Ctx) error {
 
 	recommendations, err := utils.MLReq(loggedInUserID, config.OPENING_RECOMMENDATION)
 	if err != nil {
-		return err
+		helpers.LogServerError("Error Fetching from ML API", err, c.Path())
+		return c.Status(200).JSON(fiber.Map{
+			"status":   "success",
+			"openings": nil,
+		})
 	}
 
 	var openings []models.Opening
@@ -250,7 +253,11 @@ func GetRecommendedProjects(c *fiber.Ctx) error {
 
 	recommendations, err := utils.MLReq(loggedInUserID, config.PROJECT_RECOMMENDATION)
 	if err != nil {
-		return err
+		helpers.LogServerError("Error Fetching from ML API", err, c.Path())
+		return c.Status(200).JSON(fiber.Map{
+			"status":   "success",
+			"projects": nil,
+		})
 	}
 
 	var projects []models.Project

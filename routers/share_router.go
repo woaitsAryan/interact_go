@@ -7,7 +7,6 @@ import (
 )
 
 func ShareRouter(app *fiber.App) {
-
 	shareRoutes := app.Group("/share", middlewares.Protect)
 	shareRoutes.Post("/post", controllers.ShareItem("post"))
 	shareRoutes.Post("/project", controllers.ShareItem("project"))

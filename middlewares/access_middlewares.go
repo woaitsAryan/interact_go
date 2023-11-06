@@ -73,6 +73,7 @@ func ProjectRoleAuthorization(Role models.ProjectRole) func(*fiber.Ctx) error {
 		applicationID := c.Params("applicationID")
 		chatID := c.Params("chatID")
 		membershipID := c.Params("membershipID")
+		taskID := c.Params("taskID")
 
 		var project models.Project
 		if slug != "" {
@@ -107,6 +108,17 @@ func ProjectRoleAuthorization(Role models.ProjectRole) func(*fiber.Ctx) error {
 				return &fiber.Error{Code: 400, Message: "Invalid Project."}
 			}
 			project = membership.Project
+		} else if taskID != "" {
+			var task models.Task
+			if err := initializers.DB.Preload("Project").Preload("Project.Memberships").First(&task, "id = ?", taskID).Error; err != nil {
+				var subTask models.SubTask
+				if err := initializers.DB.Preload("Task").Preload("Task.Project").Preload("Task.Project.Memberships").First(&subTask, "id = ?", taskID).Error; err != nil {
+					return &fiber.Error{Code: 400, Message: "Invalid Project."}
+				}
+				project = subTask.Task.Project
+			} else {
+				project = task.Project
+			}
 		}
 
 		if project.UserID.String() == loggedInUserID {
@@ -150,4 +162,41 @@ func GroupChatAdminAuthorization() func(*fiber.Ctx) error {
 
 		return c.Next()
 	}
+}
+
+func TaskUsersAuthorization(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	taskID := c.Params("taskID")
+
+	var project models.Project
+
+	var task models.Task
+	if err := initializers.DB.Preload("Users").Preload("Project").Preload("Project.Memberships").First(&task, "id = ?", taskID).Error; err != nil {
+		return &fiber.Error{Code: 400, Message: "No Task of this id found."}
+	}
+
+	project = task.Project
+
+	if project.UserID.String() == loggedInUserID {
+		return c.Next()
+	}
+
+	var check bool
+	for _, membership := range project.Memberships {
+		if membership.UserID.String() == loggedInUserID {
+			for _, user := range task.Users {
+				if user.ID == membership.UserID {
+					check = true
+					break
+				}
+			}
+			break
+		}
+	}
+
+	if !check {
+		return &fiber.Error{Code: 403, Message: "Cannot access this task"}
+	}
+
+	return c.Next()
 }
