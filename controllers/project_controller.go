@@ -4,6 +4,7 @@ import (
 	"log"
 	"reflect"
 
+	"github.com/Pratham-Mishra04/interact/cache"
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
@@ -19,6 +20,21 @@ import (
 
 func GetProject(c *fiber.Ctx) error {
 	slug := c.Params("slug")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
+
+	projectInCache, err := cache.GetProject(slug)
+	if err == nil {
+		go routines.UpdateProjectViews(projectInCache)
+		if parsedLoggedInUserID != projectInCache.UserID {
+			go routines.UpdateLastViewedProject(parsedLoggedInUserID, projectInCache.ID)
+		}
+		return c.Status(200).JSON(fiber.Map{
+			"status":  "success",
+			"message": "",
+			"project": projectInCache,
+		})
+	}
 
 	var project models.Project
 	if err := initializers.DB.Preload("User").Preload("Openings").Preload("Memberships").First(&project, "slug = ? AND is_private = ? ", slug, false).Error; err != nil {
@@ -35,10 +51,7 @@ func GetProject(c *fiber.Ctx) error {
 
 	go routines.UpdateProjectViews(&project)
 
-	loggedInUserID := c.GetRespHeader("loggedInUserID")
-	parsedLoggedInUserID, err := uuid.Parse(loggedInUserID)
-
-	if err == nil && parsedLoggedInUserID != project.UserID {
+	if parsedLoggedInUserID != project.UserID {
 		go routines.UpdateLastViewedProject(parsedLoggedInUserID, project.ID)
 	}
 
@@ -48,6 +61,8 @@ func GetProject(c *fiber.Ctx) error {
 	}
 	project.Views = count
 	project.Memberships = memberships
+
+	cache.SetProject(project.Slug, &project)
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",

@@ -141,7 +141,12 @@ func GetRecommendedPosts(c *fiber.Ctx) error {
 
 	recommendations, err := utils.MLReq(loggedInUserID, config.POST_RECOMMENDATION)
 	if err != nil {
+		helpers.LogServerError("Error Fetching from ML API", err, c.Path())
 		return err
+		// return c.Status(200).JSON(fiber.Map{
+		// 	"status": "success",
+		// 	"posts":  nil,
+		// })
 	}
 
 	var posts []models.Post

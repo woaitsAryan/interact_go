@@ -1,36 +1,32 @@
 package cache
 
 import (
-	"context"
 	"encoding/json"
+	"fmt"
 
-	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
-	"github.com/gofiber/fiber/v2"
 )
 
-var ctx = context.TODO()
-
-func GetPost(key string) (*models.Post, error) {
-	data, err := initializers.RedisClient.Get(ctx, key).Result()
+func GetPost(id string) (*models.Post, error) {
+	data, err := GetFromCache("post-" + id)
 	if err != nil {
-		return nil, &fiber.Error{Code: 500, Message: "Error while getting post in cache."}
+		return nil, err
 	}
 
 	post := models.Post{}
-	err = json.Unmarshal([]byte(data), &post)
-	if err != nil {
-		return nil, &fiber.Error{Code: 500, Message: "Error while unMarshalling post."}
+	if err = json.Unmarshal([]byte(data), &post); err != nil {
+		return nil, fmt.Errorf("error while unmarshaling post: %w", err)
 	}
 	return &post, nil
 }
 
-func SetPost(key string, post *models.Post) error {
+func SetPost(id string, post *models.Post) error {
 	data, err := json.Marshal(post)
 	if err != nil {
-		return &fiber.Error{Code: 500, Message: "Error while setting post in cache."}
+		return fmt.Errorf("error while marshaling post: %w", err)
 	}
-
-	initializers.RedisClient.Set(ctx, key, data, initializers.CacheExpirationTime)
+	if err := SetToCache("post-"+id, data); err != nil {
+		return err
+	}
 	return nil
 }
