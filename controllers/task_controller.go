@@ -93,7 +93,7 @@ func AddTask(taskType string) func(c *fiber.Ctx) error {
 			}
 
 			for _, userID := range reqBody.Users {
-				if GetUserIndex(userID, projectMembers) != -1 {
+				if GetUserIndex(userID, projectMembers) != -1 || project.UserID.String() == userID {
 					var user models.User
 					if err := initializers.DB.First(&user, "id = ?", userID).Error; err == nil {
 						users = append(users, user)
@@ -321,6 +321,11 @@ func DeleteTask(taskType string) func(c *fiber.Ctx) error {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 			}
 
+			// Delete all users from the task_assigned_users table
+			if err := initializers.DB.Model(&task).Association("Users").Clear(); err != nil {
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			}
+
 			result := initializers.DB.Delete(&task)
 			if result.Error != nil {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
@@ -333,6 +338,11 @@ func DeleteTask(taskType string) func(c *fiber.Ctx) error {
 				if err == gorm.ErrRecordNotFound {
 					return &fiber.Error{Code: 400, Message: "No Sub Task of this ID found."}
 				}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			}
+
+			// Delete all users from the subtask_assigned_users table
+			if err := initializers.DB.Model(&task).Association("Users").Clear(); err != nil {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 			}
 

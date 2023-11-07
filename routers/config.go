@@ -25,6 +25,7 @@ func Config(app *fiber.App) {
 	WorkspaceRouter(app)
 	MembershipRouter(app)
 	ShareRouter(app)
+	TaskRouter(app)
 
 	VerificationRouter(app)
 

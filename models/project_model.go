@@ -36,6 +36,7 @@ type Project struct {
 	Invitations   []Invitation          `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"invitations"`
 	Memberships   []Membership          `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"memberships"`
 	Tasks         []Task                `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"tasks"`
+	History       []ProjectHistory      `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"history"`
 	Notifications []Notification        `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"-"`
 	LastViews     []LastViewedProjects  `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"-"`
 	Messages      []Message             `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"-"`
@@ -50,6 +51,40 @@ type ProjectView struct {
 	ProjectID uuid.UUID `gorm:"type:uuid;not null" json:"projectID"`
 	Date      time.Time `json:"date"`
 	Count     int       `json:"count"`
+}
+
+/*
+history type:
+*-1 - User created this project
+*0 - User invited user
+*1 - User joined this project
+*2 - User edited project details
+*3 - User created an opening
+*4 - User edited opening details
+*5 - User accepted an application
+*6 - User created a new group chat
+*7 - User created a new task
+*8 - User left the project
+*9 - User removed user from the project
+*10 -
+*11 -
+*/
+
+type ProjectHistory struct {
+	ID            uuid.UUID   `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	ProjectID     uuid.UUID   `gorm:"type:uuid;not null" json:"projectID"`
+	HistoryType   int         `json:"historyType"`
+	SenderID      uuid.UUID   `gorm:"type:uuid;not null" json:"senderID"`
+	Sender        User        `json:"sender"`
+	UserID        *uuid.UUID  `gorm:"type:uuid" json:"userID"`
+	User          User        `json:"user"`
+	OpeningID     *uuid.UUID  `gorm:"type:uuid" json:"openingID"`
+	Opening       Opening     `json:"opening"`
+	ApplicationID *uuid.UUID  `gorm:"type:uuid" json:"applicationID"`
+	Application   Application `json:"application"`
+	TaskID        *uuid.UUID  `gorm:"type:uuid" json:"taskID"`
+	Task          Task        `json:"task"`
+	CreatedAt     time.Time   `gorm:"default:current_timestamp" json:"createdAt"`
 }
 
 type Task struct {
