@@ -2,8 +2,6 @@ package controllers
 
 import (
 	"errors"
-	"log"
-	"reflect"
 	"time"
 
 	"github.com/Pratham-Mishra04/interact/config"
@@ -158,49 +156,78 @@ func UpdateMe(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid Request Body."}
 	}
 
+	// if err := helpers.Validate[schemas.UserUpdateSchema](reqBody); err != nil {
+	// 	return &fiber.Error{Code: 400, Message: err.Error()}
+	// }
+
+	oldProfilePic := user.ProfilePic
+	oldCoverPic := user.CoverPic
+
 	picName, err := utils.SaveFile(c, "profilePic", "user/profilePics", true, 500, 500)
 	if err != nil {
 		return err
 	}
-	reqBody.ProfilePic = picName
+	reqBody.ProfilePic = &picName
 
 	coverName, err := utils.SaveFile(c, "coverPic", "user/coverPics", true, 900, 400)
 	if err != nil {
 		return err
 	}
-	reqBody.CoverPic = coverName
+	reqBody.CoverPic = &coverName
 
-	//TODO  make a routine for this
-	if reqBody.ProfilePic != "" {
-		err := utils.DeleteFile("user/profilePics", user.ProfilePic)
-		if err != nil {
-			log.Printf("Error while deleting user profile pic: %e", err)
-		}
+	// updateUserValue := reflect.ValueOf(&reqBody).Elem()
+	// userValue := reflect.ValueOf(&user).Elem()
+
+	// for i := 0; i < updateUserValue.NumField(); i++ {
+	// 	field := updateUserValue.Type().Field(i)
+	// 	fieldName := field.Name
+
+	// 	if fieldValue := updateUserValue.Field(i); fieldValue.IsValid() && !fieldValue.IsZero() {
+	// 		userField := userValue.FieldByName(fieldName)
+	// 		if userField.IsValid() && userField.CanSet() {
+	// 			userField.Set(fieldValue)
+	// 		}
+	// 	}
+	// }
+
+	if reqBody.Name != nil {
+		user.Name = *reqBody.Name
 	}
-	if reqBody.CoverPic != "" {
-		err := utils.DeleteFile("user/coverPics", user.CoverPic)
-		if err != nil {
-			log.Printf("Error while deleting user cover pic: %e", err)
-		}
+	if reqBody.Bio != nil {
+		user.Bio = *reqBody.Bio
 	}
-
-	updateUserValue := reflect.ValueOf(&reqBody).Elem()
-	userValue := reflect.ValueOf(&user).Elem()
-
-	for i := 0; i < updateUserValue.NumField(); i++ {
-		field := updateUserValue.Type().Field(i)
-		fieldName := field.Name
-
-		if fieldValue := updateUserValue.Field(i); fieldValue.IsValid() && fieldValue.String() != "" {
-			userField := userValue.FieldByName(fieldName)
-			if userField.IsValid() && userField.CanSet() {
-				userField.Set(fieldValue)
-			}
-		}
+	if reqBody.Tagline != nil {
+		user.Tagline = *reqBody.Tagline
+	}
+	if reqBody.ProfilePic != nil && *reqBody.ProfilePic != "" {
+		user.ProfilePic = *reqBody.ProfilePic
+	}
+	if reqBody.CoverPic != nil && *reqBody.CoverPic != "" {
+		user.CoverPic = *reqBody.CoverPic
+	}
+	if reqBody.Tags != nil {
+		user.Tags = *reqBody.Tags
+	}
+	if reqBody.Links != nil {
+		user.Links = *reqBody.Links
 	}
 
 	if err := initializers.DB.Save(&user).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	if *reqBody.ProfilePic != "" {
+		err := utils.DeleteFile("user/profilePics", oldProfilePic)
+		if err != nil {
+			initializers.Logger.Warnw("Error while deleting user profile pic", "Error", err)
+		}
+	}
+
+	if *reqBody.CoverPic != "" {
+		err := utils.DeleteFile("user/coverPics", oldCoverPic)
+		if err != nil {
+			initializers.Logger.Warnw("Error while deleting user cover pic", "Error", err)
+		}
 	}
 
 	return c.Status(200).JSON(fiber.Map{

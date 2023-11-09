@@ -254,7 +254,7 @@ func MarkTaskCompleted(taskType string) func(c *fiber.Ctx) error {
 		switch taskType {
 		case "task":
 			var task models.Task
-			if err := initializers.DB.First(&task, "id = ?", taskID).Error; err != nil {
+			if err := initializers.DB.Preload("Users").First(&task, "id = ?", taskID).Error; err != nil {
 				if err == gorm.ErrRecordNotFound {
 					return &fiber.Error{Code: 400, Message: "No Task of this ID found."}
 				}
@@ -279,7 +279,7 @@ func MarkTaskCompleted(taskType string) func(c *fiber.Ctx) error {
 
 		case "subtask":
 			var task models.SubTask
-			if err := initializers.DB.First(&task, "id = ?", taskID).Error; err != nil {
+			if err := initializers.DB.Preload("Users").First(&task, "id = ?", taskID).Error; err != nil {
 				if err == gorm.ErrRecordNotFound {
 					return &fiber.Error{Code: 400, Message: "No Sub Task of this ID found."}
 				}

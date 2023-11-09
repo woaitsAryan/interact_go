@@ -11,14 +11,14 @@ type UserCreateSchema struct {
 }
 
 type UserUpdateSchema struct {
-	Name       string         `json:"name" validate:"max=25"`
-	ProfilePic string         `json:"profilePic" validate:"image"`
-	CoverPic   string         `json:"coverPic" validate:"image"`
-	Bio        string         `json:"bio" validate:"max=300"`
-	Title      string         `json:"title"`
-	Tagline    string         `json:"tagline" validate:"max=25"`
-	Tags       pq.StringArray `json:"tags" validate:"dive,alpha"`
-	Links      pq.StringArray `json:"links" validate:"dive,url"`
+	Name       *string         `json:"name" validate:"max=25"`
+	ProfilePic *string         `json:"profilePic" validate:"image"`
+	CoverPic   *string         `json:"coverPic" validate:"image"`
+	Bio        *string         `json:"bio" validate:"max=300"`
+	Title      *string         `json:"title"`
+	Tagline    *string         `json:"tagline" validate:"max=25"`
+	Tags       *pq.StringArray `json:"tags" validate:"dive,alpha"`
+	Links      *pq.StringArray `json:"links" validate:"dive,url"`
 }
 
 type AchievementCreateSchema struct {

@@ -357,6 +357,7 @@ func UpdateProject(c *fiber.Ctx) error {
 		return err
 	}
 	reqBody.CoverPic = picName
+	oldProjectPic := project.CoverPic
 
 	projectValue := reflect.ValueOf(&project).Elem()
 	reqBodyValue := reflect.ValueOf(reqBody)
@@ -380,8 +381,6 @@ func UpdateProject(c *fiber.Ctx) error {
 	} else {
 		project.IsPrivate = false
 	}
-
-	oldProjectPic := project.CoverPic
 
 	if err := initializers.DB.Save(&project).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}

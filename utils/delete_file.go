@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"log"
 	"os"
 )
 
@@ -12,8 +11,6 @@ func DeleteFile(path string, fileName string) error {
 	}
 
 	picPath := "public/" + path + "/" + fileName
-
-	log.Println(picPath)
 
 	err := os.Remove(picPath)
 	if err != nil {

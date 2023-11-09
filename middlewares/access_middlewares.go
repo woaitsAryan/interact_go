@@ -164,32 +164,43 @@ func GroupChatAdminAuthorization() func(*fiber.Ctx) error {
 	}
 }
 
-func TaskUsersAuthorization(c *fiber.Ctx) error {
+func TaskUsersCheck(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	taskID := c.Params("taskID")
 
-	var project models.Project
-
 	var task models.Task
-	if err := initializers.DB.Preload("Users").Preload("Project").Preload("Project.Memberships").First(&task, "id = ?", taskID).Error; err != nil {
+	if err := initializers.DB.Preload("Users").First(&task, "id = ?", taskID).Error; err != nil {
 		return &fiber.Error{Code: 400, Message: "No Task of this id found."}
 	}
 
-	project = task.Project
+	var check bool
+	for _, user := range task.Users {
+		if user.ID.String() == loggedInUserID {
+			check = true
+			break
+		}
+	}
 
-	if project.UserID.String() == loggedInUserID {
-		return c.Next()
+	if !check {
+		return &fiber.Error{Code: 403, Message: "Cannot access this task"}
+	}
+
+	return c.Next()
+}
+
+func SubTaskUsersAuthorization(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	subTaskID := c.Params("taskID")
+
+	var subTask models.SubTask
+	if err := initializers.DB.Preload("Task").Preload("Task.Users").First(&subTask, "id = ?", subTaskID).Error; err != nil {
+		return &fiber.Error{Code: 400, Message: "No Sub Task of this id found."}
 	}
 
 	var check bool
-	for _, membership := range project.Memberships {
-		if membership.UserID.String() == loggedInUserID {
-			for _, user := range task.Users {
-				if user.ID == membership.UserID {
-					check = true
-					break
-				}
-			}
+	for _, user := range subTask.Task.Users {
+		if user.ID.String() == loggedInUserID {
+			check = true
 			break
 		}
 	}

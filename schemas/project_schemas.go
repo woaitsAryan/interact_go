@@ -14,6 +14,7 @@ type ProjectCreateSchema struct {
 
 type ProjectUpdateSchema struct {
 	Tagline      string         `json:"tagline" validate:"max=40"`
+	Category     string         `json:"category"`
 	CoverPic     string         `json:"coverPic" validate:"image"`
 	Description  string         `json:"description" validate:"max=500"`
 	Page         string         `json:"page"`

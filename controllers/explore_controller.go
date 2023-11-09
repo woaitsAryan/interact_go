@@ -111,10 +111,10 @@ func GetTrendingOpenings(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
-	// paginatedDB := API.Paginator(c)(initializers.DB)
+	paginatedDB := API.Paginator(c)(initializers.DB)
 	var openings []models.Opening
 
-	searchedDB := API.Search(c, 3)(initializers.DB)
+	searchedDB := API.Search(c, 3)(paginatedDB)
 
 	if err := searchedDB.Preload("Project").
 		Order("no_of_applications DESC").
@@ -343,9 +343,8 @@ func GetLastViewedProjects(c *fiber.Ctx) error {
 }
 
 func GetTrendingUsers(c *fiber.Ctx) error {
-	// paginatedDB := API.Paginator(c)(initializers.DB)
-
-	searchedDB := API.Search(c, 0)(initializers.DB)
+	paginatedDB := API.Paginator(c)(initializers.DB)
+	searchedDB := API.Search(c, 0)(paginatedDB)
 
 	var users []models.User
 	if err := searchedDB.
@@ -423,21 +422,37 @@ func GetSimilarUsers(c *fiber.Ctx) error {
 func GetSimilarProjects(c *fiber.Ctx) error {
 	slug := c.Params("slug")
 
+	paginatedDB := API.Paginator(c)(initializers.DB)
+
 	var project models.Project
-	initializers.DB.First(&project, "slug = ?", slug)
+	if err := initializers.DB.First(&project, "slug = ?", slug).Error; err != nil {
+		return &fiber.Error{Code: 400, Message: "No Project with this ID found."}
+	}
 
 	recommendations, err := utils.MLReq(project.ID.String(), config.PROJECT_SIMILAR)
 	if err != nil {
-		return err
+		helpers.LogServerError("Error Fetching from ML API", err, c.Path())
 	}
 
 	var projects []models.Project
 
-	if err := initializers.DB.
-		Preload("User").
-		Where("id IN ?", recommendations).
-		Find(&projects).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	if len(recommendations) == 0 {
+		if err := paginatedDB.
+			Preload("User").
+			Where("id <> ?", project.ID).
+			Where("is_private=?", false).
+			Where("category = ? OR tags && ?", project.Category, pq.StringArray(project.Tags)).
+			Order("total_no_views DESC").
+			Find(&projects).Error; err != nil {
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		}
+	} else {
+		if err := paginatedDB.
+			Preload("User").
+			Where("id IN ?", recommendations).
+			Find(&projects).Error; err != nil {
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
