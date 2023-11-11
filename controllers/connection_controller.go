@@ -39,7 +39,7 @@ func FollowUser(c *fiber.Ctx) error {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 			}
 
-			go routines.IncrementCountsAndSendNotification(loggedInUserID, toFollowID)
+			go routines.IncrementCountsAndSendNotification(loggedInUserID, toFollowID) //! Check if race conditions of - + numFollowers happens when handling multiple users
 
 			return c.Status(200).JSON(fiber.Map{
 				"status":  "success",

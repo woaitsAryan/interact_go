@@ -6,7 +6,7 @@ type ProjectCreateSchema struct {
 	Title       string         `json:"title" validate:"required,max=20"`
 	Tagline     string         `json:"tagline" validate:"required,max=40"`
 	Description string         `json:"description" validate:"required,max=500"`
-	Tags        pq.StringArray `json:"tags" validate:"dive,alpha"`
+	Tags        pq.StringArray `json:"tags" validate:"dive"`
 	Category    string         `json:"category" validate:"required"`
 	IsPrivate   bool           `json:"isPrivate" validate:"boolean"`
 	Links       pq.StringArray `json:"links" validate:"dive,url"`

@@ -24,9 +24,32 @@ func AddReport(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: err.Error()}
 	}
 
+	var existingReport models.Report
+	if reqBody.UserID != "" {
+		initializers.DB.Where("reporter_id=? AND user_id=?", parsedLoggedInUserID, reqBody.UserID).First(&existingReport)
+	}
+	if reqBody.PostID != "" {
+		initializers.DB.Where("reporter_id=? AND post_id=?", parsedLoggedInUserID, reqBody.PostID).First(&existingReport)
+	}
+	if reqBody.ProjectID != "" {
+		initializers.DB.Where("reporter_id=? AND project_id=?", parsedLoggedInUserID, reqBody.ProjectID).First(&existingReport)
+	}
+	if reqBody.OpeningID != "" {
+		initializers.DB.Where("reporter_id=? AND opening_id=?", parsedLoggedInUserID, reqBody.OpeningID).First(&existingReport)
+	}
+
+	if existingReport.ID != uuid.Nil {
+
+		return c.Status(400).JSON(fiber.Map{
+			"status":  "success",
+			"message": "You have already filed a report.",
+		})
+	}
+
 	report := models.Report{
 		ReporterID: parsedLoggedInUserID,
 		ReportType: reqBody.ReportType,
+		Content:    reqBody.Content,
 	}
 
 	if reqBody.UserID != "" {

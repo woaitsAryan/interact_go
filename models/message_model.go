@@ -19,7 +19,7 @@ type Message struct {
 	OpeningID *uuid.UUID `gorm:"type:uuid" json:"openingID"` // shared opening
 	Opening   Opening    `json:"opening"`
 	ProfileID *uuid.UUID `gorm:"type:uuid" json:"profileID"` // shared profile
-	Profile   User       `gorm:"foreignKey:ProfileID;" json:"profile"`
+	Profile   User       `gorm:"" json:"profile"`
 	// MessageID *uuid.UUID `gorm:"type:uuid" json:"messageID"` // replied message
 	// Message   Message    `json:"message"`
 	Content   string    `gorm:"type:text;not null" json:"content"`

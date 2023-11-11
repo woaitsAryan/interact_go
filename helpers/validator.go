@@ -20,7 +20,6 @@ func Validate[T any](payload T) error {
 
 		for _, fieldError := range validationErrors {
 			field := fieldError.Field()
-			// tag := fieldError.Tag()
 			errorMessage := fmt.Sprintf("Invalid %s \n", field)
 			errorsBuilder.WriteString(errorMessage)
 		}

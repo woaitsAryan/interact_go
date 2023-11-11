@@ -12,6 +12,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/schemas"
 	"github.com/Pratham-Mishra04/interact/utils"
+	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/gosimple/slug"
@@ -214,8 +215,13 @@ func GetMyLikedProjects(c *fiber.Ctx) error {
 func GetUserProjects(c *fiber.Ctx) error {
 	userID := c.Params("userID")
 
+	paginatedDB := API.Paginator(c)(initializers.DB)
+
 	var projects []models.Project
-	if err := initializers.DB.Where("user_id = ? AND is_private = ?", userID, false).Find(&projects).Error; err != nil {
+	if err := paginatedDB.
+		Where("user_id = ? AND is_private = ?", userID, false).
+		Order("created_at DESC").
+		Find(&projects).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
@@ -229,8 +235,14 @@ func GetUserProjects(c *fiber.Ctx) error {
 func GetUserContributingProjects(c *fiber.Ctx) error {
 	userID := c.Params("userID")
 
+	paginatedDB := API.Paginator(c)(initializers.DB)
+
 	var memberships []models.Membership
-	if err := initializers.DB.Preload("Project").Select("project_id").Where("user_id = ?", userID).Find(&memberships).Error; err != nil {
+	if err := paginatedDB.
+		Preload("Project").
+		Where("user_id = ?", userID).
+		Order("created_at DESC").
+		Find(&memberships).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 

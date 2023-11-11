@@ -33,6 +33,10 @@ func ExploreRouter(app *fiber.App) {
 	exploreRoutes.Get("/users/similar/:username", controllers.GetSimilarUsers)
 	exploreRoutes.Get("/projects/similar/:slug", controllers.GetSimilarProjects)
 
+	exploreRoutes.Get("/users/posts/:userID", controllers.GetUserPosts)
+	exploreRoutes.Get("/users/projects/:userID", controllers.GetUserProjects)
+	exploreRoutes.Get("/users/projects/contributing/:userID", controllers.GetUserContributingProjects)
+
 	exploreRoutes.Get("/users/:username", controllers.GetUser)
 	exploreRoutes.Get("/projects/:slug", controllers.GetProject)
 }

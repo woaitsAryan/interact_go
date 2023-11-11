@@ -55,7 +55,12 @@ func GetUserPosts(c *fiber.Ctx) error {
 	paginatedDB := API.Paginator(c)(initializers.DB)
 
 	var posts []models.Post
-	if err := paginatedDB.Preload("RePost").Preload("User").Where("user_id = ?", userID).Find(&posts).Error; err != nil {
+	if err := paginatedDB.
+		Preload("RePost").
+		Preload("User").
+		Where("user_id = ?", userID).
+		Order("created_at DESC").
+		Find(&posts).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 

@@ -15,7 +15,7 @@ func GetMyProjects(c *fiber.Ctx) error {
 	searchedDB := API.Search(c, 1)(initializers.DB)
 
 	var projects []models.Project
-	if err := searchedDB.Where("user_id = ?", loggedInUserID).Find(&projects).Error; err != nil {
+	if err := searchedDB.Where("user_id = ?", loggedInUserID).Order("created_at DESC").Find(&projects).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
@@ -30,7 +30,7 @@ func GetMyContributingProjects(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var memberships []models.Membership
-	if err := initializers.DB.Preload("Project").Preload("Project.User").Where("user_id = ?", loggedInUserID).Find(&memberships).Error; err != nil {
+	if err := initializers.DB.Preload("Project").Preload("Project.User").Where("user_id = ?", loggedInUserID).Order("created_at DESC").Find(&memberships).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
@@ -50,7 +50,7 @@ func GetMyApplications(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var applications []models.Application
-	if err := initializers.DB.Preload("Opening").Preload("Project").Where("user_id=?", loggedInUserID).Find(&applications).Error; err != nil {
+	if err := initializers.DB.Preload("Opening").Preload("Project").Where("user_id=?", loggedInUserID).Order("created_at DESC").Find(&applications).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 

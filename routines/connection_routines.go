@@ -1,10 +1,13 @@
 package routines
 
 import (
+	"time"
+
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 func IncrementCountsAndSendNotification(loggedInUserID uuid.UUID, toFollowID uuid.UUID) {
@@ -29,14 +32,30 @@ func IncrementCountsAndSendNotification(loggedInUserID uuid.UUID, toFollowID uui
 				helpers.LogDatabaseError("Error while incrementing number following-IncrementCountsAndSendNotification", err, "go_routine")
 			}
 
-			notification := models.Notification{
-				NotificationType: 0,
-				UserID:           toFollowUser.ID,
-				SenderID:         loggedInUserID,
-			}
+			var existingNotification models.Notification
+			if err := initializers.DB.
+				First(&existingNotification, "notification_type=? AND user_id=? AND sender_id=?", 0, toFollowUser.ID, loggedInUserID).
+				Error; err != nil {
+				if err == gorm.ErrRecordNotFound {
+					notification := models.Notification{
+						NotificationType: 0,
+						UserID:           toFollowUser.ID,
+						SenderID:         loggedInUserID,
+					}
 
-			if err := initializers.DB.Create(&notification).Error; err != nil {
-				helpers.LogDatabaseError("Error while creating Notification-IncrementCountsAndSendNotification", err, "go_routine")
+					if err := initializers.DB.Create(&notification).Error; err != nil {
+						helpers.LogDatabaseError("Error while creating Notification-IncrementCountsAndSendNotification", err, "go_routine")
+					}
+				} else {
+					helpers.LogDatabaseError("No User of this ID found-DecrementCounts.", err, "go_routine")
+				}
+			} else {
+				existingNotification.CreatedAt = time.Now()
+				existingNotification.Read = false
+
+				if err := initializers.DB.Save(&existingNotification).Error; err != nil {
+					helpers.LogDatabaseError("Error while saving existing Notification-IncrementCountsAndSendNotification", err, "go_routine")
+				}
 			}
 		}
 	}

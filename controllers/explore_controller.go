@@ -236,6 +236,7 @@ func GetTrendingProjects(c *fiber.Ctx) error {
 
 	if err := searchedDB.
 		Preload("User").
+		Preload("Memberships").
 		Select("*, (total_no_views + 3 * no_likes + 2 * no_comments + 5 * no_shares) AS weighted_average").
 		Order("weighted_average DESC").
 		Where("user_id <> ? AND is_private = ?", loggedInUserID, false).
@@ -264,6 +265,7 @@ func GetRecommendedProjects(c *fiber.Ctx) error {
 
 	if err := initializers.DB.
 		Preload("User").
+		Preload("Memberships").
 		Where("id IN ?", recommendations).
 		Find(&projects).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
@@ -283,6 +285,7 @@ func GetMostLikedProjects(c *fiber.Ctx) error {
 
 	if err := searchedDB.
 		Preload("User").
+		Preload("Memberships").
 		Order("no_likes DESC").
 		Where("is_private = ?", false).
 		Find(&projects).Error; err != nil {
@@ -302,6 +305,7 @@ func GetRecentlyAddedProjects(c *fiber.Ctx) error {
 
 	if err := searchedDB.
 		Preload("User").
+		Preload("Memberships").
 		Order("created_at DESC").
 		Where("is_private = ?", false).
 		Find(&projects).Error; err != nil {
@@ -321,6 +325,7 @@ func GetLastViewedProjects(c *fiber.Ctx) error {
 	paginatedDB := API.Paginator(c)(initializers.DB)
 	if err := paginatedDB.
 		Preload("User").
+		Preload("Memberships").
 		Order("timestamp DESC").
 		Preload("Project").
 		Where("user_id=?", loggedInUserID).
@@ -439,6 +444,7 @@ func GetSimilarProjects(c *fiber.Ctx) error {
 	if len(recommendations) == 0 {
 		if err := paginatedDB.
 			Preload("User").
+			Preload("Memberships").
 			Where("id <> ?", project.ID).
 			Where("is_private=?", false).
 			Where("category = ? OR tags && ?", project.Category, pq.StringArray(project.Tags)).
@@ -449,6 +455,7 @@ func GetSimilarProjects(c *fiber.Ctx) error {
 	} else {
 		if err := paginatedDB.
 			Preload("User").
+			Preload("Memberships").
 			Where("id IN ?", recommendations).
 			Find(&projects).Error; err != nil {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
