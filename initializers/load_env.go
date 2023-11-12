@@ -25,6 +25,8 @@ type Config struct {
 	DB_USER              string      `mapstructure:"DB_USER"`
 	DB_PASSWORD          string      `mapstructure:"DB_PASSWORD"`
 	BACKUP_DIR           string      `mapstructure:"BACKUP_DIR"`
+	REDIS_HOST           string      `mapstructure:"REDIS_HOST"`
+	REDIS_PORT           string      `mapstructure:"REDIS_PORT"`
 	REDIS_PASSWORD       string      `mapstructure:"REDIS_PASSWORD"`
 	JWT_SECRET           string      `mapstructure:"JWT_SECRET"`
 	FRONTEND_URL         string      `mapstructure:"FRONTEND_URL"`

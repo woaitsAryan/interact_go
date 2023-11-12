@@ -1,4 +1,9 @@
 version: '3.8'
+
+networks:
+  interact-network:
+    driver: bridge
+
 services:
   go-api:
     container_name: interact-api
@@ -6,7 +11,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - 8000:8000
+      - 8000:${PORT}
     depends_on:
       - postgres
       - redis
@@ -15,13 +20,15 @@ services:
     volumes:
       - pics:/app/public/
       - logs:/app/log/
+    networks:
+      - interact-network
 
   postgres:
     image: postgres
     container_name: interact-postgres-db
     restart: always
     ports:
-      - 5432:5432
+      - 5432:${DB_PORT}
     env_file:
       - .env
     environment:
@@ -31,23 +38,32 @@ services:
     volumes:
       - postgres:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - interact-network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-q", "-d", "${DB_NAME}", "-U", "${DB_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
 
   redis:
     image: redis
     container_name: interact-redis-db
     restart: always
     ports:
-      - 6379:6379
+      - 6379:${REDIS_PORT}
     command: redis-server --requirepass ${REDIS_PASSWORD}
-    volumes:
-      - redis:/data
+    networks:
+      - interact-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
 
 volumes:
   postgres:
     name: postgres-db
-    driver: local
-  redis:
-    name: redis-db
     driver: local
   pics:
     name: storage-db

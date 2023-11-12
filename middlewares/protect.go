@@ -33,11 +33,19 @@ func verifyToken(tokenString string, user *models.User, checkRedirect bool) erro
 		if checkRedirect {
 			rdt, ok := claims["rdt"].(bool)
 			if !ok {
-				return &fiber.Error{Code: 401, Message: "Not a redirect Token."}
+				if initializers.CONFIG.ENV == initializers.DevelopmentEnv {
+					return &fiber.Error{Code: 403, Message: "Not a redirect Token."}
+				} else {
+					return &fiber.Error{Code: 403, Message: "Connection Timeout, Login again"}
+				}
 			}
 
 			if !rdt {
-				return &fiber.Error{Code: 403, Message: "Not a redirect Token."}
+				if initializers.CONFIG.ENV == initializers.DevelopmentEnv {
+					return &fiber.Error{Code: 403, Message: "Not a redirect Token."}
+				} else {
+					return &fiber.Error{Code: 403, Message: "Connection Timeout, Login again"}
+				}
 			}
 		}
 
