@@ -19,7 +19,7 @@ services:
       - .env
     volumes:
       - pics:/app/public/
-      - logs:/app/log/
+      - /log:/app/log/
     networks:
       - interact-network
 
@@ -67,7 +67,4 @@ volumes:
     driver: local
   pics:
     name: storage-db
-    driver: local
-  logs:
-    name: logs-db
     driver: local
