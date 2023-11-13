@@ -313,7 +313,7 @@ func DeleteTask(taskType string) func(c *fiber.Ctx) error {
 		switch taskType {
 		case "task":
 			var task models.Task
-			if err := initializers.DB.
+			if err := initializers.DB.Preload("SubTasks").
 				First(&task, "id = ?", taskID).Error; err != nil {
 				if err == gorm.ErrRecordNotFound {
 					return &fiber.Error{Code: 400, Message: "No Task of this ID found."}
@@ -324,6 +324,13 @@ func DeleteTask(taskType string) func(c *fiber.Ctx) error {
 			// Delete all users from the task_assigned_users table
 			if err := initializers.DB.Model(&task).Association("Users").Clear(); err != nil {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			}
+
+			for _, subTask := range task.SubTasks {
+				// Delete all users from the subtask_assigned_users table
+				if err := initializers.DB.Model(&subTask).Association("Users").Clear(); err != nil {
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+				}
 			}
 
 			result := initializers.DB.Delete(&task)

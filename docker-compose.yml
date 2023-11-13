@@ -1,7 +1,7 @@
 version: '3.8'
 
 networks:
-  interact-network:
+  backend-network:
     driver: bridge
 
 services:
@@ -18,10 +18,10 @@ services:
     env_file:
       - .env
     volumes:
-      - pics:/app/public/
-      - /log:/app/log/
+      - ./public:/app/public/
+      - ./log:/app/log/
     networks:
-      - interact-network
+      - backend-network
 
   postgres:
     image: postgres
@@ -39,7 +39,7 @@ services:
       - postgres:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
-      - interact-network
+      - backend-network
     healthcheck:
       test: ["CMD", "pg_isready", "-q", "-d", "${DB_NAME}", "-U", "${DB_USER}"]
       interval: 5s
@@ -54,7 +54,7 @@ services:
       - 6379:${REDIS_PORT}
     command: redis-server --requirepass ${REDIS_PASSWORD}
     networks:
-      - interact-network
+      - backend-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -64,7 +64,4 @@ services:
 volumes:
   postgres:
     name: postgres-db
-    driver: local
-  pics:
-    name: storage-db
     driver: local
