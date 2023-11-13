@@ -56,18 +56,18 @@ type ProjectView struct {
 /*
 history type:
 *-1 - User created this project
-*0 - User invited user
+*0 - User sent invitation to user
 *1 - User joined this project
 *2 - User edited project details
 *3 - User created an opening
 *4 - User edited opening details
-*5 - User accepted an application
-*6 - User created a new group chat
-*7 - User created a new task
-*8 - User left the project
-*9 - User removed user from the project
-*10 -
-*11 -
+*5 - User deleted opening
+*6 - User accepted application of user
+*7 - User rejected application of user
+*8 - User created a new group chat
+*9 - User created a new task
+*10 - User left the project
+*11 - User removed user from the project
 */
 
 type ProjectHistory struct {
@@ -82,6 +82,8 @@ type ProjectHistory struct {
 	Opening       Opening     `json:"opening"`
 	ApplicationID *uuid.UUID  `gorm:"type:uuid" json:"applicationID"`
 	Application   Application `json:"application"`
+	InvitationID  *uuid.UUID  `gorm:"type:uuid" json:"invitationID"`
+	Invitation    Invitation  `json:"invitation"`
 	TaskID        *uuid.UUID  `gorm:"type:uuid" json:"taskID"`
 	Task          Task        `json:"task"`
 	CreatedAt     time.Time   `gorm:"default:current_timestamp;index:idx_created_at,sort:desc" json:"createdAt"`

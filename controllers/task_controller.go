@@ -5,6 +5,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/schemas"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -114,6 +115,10 @@ func AddTask(taskType string) func(c *fiber.Ctx) error {
 			if result.Error != nil {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 			}
+
+			projectMemberID := c.GetRespHeader("projectMemberID")
+			parsedID, _ := uuid.Parse(projectMemberID)
+			go routines.MarkProjectHistory(project.ID, parsedID, 9, nil, nil, nil, nil, &task.ID)
 
 			return c.Status(201).JSON(fiber.Map{
 				"status":  "success",

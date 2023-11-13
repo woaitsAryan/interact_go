@@ -5,6 +5,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -129,7 +130,7 @@ func AddGroupChat(c *fiber.Ctx) error {
 	})
 }
 
-func AddProjectChat(c *fiber.Ctx) error { //! check for project membership
+func AddProjectChat(c *fiber.Ctx) error { //! check for project memberships of the users in reqBody
 	var reqBody struct {
 		Title       string   `json:"title"`
 		Description string   `json:"description"`
@@ -177,6 +178,10 @@ func AddProjectChat(c *fiber.Ctx) error { //! check for project membership
 	if result.Error != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
+
+	projectMemberID := c.GetRespHeader("projectMemberID")
+	parsedID, _ := uuid.Parse(projectMemberID)
+	go routines.MarkProjectHistory(project.ID, parsedID, 8, nil, nil, nil, nil, nil)
 
 	for _, chatUserID := range chatUserIDs {
 		parsedChatUserID, err := uuid.Parse(chatUserID)

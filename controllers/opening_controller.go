@@ -104,8 +104,12 @@ func AddOpening(c *fiber.Ctx) error {
 	result := initializers.DB.Create(&newOpening)
 
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
+
+	projectMemberID := c.GetRespHeader("projectMemberID")
+	parsedID, _ := uuid.Parse(projectMemberID)
+	go routines.MarkProjectHistory(project.ID, parsedID, 3, nil, &newOpening.ID, nil, nil, nil)
 
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",
@@ -174,6 +178,10 @@ func EditOpening(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
 
+	projectMemberID := c.GetRespHeader("projectMemberID")
+	parsedID, _ := uuid.Parse(projectMemberID)
+	go routines.MarkProjectHistory(opening.ProjectID, parsedID, 4, nil, &opening.ID, nil, nil, nil)
+
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Opening Updated",
@@ -202,11 +210,17 @@ func DeleteOpening(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
+	projectID := opening.ProjectID
+
 	result := initializers.DB.Delete(&opening)
 
 	if result.Error != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
+
+	projectMemberID := c.GetRespHeader("projectMemberID")
+	parsedID, _ := uuid.Parse(projectMemberID)
+	go routines.MarkProjectHistory(projectID, parsedID, 5, nil, nil, nil, nil, nil)
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",

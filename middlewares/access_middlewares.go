@@ -48,6 +48,7 @@ func OrgRoleAuthorization(Role models.OrganizationRole) func(*fiber.Ctx) error {
 					}
 					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 				}
+				c.Set("orgMemberID", c.GetRespHeader("loggedInUserID"))
 				return c.Next()
 			}
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
@@ -122,6 +123,7 @@ func ProjectRoleAuthorization(Role models.ProjectRole) func(*fiber.Ctx) error {
 		}
 
 		if project.UserID.String() == loggedInUserID {
+			c.Set("projectMemberID", c.GetRespHeader("loggedInUserID"))
 			return c.Next()
 		}
 

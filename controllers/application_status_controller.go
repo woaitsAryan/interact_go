@@ -45,6 +45,10 @@ func AcceptApplication(c *fiber.Ctx) error {
 
 	go routines.CreateMembershipAndSendNotification(&application)
 
+	projectMemberID := c.GetRespHeader("projectMemberID")
+	parsedID, _ := uuid.Parse(projectMemberID)
+	go routines.MarkProjectHistory(application.ProjectID, parsedID, 6, nil, nil, &application.ID, nil, nil)
+
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Application Accepted.",
@@ -94,6 +98,10 @@ func RejectApplication(c *fiber.Ctx) error {
 	if err := initializers.DB.Create(&notification).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
+
+	projectMemberID := c.GetRespHeader("projectMemberID")
+	parsedID, _ := uuid.Parse(projectMemberID)
+	go routines.MarkProjectHistory(application.ProjectID, parsedID, 7, nil, nil, &application.ID, nil, nil)
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",

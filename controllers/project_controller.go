@@ -126,6 +126,26 @@ func GetWorkSpaceProject(c *fiber.Ctx) error {
 	})
 }
 
+func GetProjectHistory(c *fiber.Ctx) error {
+	projectID := c.Params("projectID")
+
+	paginatedDB := API.Paginator(c)(initializers.DB)
+	var history []models.ProjectHistory
+
+	if err := paginatedDB.
+		Preload("Sender").
+		Preload("User").
+		Where("project_id=?", projectID).
+		Order("created_at DESC").
+		Find(&history).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"history": history,
+	})
+}
+
 func GetWorkSpaceProjectTasks(c *fiber.Ctx) error {
 	slug := c.Params("slug")
 
@@ -332,10 +352,11 @@ func AddProject(c *fiber.Ctx) error {
 			}
 
 			result := initializers.DB.Create(&newProject)
-
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 			}
+
+			go routines.MarkProjectHistory(newProject.ID, parsedID, -1, nil, nil, nil, nil, nil)
 
 			return c.Status(201).JSON(fiber.Map{
 				"status":  "success",
@@ -404,6 +425,10 @@ func UpdateProject(c *fiber.Ctx) error {
 			initializers.Logger.Warnw("Error while deleting project cover pic", "Error", err)
 		}
 	}
+
+	projectMemberID := c.GetRespHeader("projectMemberID")
+	parsedID, _ := uuid.Parse(projectMemberID)
+	go routines.MarkProjectHistory(project.ID, parsedID, 2, nil, nil, nil, nil, nil)
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",

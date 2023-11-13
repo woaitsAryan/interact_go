@@ -59,3 +59,40 @@ func UpdateLastViewedOpening(userID uuid.UUID, openingID uuid.UUID) {
 		}
 	}
 }
+
+func MarkProjectHistory(
+	projectID uuid.UUID,
+	senderID uuid.UUID,
+	historyType int,
+	userID *uuid.UUID,
+	openingID *uuid.UUID,
+	applicationID *uuid.UUID,
+	invitationID *uuid.UUID,
+	taskID *uuid.UUID) {
+
+	history := models.ProjectHistory{
+		ProjectID:   projectID,
+		SenderID:    senderID,
+		HistoryType: historyType,
+	}
+
+	if userID != nil {
+		history.UserID = userID
+	}
+	if openingID != nil {
+		history.OpeningID = openingID
+	}
+	if applicationID != nil {
+		history.ApplicationID = applicationID
+	}
+	if invitationID != nil {
+		history.InvitationID = invitationID
+	}
+	if taskID != nil {
+		history.TaskID = taskID
+	}
+
+	if err := initializers.DB.Create(&history).Error; err != nil {
+		helpers.LogDatabaseError("Error while creating Project History-MarkProjectHistory", err, "go_routine")
+	}
+}

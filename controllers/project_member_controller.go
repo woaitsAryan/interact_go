@@ -5,6 +5,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/Pratham-Mishra04/interact/routines"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -101,8 +102,12 @@ func AddMember(c *fiber.Ctx) error {
 			result := initializers.DB.Create(&invitation)
 
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 			}
+
+			projectMemberID := c.GetRespHeader("projectMemberID")
+			parsedID, _ := uuid.Parse(projectMemberID)
+			go routines.MarkProjectHistory(project.ID, parsedID, 0, &invitation.UserID, nil, nil, &invitation.ID, nil)
 
 			invitation.User = user
 
@@ -140,11 +145,17 @@ func RemoveMember(c *fiber.Ctx) error { //TODO add manager cannot remove manager
 		return &fiber.Error{Code: 403, Message: "You do not have the permission to perform this action."}
 	}
 
-	result := initializers.DB.Delete(&membership)
+	parsedUserID := membership.UserID
+	parsedProjectID := membership.ProjectID
 
+	result := initializers.DB.Delete(&membership)
 	if result.Error != nil {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error while deleting membership."}
 	}
+
+	projectMemberID := c.GetRespHeader("projectMemberID")
+	parsedID, _ := uuid.Parse(projectMemberID)
+	go routines.MarkProjectHistory(parsedProjectID, parsedID, 11, &parsedUserID, nil, nil, nil, nil)
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",
@@ -164,10 +175,15 @@ func LeaveProject(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
+	parsedUserID := membership.UserID
+	parsedProjectID := membership.ProjectID
+
 	result := initializers.DB.Delete(&membership)
 	if result.Error != nil {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error while deleting membership."}
 	}
+
+	go routines.MarkProjectHistory(parsedProjectID, parsedUserID, 10, nil, nil, nil, nil, nil)
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",

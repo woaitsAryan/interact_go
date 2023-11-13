@@ -64,6 +64,9 @@ func AcceptInvitation(c *fiber.Ctx) error {
 		if result.Error != nil {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 		}
+
+		go routines.MarkProjectHistory(*invitation.ProjectID, parsedLoggedInUserID, 1, nil, nil, nil, nil, nil)
+
 	} else if invitation.OrganizationID != nil {
 		membership := models.OrganizationMembership{
 			UserID:         invitation.UserID,
