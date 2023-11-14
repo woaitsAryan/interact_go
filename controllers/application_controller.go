@@ -152,6 +152,7 @@ func AddApplication(c *fiber.Ctx) error {
 		Content:   reqBody.Content,
 		Resume:    resumePath,
 		Links:     reqBody.Links,
+		Email:     reqBody.Email,
 	}
 
 	result := initializers.DB.Create(&newApplication)

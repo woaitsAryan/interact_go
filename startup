@@ -1,0 +1,9 @@
+export COMPOSE_PROJECT_NAME=interact
+
+#! IMPORTANT
+
+- TABLES MESSAGES and CHATS have circular referencing so they cant be migrated as they are.
+- To migrate them first comment out the references of MESSAGES in CHATS
+    and also comment out the occurences in the CONTROLLERS.
+- Then migrate the TABLES, uncomment the references and migrate again.
+- Do the same for GROUP_MESSAGES and GROUP_CHATS

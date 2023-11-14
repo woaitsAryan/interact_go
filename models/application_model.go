@@ -15,6 +15,7 @@ type Application struct {
 	Project       Project          `gorm:"" json:"project"`
 	UserID        uuid.UUID        `gorm:"type:uuid;not null" json:"userID"`
 	User          User             `gorm:"" json:"user"`
+	Email         string           `gorm:"" json:"email"`
 	CreatedAt     time.Time        `gorm:"default:current_timestamp" json:"createdAt"`
 	Status        int              `json:"status"` //* -1 rejected, 0 submitted, 1 under review, 2 accepted
 	Content       string           `gorm:"type:text;not null" json:"content"`

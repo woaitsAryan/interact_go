@@ -129,7 +129,7 @@ func AddMessage(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	chat.LatestMessageID = message.ID
+	chat.LatestMessageID = &message.ID
 
 	result = initializers.DB.Save(&chat)
 	if result.Error != nil {

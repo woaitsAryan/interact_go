@@ -4,6 +4,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
+	"github.com/Pratham-Mishra04/interact/populate"
 	"github.com/Pratham-Mishra04/interact/routers"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
@@ -16,6 +17,8 @@ func init() {
 	initializers.AddLogger()
 	initializers.ConnectToCache()
 	initializers.AutoMigrate()
+
+	populate.FillDummies()
 
 	config.InitializeOAuthGoogle()
 }

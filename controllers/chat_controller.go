@@ -212,7 +212,7 @@ func GetUnreadChats(c *fiber.Ctx) error { //* Personal Only
 			if err := initializers.DB.Where("chat_id=? AND user_id=?", chat.ID, chat.CreatingUserID).
 				Order("created_at DESC").
 				First(&message).Error; err == nil {
-				if chat.LastReadMessageByAcceptingUserID != message.ID {
+				if chat.LastReadMessageByAcceptingUserID != nil && *chat.LastReadMessageByAcceptingUserID != message.ID {
 					chatIDs = append(chatIDs, chat.ID.String())
 				}
 			}
@@ -220,7 +220,7 @@ func GetUnreadChats(c *fiber.Ctx) error { //* Personal Only
 			if err := initializers.DB.Where("chat_id=? AND user_id=?", chat.ID, chat.AcceptingUserID).
 				Order("created_at DESC").
 				First(&message).Error; err == nil {
-				if chat.LastReadMessageByCreatingUserID != message.ID {
+				if chat.LastReadMessageByCreatingUserID != nil && *chat.LastReadMessageByCreatingUserID != message.ID {
 					chatIDs = append(chatIDs, chat.ID.String())
 				}
 			}
@@ -327,13 +327,13 @@ func UpdateLastRead(c *fiber.Ctx) error {
 		if err := initializers.DB.Where("chat_id=? AND user_id=?", chat.ID, chat.CreatingUserID).
 			Order("created_at DESC").
 			First(&message).Error; err == nil {
-			chat.LastReadMessageByAcceptingUserID = message.ID
+			chat.LastReadMessageByAcceptingUserID = &message.ID
 		}
 	} else if chat.CreatingUserID == parsedLoggedInUserID {
 		if err := initializers.DB.Where("chat_id=? AND user_id=?", chat.ID, chat.AcceptingUserID).
 			Order("created_at DESC").
 			First(&message).Error; err == nil {
-			chat.LastReadMessageByCreatingUserID = message.ID
+			chat.LastReadMessageByCreatingUserID = &message.ID
 		}
 	}
 
