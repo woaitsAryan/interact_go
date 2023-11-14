@@ -23,8 +23,8 @@ type Chat struct {
 	Accepted                         bool      `gorm:"default:false" json:"accepted"`
 	LastReadMessageByCreatingUserID  uuid.UUID `gorm:"type:uuid" json:"lastReadMessageByCreatingUserID"`
 	LastReadMessageByAcceptingUserID uuid.UUID `gorm:"type:uuid" json:"lastReadMessageByAcceptingUserID"`
-	LastReadMessageByCreatingUser    *Message  `gorm:"foreignKey:LastReadMessageByCreatingUserID;constraint:OnDelete:SET NULL" json:"lastReadMessageByCreatingUser"`
-	LastReadMessageByAcceptingUser   *Message  `gorm:"foreignKey:LastReadMessageByAcceptingUserID;constraint:OnDelete:SET NULL" json:"lastReadMessageByAcceptingUser"`
+	LastReadMessageByCreatingUser    *Message  `gorm:"foreignKey:LastReadMessageByCreatingUserID;constraint:OnDelete:CASCADE" json:"lastReadMessageByCreatingUser"`
+	LastReadMessageByAcceptingUser   *Message  `gorm:"foreignKey:LastReadMessageByAcceptingUserID;constraint:OnDelete:CASCADE" json:"lastReadMessageByAcceptingUser"`
 }
 
 type GroupChat struct { //TODO store number of members in model to show in invitation
@@ -36,11 +36,11 @@ type GroupChat struct { //TODO store number of members in model to show in invit
 	UserID          uuid.UUID             `gorm:"type:uuid;not null" json:"userID"`
 	User            User                  `gorm:"" json:"user"`
 	OrganizationID  *uuid.UUID            `gorm:"type:uuid;" json:"organizationID"`
-	Organization    Organization          `gorm:"constraint:OnDelete:CASCADE" json:"organization"`
+	Organization    Organization          `gorm:"" json:"organization"`
 	ProjectID       *uuid.UUID            `gorm:"type:uuid;" json:"projectID"`
-	Project         Project               `gorm:"constraint:OnDelete:CASCADE" json:"project"`
+	Project         Project               `gorm:"" json:"project"`
 	CreatedAt       time.Time             `gorm:"default:current_timestamp" json:"createdAt"`
-	Memberships     []GroupChatMembership `gorm:"constraint:OnDelete:CASCADE" json:"memberships"`
+	Memberships     []GroupChatMembership `gorm:"foreignKey:GroupChatID;constraint:OnDelete:CASCADE" json:"memberships"`
 	Messages        []GroupChatMessage    `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE" json:"messages"`
 	LatestMessageID uuid.UUID             `gorm:"type:uuid" json:"latestMessageID"`
 	LatestMessage   *GroupChatMessage     `gorm:"foreignKey:LatestMessageID;constraint:OnDelete:CASCADE" json:"latestMessage"`

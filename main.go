@@ -15,7 +15,7 @@ func init() {
 	initializers.ConnectToDB()
 	initializers.AddLogger()
 	initializers.ConnectToCache()
-	// initializers.AutoMigrate()
+	initializers.AutoMigrate()
 
 	config.InitializeOAuthGoogle()
 }
