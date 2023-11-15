@@ -51,7 +51,7 @@ func ToLowercaseArray(arr []string) []string {
 }
 
 func RandomLinks() []string {
-	strings := []string{"www.google.com", "www.youtube.com", "www.facebook.com", "www.gmail.com", "www.github.com"}
+	strings := []string{"https://www.google.com", "https://www.youtube.com", "https://www.facebook.com", "https://www.gmail.com", "https://www.github.com"}
 
 	// Get a random count between 0 and 5
 	count := rand.Intn(6)
@@ -72,7 +72,7 @@ func getRandomProjectID(projectIDs []uuid.UUID) uuid.UUID {
 func PopulateProjects() {
 	log.Println("----------------Populating Projects----------------")
 
-	jsonFile, err := os.Open("projects.json")
+	jsonFile, err := os.Open("populate/projects.json")
 	if err != nil {
 		log.Fatalf("Failed to open the JSON file: %v", err)
 	}
@@ -109,7 +109,7 @@ func PopulateProjects() {
 func PopulatePosts() {
 	log.Println("----------------Populating Posts----------------")
 
-	jsonFile, err := os.Open("posts.json")
+	jsonFile, err := os.Open("populate/posts.json")
 	if err != nil {
 		log.Fatalf("Failed to open the JSON file: %v", err)
 	}
@@ -141,7 +141,7 @@ func PopulatePosts() {
 func PopulateOpenings() {
 	log.Println("----------------Populating Openings----------------")
 
-	jsonFile, err := os.Open("openings.json")
+	jsonFile, err := os.Open("populate/openings.json")
 	if err != nil {
 		log.Fatalf("Failed to open the JSON file: %v", err)
 	}

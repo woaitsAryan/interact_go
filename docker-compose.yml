@@ -20,6 +20,7 @@ services:
     volumes:
       - ./public:/app/public/
       - ./log:/app/log/
+      - ./db_backups:/app/db_backups/
     networks:
       - backend-network
 
@@ -28,7 +29,7 @@ services:
     container_name: interact-postgres-db
     restart: always
     ports:
-      - 5432:${DB_PORT}
+      - :${DB_PORT}
     env_file:
       - .env
     environment:

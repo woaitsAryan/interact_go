@@ -20,7 +20,7 @@ notification type:
 *8 - You were removed from the project
 *9 - Chat request
 *10 - Accepted Project Invitation
-*11 - Accepted Org Invitation
+*11 - User assigned you a task in project
 */
 
 type Notification struct {

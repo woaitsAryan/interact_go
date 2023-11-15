@@ -1,6 +1,6 @@
 # Source environment variables from .env file
 if [ -f .env ]; then
-    source .env
+    source .env.db
 else
     echo "Error: .env file not found." >> ./log/backup.log
     exit 1
@@ -27,12 +27,14 @@ PGPASSWORD="$DB_PASSWORD" pg_dump -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "
 
 # Check if the backup was successful
 if [ $? -eq 0 ]; then
-    echo "Backup completed successfully: $BACKUP_FILE" >> ./log/backup.log
+    timestamp=$(date "+%Y-%m-%d %H:%M:%S")
+    echo "$timestamp INFO: Backup completed successfully - $BACKUP_FILE" >> ./log/backup.log
 
     # Delete backups older than a week
     find "$BACKUP_DIR" -name 'backup_*.sql' -type f -mtime +7 -delete
 else
-    echo "Error: Backup failed. Please check for errors." >> ./log/backup.log
+    timestamp=$(date "+%Y-%m-%d %H:%M:%S")
+    echo "$timestamp ERROR: Backup failed. Please check for errors." >> ./log/backup.log
     exit 1
 fi
 
