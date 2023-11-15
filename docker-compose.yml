@@ -20,12 +20,11 @@ services:
     volumes:
       - ./public:/app/public/
       - ./log:/app/log/
-      - ./db_backups:/app/db_backups/
     networks:
       - backend-network
 
   postgres:
-    image: postgres
+    image: postgres:16
     container_name: interact-postgres-db
     restart: always
     ports:
@@ -39,6 +38,7 @@ services:
     volumes:
       - postgres:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database:/app/database/
     networks:
       - backend-network
     healthcheck:
