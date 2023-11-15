@@ -24,8 +24,10 @@ services:
       - backend-network
 
   postgres:
-    image: postgres:16
     container_name: interact-postgres-db
+    build:
+      context: .
+      dockerfile: db.Dockerfile
     restart: always
     ports:
       - :${DB_PORT}
