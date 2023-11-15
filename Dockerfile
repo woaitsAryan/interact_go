@@ -20,6 +20,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /main
 EXPOSE 8000
 
 RUN chmod +x /app/backup.sh
+RUN chmod +x /app/restore.sh
 
 # Apply the cron job
 RUN chmod +x /app/cron

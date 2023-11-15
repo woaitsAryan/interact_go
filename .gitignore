@@ -3,5 +3,5 @@
 interact.exe*
 /scripts
 /log
-/db_backups
+/backups
 .DS_Store

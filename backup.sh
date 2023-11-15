@@ -2,7 +2,7 @@
 if [ -f .env ]; then
     source .env.db
 else
-    echo "Error: .env file not found." >> ./log/backup.log
+    echo "Error: .env.db file not found." >> ./log/backup.log
     exit 1
 fi
 
