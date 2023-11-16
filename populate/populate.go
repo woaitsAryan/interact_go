@@ -85,7 +85,13 @@ func PopulateProjects() {
 	}
 
 	var users []models.User
-	initializers.DB.Find(&users)
+	if err := initializers.DB.Find(&users).Error; err != nil {
+		return
+	} else {
+		if len(users) == 0 {
+			return
+		}
+	}
 
 	var userIDs []uuid.UUID
 	for _, user := range users {
@@ -122,7 +128,13 @@ func PopulatePosts() {
 	}
 
 	var users []models.User
-	initializers.DB.Find(&users)
+	if err := initializers.DB.Find(&users).Error; err != nil {
+		return
+	} else {
+		if len(users) == 0 {
+			return
+		}
+	}
 
 	var userIDs []uuid.UUID
 	for _, user := range users {
@@ -154,7 +166,13 @@ func PopulateOpenings() {
 	}
 
 	var projects []models.Project
-	initializers.DB.Find(&projects)
+	if err := initializers.DB.Find(&projects).Error; err != nil {
+		return
+	} else {
+		if len(projects) == 0 {
+			return
+		}
+	}
 
 	var projectIDs []uuid.UUID
 	for _, project := range projects {

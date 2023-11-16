@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/Pratham-Mishra04/interact/config"
@@ -434,7 +435,10 @@ func GetSimilarProjects(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "No Project with this ID found."}
 	}
 
-	recommendations, err := utils.MLReq(project.ID.String(), config.PROJECT_SIMILAR)
+	limit, _ := strconv.Atoi(c.Query("limit", "10"))
+	page, _ := strconv.Atoi(c.Query("page", "1"))
+
+	recommendations, err := utils.MLReq(project.ID.String(), config.PROJECT_SIMILAR, limit, page)
 	if err != nil {
 		helpers.LogServerError("Error Fetching from ML API", err, c.Path())
 	}
@@ -453,7 +457,7 @@ func GetSimilarProjects(c *fiber.Ctx) error {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 		}
 	} else {
-		if err := paginatedDB.
+		if err := initializers.DB.
 			Preload("User").
 			Preload("Memberships").
 			Where("id IN ?", recommendations).

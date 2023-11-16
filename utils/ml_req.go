@@ -10,10 +10,26 @@ import (
 	"github.com/Pratham-Mishra04/interact/initializers"
 )
 
-func MLReq(id string, url string) ([]string, error) {
+func MLReq(id string, url string, args ...int) ([]string, error) {
+
+	var limit, page int
+	switch len(args) {
+	case 0:
+		limit = 10
+		page = 1
+	case 1:
+		limit = args[0]
+		page = 1
+	case 2:
+		limit = args[0]
+		page = args[1]
+	}
+
 	URL := initializers.CONFIG.ML_URL + url
-	reqBody, _ := json.Marshal(map[string]string{
-		"id": id,
+	reqBody, _ := json.Marshal(map[string]any{
+		"id":    id,
+		"limit": limit,
+		"page":  page,
 	})
 	response, err := http.Post(URL, "application/json", bytes.NewBuffer(reqBody))
 	if err != nil {

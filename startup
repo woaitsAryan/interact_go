@@ -12,3 +12,7 @@ export COMPOSE_PROJECT_NAME=interact
     and also comment out the occurences in the CONTROLLERS.
 - Then migrate the TABLES, uncomment the references and migrate again.
 - Do the same for GROUP_MESSAGES and GROUP_CHATS
+
+! Added all this in init.sql, but if issue still persists,
+ - docker exec -it container_name bash
+ - psql -U postgres -d postgres -a -f /docker-entrypoint-initdb.d/init.sql
