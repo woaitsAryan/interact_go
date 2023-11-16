@@ -8,9 +8,11 @@ import (
 )
 
 func UserRouter(app *fiber.App) {
-	app.Post("/signup", validators.UserCreateValidator, controllers.SignUp)
+	app.Post("/signup", validators.UserCreateValidator, middlewares.EarlyAccessCheck, controllers.SignUp)
 	app.Post("/login", controllers.LogIn)
 	app.Post("/refresh", controllers.Refresh)
+
+	app.Post("/early_access", controllers.GetEarlyAccessToken)
 
 	app.Post("/recovery", controllers.SendResetURL)
 	app.Post("/recovery/verify", controllers.ResetPassword)

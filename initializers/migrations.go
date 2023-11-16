@@ -13,7 +13,7 @@ func AutoMigrate() {
 		&models.Achievement{},
 		&models.ProfileView{},
 		&models.FollowFollower{},
-		&models.Notification{},
+
 		&models.PostBookmark{},
 		&models.PostBookmarkItem{},
 		&models.ProjectBookmark{},
@@ -28,6 +28,8 @@ func AutoMigrate() {
 		&models.GroupChatMembership{},
 
 		&models.Post{},
+		&models.UserPostTag{},
+
 		&models.Project{},
 		&models.ProjectView{},
 		&models.ProjectHistory{},
@@ -36,19 +38,25 @@ func AutoMigrate() {
 		&models.Opening{},
 		&models.Application{},
 		&models.Membership{},
+
 		&models.Comment{},
 		&models.Invitation{},
 		&models.Like{},
-		&models.UserPostTag{},
+
 		&models.LastViewedProjects{},
 		&models.LastViewedOpenings{},
-		&models.SearchQuery{},
+
 		&models.UserVerification{},
 		&models.OAuth{},
+		&models.EarlyAccess{},
+
 		&models.Organization{},
 		&models.OrganizationMembership{},
 		&models.OrganizationHistory{},
+
 		&models.Report{},
+		&models.Notification{},
+		&models.SearchQuery{},
 	)
 	fmt.Println("Migrations Finished!")
 }

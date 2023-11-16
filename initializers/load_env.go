@@ -29,6 +29,7 @@ type Config struct {
 	REDIS_PORT           string      `mapstructure:"REDIS_PORT"`
 	REDIS_PASSWORD       string      `mapstructure:"REDIS_PASSWORD"`
 	JWT_SECRET           string      `mapstructure:"JWT_SECRET"`
+	EARLY_ACCESS_SECRET  string      `mapstructure:"EARLY_ACCESS_SECRET"`
 	FRONTEND_URL         string      `mapstructure:"FRONTEND_URL"`
 	BACKEND_URL          string      `mapstructure:"BACKEND_URL"`
 	ML_URL               string      `mapstructure:"ML_URL"`

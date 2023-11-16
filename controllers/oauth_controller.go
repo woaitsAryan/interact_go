@@ -122,30 +122,32 @@ func GoogleCallback(c *fiber.Ctx) error {
 		var user models.User
 		if err := initializers.DB.Session(&gorm.Session{SkipHooks: true}).Preload("OAuth").First(&user, "email = ?", userInfo.Email).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
-				newUser := models.User{
-					Name:              userInfo.Name,
-					Email:             userInfo.Email,
-					Username:          userInfo.Email,
-					PasswordChangedAt: time.Now(),
-				}
+				return c.Redirect(initializers.CONFIG.FRONTEND_URL+"/login?msg=nouser", fiber.StatusTemporaryRedirect)
 
-				result := initializers.DB.Create(&newUser)
-				if result.Error != nil {
-					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
-				}
+				// newUser := models.User{
+				// 	Name:              userInfo.Name,
+				// 	Email:             userInfo.Email,
+				// 	Username:          userInfo.Email,
+				// 	PasswordChangedAt: time.Now(),
+				// }
 
-				oauth := models.OAuth{
-					UserID:              newUser.ID,
-					Provider:            "Google",
-					OnBoardingCompleted: false,
-				}
+				// result := initializers.DB.Create(&newUser)
+				// if result.Error != nil {
+				// 	return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				// }
 
-				result = initializers.DB.Create(&oauth)
-				if result.Error != nil {
-					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
-				}
+				// oauth := models.OAuth{
+				// 	UserID:              newUser.ID,
+				// 	Provider:            "Google",
+				// 	OnBoardingCompleted: false,
+				// }
 
-				return RedirectToSignUp(c, newUser)
+				// result = initializers.DB.Create(&oauth)
+				// if result.Error != nil {
+				// 	return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				// }
+
+				// return RedirectToSignUp(c, newUser)
 			} else {
 				return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 			}

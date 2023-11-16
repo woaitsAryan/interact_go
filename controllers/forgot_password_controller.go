@@ -53,7 +53,7 @@ func SendResetURL(c *fiber.Ctx) error {
 
 	resetURL := initializers.CONFIG.FRONTEND_URL + "/account_recovery?uid=" + user.ID.String() + "&token=" + code
 
-	err = helpers.SendMail("Account Recovery | Interact", "Hi "+user.Username+"(your username)"+", "+"Reset your Password on this URL: "+resetURL, user.Name, user.Email)
+	err = helpers.SendMail("Account Recovery | Interact", "Hi "+user.Username+"(your username)"+", "+"Reset your Password on this URL: "+resetURL, user.Name, user.Email, "<div><strong>This is Valid for next 10 minutes only!</strong></div>")
 	if err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}

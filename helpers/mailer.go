@@ -7,10 +7,10 @@ import (
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
-func SendMail(subject string, body string, recipientName string, recipientEmail string) error {
+func SendMail(subject string, body string, recipientName string, recipientEmail string, htmlStr string) error {
 	from := mail.NewEmail(config.SENDER_NAME, config.SENDER_EMAIL)
 	to := mail.NewEmail(recipientName, recipientEmail)
-	htmlContent := body + "<div><strong>This is Valid for next 10 minutes only!</strong></div>" //! Email Template
+	htmlContent := body + htmlStr //TODO Email Template
 	message := mail.NewSingleEmail(from, subject, to, body, htmlContent)
 	client := sendgrid.NewSendClient(initializers.CONFIG.SENDGRID_KEY)
 	_, err := client.Send(message)

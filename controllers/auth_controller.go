@@ -81,6 +81,8 @@ func SignUp(c *fiber.Ctx) error {
 		PasswordChangedAt: time.Now(),
 	}
 
+	newUser.Verified = true
+
 	result := initializers.DB.Create(&newUser)
 	if result.Error != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
