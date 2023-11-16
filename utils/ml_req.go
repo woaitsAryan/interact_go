@@ -7,10 +7,11 @@ import (
 
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
+	"github.com/Pratham-Mishra04/interact/initializers"
 )
 
 func MLReq(id string, url string) ([]string, error) {
-	URL := "http://127.0.0.1:3030/" + url
+	URL := initializers.CONFIG.ML_URL + url
 	reqBody, _ := json.Marshal(map[string]string{
 		"id": id,
 	})

@@ -1,5 +1,10 @@
 export COMPOSE_PROJECT_NAME=interact
 
+# FOR DATABASE BACKUPS
+- mkdir database & cd database
+- mkdir backups & mkdir logs
+- cd logs & touch backup.log
+
 #! IMPORTANT
 
 - TABLES MESSAGES and CHATS have circular referencing so they cant be migrated as they are.

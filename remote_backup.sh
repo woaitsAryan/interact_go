@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Source database configuration from .env.db file
-if [ -f .env.db ]; then
-    source .env.db
+if [ -f .env.db.remote ]; then
+    source .env.db.remote
 else
-    echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR: .env.db file not found." >> ./database/logs/backup.log
+    echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR: .env.db.remote file not found." >> ./database/logs/backup.log
     exit 1
 fi
 
@@ -31,8 +31,8 @@ BACKUP_FILE="$BACKUP_DIR/$MOST_RECENT_BACKUP"
 
 # Restore database with password
 if PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" < "$BACKUP_FILE"; then
-    echo "$(date '+%Y-%m-%d %H:%M:%S') INFO: Database restore completed successfully from $MOST_RECENT_BACKUP." >> ./database/logs/backup.log
+    echo "$(date '+%Y-%m-%d %H:%M:%S') INFO: Database remote backup completed successfully from $MOST_RECENT_BACKUP." >> ./database/logs/backup.log
 else
-    echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR: Database restore failed. Please check for errors." >> ./database/logs/backup.log
+    echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR: Database remote backup failed. Please check for errors." >> ./database/logs/backup.log
     exit 1
 fi

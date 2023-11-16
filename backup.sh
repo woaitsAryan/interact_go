@@ -1,5 +1,5 @@
 # Source environment variables from .env file
-if [ -f .env ]; then
+if [ -f .env.db ]; then
     source .env.db
 else
     echo "Error: .env.db file not found." >> ./database/logs/backup.log
