@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/Pratham-Mishra04/interact/cache"
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
@@ -111,6 +112,9 @@ func AddOpening(c *fiber.Ctx) error {
 	parsedID, _ := uuid.Parse(projectMemberID)
 	go routines.MarkProjectHistory(project.ID, parsedID, 3, nil, &newOpening.ID, nil, nil, nil)
 
+	cache.RemoveProject(project.Slug)
+	cache.RemoveProject("-workspace--" + project.Slug)
+
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",
 		"message": "New Opening Added",
@@ -142,7 +146,7 @@ func EditOpening(c *fiber.Ctx) error {
 	}
 
 	var opening models.Opening
-	if err := initializers.DB.First(&opening, "id = ? AND user_id=?", parsedOpeningID, parsedUserID).Error; err != nil {
+	if err := initializers.DB.Preload("Project").First(&opening, "id = ? AND user_id=?", parsedOpeningID, parsedUserID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Opening of this ID found."}
 		}
@@ -182,6 +186,9 @@ func EditOpening(c *fiber.Ctx) error {
 	parsedID, _ := uuid.Parse(projectMemberID)
 	go routines.MarkProjectHistory(opening.ProjectID, parsedID, 4, nil, &opening.ID, nil, nil, nil)
 
+	cache.RemoveProject(opening.Project.Slug)
+	cache.RemoveProject("-workspace--" + opening.Project.Slug)
+
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Opening Updated",
@@ -203,7 +210,7 @@ func DeleteOpening(c *fiber.Ctx) error {
 	}
 
 	var opening models.Opening
-	if err := initializers.DB.First(&opening, "id = ? AND user_id=?", parsedOpeningID, parsedUserID).Error; err != nil {
+	if err := initializers.DB.Preload("Project").First(&opening, "id = ? AND user_id=?", parsedOpeningID, parsedUserID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Opening of this ID found."}
 		}
@@ -211,6 +218,7 @@ func DeleteOpening(c *fiber.Ctx) error {
 	}
 
 	projectID := opening.ProjectID
+	projectSlug := opening.Project.Slug
 
 	result := initializers.DB.Delete(&opening)
 
@@ -221,6 +229,9 @@ func DeleteOpening(c *fiber.Ctx) error {
 	projectMemberID := c.GetRespHeader("projectMemberID")
 	parsedID, _ := uuid.Parse(projectMemberID)
 	go routines.MarkProjectHistory(projectID, parsedID, 5, nil, nil, nil, nil, nil)
+
+	cache.RemoveProject(projectSlug)
+	cache.RemoveProject("-workspace--" + projectSlug)
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",

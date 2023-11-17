@@ -30,3 +30,10 @@ func SetPost(id string, post *models.Post) error {
 	}
 	return nil
 }
+
+func RemovePost(id string) error {
+	if err := RemoveFromCache("post-" + id); err != nil {
+		return err
+	}
+	return nil
+}

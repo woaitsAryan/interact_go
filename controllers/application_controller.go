@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/Pratham-Mishra04/interact/cache"
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
@@ -118,7 +119,7 @@ func AddApplication(c *fiber.Ctx) error {
 	}
 
 	var opening models.Opening
-	if err := initializers.DB.Where("id = ? AND active=true", parsedOpeningID).First(&opening).Error; err != nil {
+	if err := initializers.DB.Preload("Project").Where("id = ? AND active=true", parsedOpeningID).First(&opening).Error; err != nil {
 		return &fiber.Error{Code: 400, Message: "No Opening of this ID found."}
 	}
 
@@ -161,6 +162,7 @@ func AddApplication(c *fiber.Ctx) error {
 	}
 
 	go routines.IncrementOpeningApplicationsAndSendNotification(parsedOpeningID, newApplication.ID, parsedUserID)
+	cache.RemoveProject("-workspace--" + opening.Project.Slug)
 
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",
@@ -178,7 +180,7 @@ func DeleteApplication(c *fiber.Ctx) error {
 	}
 
 	var application models.Application
-	if err := initializers.DB.First(&application, "user_id=? AND id = ?", loggedInUserID, parsedApplicationID).Error; err != nil {
+	if err := initializers.DB.Preload("Project").First(&application, "user_id=? AND id = ?", loggedInUserID, parsedApplicationID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Application of this ID found."}
 		}
@@ -190,6 +192,8 @@ func DeleteApplication(c *fiber.Ctx) error {
 	if result.Error != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
+
+	cache.RemoveProject("-workspace--" + application.Project.Slug)
 
 	parsedOpeningID := application.OpeningID
 	go routines.DecrementOpeningApplications(parsedOpeningID)

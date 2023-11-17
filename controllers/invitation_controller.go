@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/Pratham-Mishra04/interact/cache"
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
@@ -41,7 +42,7 @@ func AcceptInvitation(c *fiber.Ctx) error {
 	}
 
 	var invitation models.Invitation
-	err := initializers.DB.First(&invitation, "id=? AND user_id=?", invitationID, loggedInUserID).Error
+	err := initializers.DB.Preload("Project").First(&invitation, "id=? AND user_id=?", invitationID, loggedInUserID).Error
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "No Invitation of this ID found."}
 	}
@@ -66,7 +67,8 @@ func AcceptInvitation(c *fiber.Ctx) error {
 		}
 
 		go routines.MarkProjectHistory(*invitation.ProjectID, parsedLoggedInUserID, 1, nil, nil, nil, nil, nil)
-
+		cache.RemoveProject(invitation.Project.Slug)
+		cache.RemoveProject("-workspace--" + invitation.Project.Slug)
 	} else if invitation.OrganizationID != nil {
 		membership := models.OrganizationMembership{
 			UserID:         invitation.UserID,
@@ -147,6 +149,7 @@ func WithdrawInvitation(c *fiber.Ctx) error {
 		if invitation.Project.UserID.String() != loggedInUserID {
 			return &fiber.Error{Code: 403, Message: "You don't have the permission to perform this action."}
 		}
+		cache.RemoveProject("-workspace--" + invitation.Project.Slug)
 	} else if invitation.OrganizationID != nil {
 		if invitation.Organization.UserID.String() != loggedInUserID {
 			return &fiber.Error{Code: 403, Message: "You don't have the permission to perform this action."}

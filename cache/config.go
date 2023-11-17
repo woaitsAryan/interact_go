@@ -30,3 +30,15 @@ func SetToCache(key string, data []byte) error {
 	}
 	return nil
 }
+
+func RemoveFromCache(key string) error {
+	err := initializers.RedisClient.Del(ctx, key).Err()
+	if err != nil {
+		if err == redis.Nil {
+			return nil
+		}
+		helpers.LogServerError("Error Removing from cache", err, "")
+		return fmt.Errorf("error removing from cache")
+	}
+	return nil
+}

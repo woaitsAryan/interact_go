@@ -237,6 +237,8 @@ func UpdatePost(c *fiber.Ctx) error {
 		}
 	}
 
+	cache.RemovePost(postID)
+
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Post updated successfully",

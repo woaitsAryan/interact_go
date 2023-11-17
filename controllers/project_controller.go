@@ -97,10 +97,10 @@ func GetWorkSpaceProject(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	// var invitations []models.Invitation
-	// if err := initializers.DB.Preload("User").Find(&invitations, "project_id = ? AND (status = 0 OR status = -1)", project.ID).Error; err != nil {
-	// 	return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-	// }
+	var invitations []models.Invitation
+	if err := initializers.DB.Preload("User").Find(&invitations, "project_id = ? AND (status = 0 OR status = -1)", project.ID).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
 
 	// var chats []models.GroupChat
 	// if err := initializers.DB.Find(&chats, "project_id = ? ", project.ID).Error; err != nil {
@@ -113,8 +113,8 @@ func GetWorkSpaceProject(c *fiber.Ctx) error {
 	}
 	project.Views = count
 	project.Memberships = memberships
-	// project.Invitations = invitations //TODO remove if not required
-	// project.Chats = chats             //TODO only include chats you are part of
+	project.Invitations = invitations //TODO remove if not required
+	// project.Chats = chats //TODO only include chats you are part of
 
 	cache.SetProject("-workspace--"+project.Slug, &project)
 
@@ -429,6 +429,9 @@ func UpdateProject(c *fiber.Ctx) error {
 	projectMemberID := c.GetRespHeader("projectMemberID")
 	parsedID, _ := uuid.Parse(projectMemberID)
 	go routines.MarkProjectHistory(project.ID, parsedID, 2, nil, nil, nil, nil, nil)
+
+	cache.RemoveProject(project.Slug)
+	cache.RemoveProject("-workspace--" + project.Slug)
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",

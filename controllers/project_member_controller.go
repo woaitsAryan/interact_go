@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/Pratham-Mishra04/interact/cache"
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
@@ -111,6 +112,8 @@ func AddMember(c *fiber.Ctx) error {
 
 			invitation.User = user
 
+			cache.RemoveProject("-workspace--" + project.Slug)
+
 			return c.Status(201).JSON(fiber.Map{
 				"status":     "success",
 				"message":    "Invitation sent to the user.",
@@ -147,6 +150,7 @@ func RemoveMember(c *fiber.Ctx) error { //TODO add manager cannot remove manager
 
 	parsedUserID := membership.UserID
 	parsedProjectID := membership.ProjectID
+	projectSlug := membership.Project.Slug
 
 	result := initializers.DB.Delete(&membership)
 	if result.Error != nil {
@@ -156,6 +160,9 @@ func RemoveMember(c *fiber.Ctx) error { //TODO add manager cannot remove manager
 	projectMemberID := c.GetRespHeader("projectMemberID")
 	parsedID, _ := uuid.Parse(projectMemberID)
 	go routines.MarkProjectHistory(parsedProjectID, parsedID, 11, &parsedUserID, nil, nil, nil, nil)
+
+	cache.RemoveProject(projectSlug)
+	cache.RemoveProject("-workspace--" + projectSlug)
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",
@@ -177,6 +184,7 @@ func LeaveProject(c *fiber.Ctx) error {
 
 	parsedUserID := membership.UserID
 	parsedProjectID := membership.ProjectID
+	projectSlug := membership.Project.Slug
 
 	result := initializers.DB.Delete(&membership)
 	if result.Error != nil {
@@ -184,6 +192,9 @@ func LeaveProject(c *fiber.Ctx) error {
 	}
 
 	go routines.MarkProjectHistory(parsedProjectID, parsedUserID, 10, nil, nil, nil, nil, nil)
+
+	cache.RemoveProject(projectSlug)
+	cache.RemoveProject("-workspace--" + projectSlug)
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",
