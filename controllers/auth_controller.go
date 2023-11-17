@@ -88,6 +88,15 @@ func SignUp(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
 
+	profile := models.Profile{
+		UserID: newUser.ID,
+	}
+
+	result = initializers.DB.Create(&profile)
+	if result.Error != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+	}
+
 	c.Set("loggedInUserID", newUser.ID.String())
 
 	picName, err := utils.SaveFile(c, "profilePic", "user/profilePics", false, 500, 500)

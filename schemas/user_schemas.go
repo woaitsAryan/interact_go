@@ -1,6 +1,8 @@
 package schemas
 
-import "github.com/lib/pq"
+import (
+	"github.com/lib/pq"
+)
 
 type UserCreateSchema struct {
 	Name            string `json:"name" validate:"required,max=25"`
@@ -14,11 +16,20 @@ type UserUpdateSchema struct {
 	Name       *string         `json:"name" validate:"max=25"`
 	ProfilePic *string         `json:"profilePic" validate:"image"`
 	CoverPic   *string         `json:"coverPic" validate:"image"`
-	Bio        *string         `json:"bio" validate:"max=1000"`
+	Bio        *string         `json:"bio" validate:"max=500"`
 	Title      *string         `json:"title"`
 	Tagline    *string         `json:"tagline" validate:"max=25"`
 	Tags       *pq.StringArray `json:"tags" validate:"dive,alpha"`
 	Links      *pq.StringArray `json:"links" validate:"dive,url"`
+}
+
+type ProfileUpdateSchema struct {
+	School      *string         `json:"school" validate:"max=25"`
+	Degree      *string         `json:"degree" validate:"max=25"`
+	YOG         *string         `json:"yog"`
+	Description *string         `json:"description" validate:"max=1500"`
+	Hobbies     *pq.StringArray `json:"hobbies"`
+	Areas       *pq.StringArray `json:"areas"`
 }
 
 type AchievementCreateSchema struct {

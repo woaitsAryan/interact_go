@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type User struct { //! Add numProjects field to display on user explore card
+type User struct { //TODO Add numProjects field to display on user explore card
 	ID                        uuid.UUID            `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	Name                      string               `gorm:"type:text;not null" json:"name"`
 	Username                  string               `gorm:"type:text;unique;not null" json:"username"`
@@ -37,16 +37,17 @@ type User struct { //! Add numProjects field to display on user explore card
 	Active                    bool                 `gorm:"default:true" json:"-"`
 	CreatedAt                 time.Time            `gorm:"default:current_timestamp;index:idx_created_at,sort:desc" json:"-"`
 	OAuth                     OAuth                `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"-"`
+	Profile                   Profile              `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"profile"`
 	Projects                  []Project            `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"projects"`
 	Posts                     []Post               `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"posts"`
 	Memberships               []Membership         `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"memberships"`
-	Achievements              []Achievement        `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"achievements"`
 	Applications              []Application        `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"applications"`
 	PostBookmarks             []PostBookmark       `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"postBookmarks"`
 	ProjectBookmarks          []ProjectBookmark    `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"projectBookmarks"`
 	Notifications             []Notification       `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"notifications"`
 	LastViewedProjects        []LastViewedProjects `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"lastViewedProjects"`
 	LastViewedOpenings        []LastViewedOpenings `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"lastViewedOpenings"`
+	Openings                  []Opening            `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"-"` //TODO can have this in the openings tab
 	SendNotifications         []Notification       `gorm:"foreignKey:SenderID;constraint:OnDelete:CASCADE" json:"-"`
 	Followers                 []FollowFollower     `gorm:"foreignKey:FollowerID;constraint:OnDelete:CASCADE" json:"-"`
 	Following                 []FollowFollower     `gorm:"foreignKey:FollowedID;constraint:OnDelete:CASCADE" json:"-"`
@@ -66,7 +67,6 @@ func (u *User) AfterFind(tx *gorm.DB) error {
 		u.Views = 0
 		u.NoFollowers = 0
 		u.NoFollowing = 0
-		u.Achievements = nil
 		u.Memberships = nil
 		u.Projects = nil
 		u.Posts = nil
@@ -103,12 +103,23 @@ type FollowFollower struct { //* follower follows followed
 	CreatedAt  time.Time `gorm:"default:current_timestamp" json:"-"`
 }
 
+type Profile struct {
+	ID                   uuid.UUID      `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	UserID               uuid.UUID      `gorm:"type:uuid;unique;not null" json:"userID"`
+	School               string         `gorm:"type:text" json:"school"`
+	Degree               string         `gorm:"type:text" json:"degree"`
+	YearOfGraduation     int            `gorm:"default:0" json:"yearOfGraduation"`
+	Description          string         `gorm:"type:text" json:"description"`
+	AreasOfCollaboration pq.StringArray `gorm:"type:text[]" json:"areasOfCollaboration"`
+	Hobbies              pq.StringArray `gorm:"type:text[]" json:"hobbies"`
+	Achievements         []Achievement  `gorm:"foreignKey:ProfileID;constraint:OnDelete:CASCADE" json:"achievements"`
+}
+
 type Achievement struct {
-	ID     uuid.UUID      `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	UserID uuid.UUID      `gorm:"type:uuid;not null" json:"userID"`
-	User   User           `json:"user"`
-	Title  string         `gorm:"type:text;not null" json:"title"`
-	Skills pq.StringArray `gorm:"type:text[];not null" json:"skills"`
+	ID        uuid.UUID      `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	ProfileID uuid.UUID      `gorm:"type:uuid;not null" json:"profileID"`
+	Title     string         `gorm:"type:text;not null" json:"title"`
+	Skills    pq.StringArray `gorm:"type:text[];not null" json:"skills"`
 }
 
 type LastViewedProjects struct {

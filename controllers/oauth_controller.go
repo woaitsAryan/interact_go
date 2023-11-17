@@ -136,6 +136,15 @@ func GoogleCallback(c *fiber.Ctx) error {
 				// 	return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 				// }
 
+				// profile := models.Profile{
+				// 	UserID: newUser.ID,
+				// }
+
+				// result = initializers.DB.Create(&profile)
+				// if result.Error != nil {
+				// 	return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				// }
+
 				// oauth := models.OAuth{
 				// 	UserID:              newUser.ID,
 				// 	Provider:            "Google",

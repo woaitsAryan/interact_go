@@ -10,6 +10,7 @@ func AutoMigrate() {
 	fmt.Println("\nStarting Migrations...")
 	DB.AutoMigrate(
 		&models.User{},
+		&models.Profile{},
 		&models.Achievement{},
 		&models.ProfileView{},
 		&models.FollowFollower{},

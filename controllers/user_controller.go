@@ -39,7 +39,8 @@ func GetMe(c *fiber.Ctx) error {
 
 	var user models.User
 	initializers.DB.
-		Preload("Achievements").
+		Preload("Profile").
+		Preload("Profile>Achievements").
 		First(&user, "id = ?", userID)
 
 	return c.Status(200).JSON(fiber.Map{
@@ -51,31 +52,14 @@ func GetMe(c *fiber.Ctx) error {
 
 func GetUser(c *fiber.Ctx) error {
 	username := c.Params("username")
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var user models.User
-	initializers.DB.First(&user, "username = ?", username)
+	initializers.DB.Preload("Profile").First(&user, "username = ?", username)
 
 	if user.ID == uuid.Nil {
 		return &fiber.Error{Code: 400, Message: "No user of this username found."}
 	}
-
-	var projects []models.Project
-	for _, project := range user.Projects {
-		if !project.IsPrivate {
-			projects = append(projects, project)
-		}
-	}
-	user.Projects = projects
-
-	var memberships []models.Membership
-	for _, membership := range user.Memberships {
-		if !membership.Project.IsPrivate {
-			memberships = append(memberships, membership)
-		}
-	}
-	user.Memberships = memberships
-
-	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	if user.ID.String() != loggedInUserID {
 		routines.UpdateProfileViews(&user)

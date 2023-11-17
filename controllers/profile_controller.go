@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"strconv"
 
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
@@ -13,9 +14,70 @@ import (
 	"gorm.io/gorm"
 )
 
-func AddAchievement(c *fiber.Ctx) error {
+func EditProfile(c *fiber.Ctx) error {
 	userID := c.GetRespHeader("loggedInUserID")
 	parsedUserID, _ := uuid.Parse(userID)
+
+	var profile models.Profile
+	if err := initializers.DB.First(&profile, "user_id = ?", userID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+
+			newProfile := models.Profile{
+				UserID: parsedUserID,
+			}
+
+			result := initializers.DB.Create(&newProfile)
+			if result.Error != nil {
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			}
+
+			return &fiber.Error{Code: 400, Message: "Some Error Occurred, Please Try Again."}
+		}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	var reqBody schemas.ProfileUpdateSchema
+	if err := c.BodyParser(&reqBody); err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid Request Body."}
+	}
+
+	if reqBody.School != nil {
+		profile.School = *reqBody.School
+	}
+	if reqBody.Description != nil {
+		profile.Description = *reqBody.Description
+	}
+	if reqBody.Areas != nil {
+		profile.AreasOfCollaboration = *reqBody.Areas
+	}
+	if reqBody.Degree != nil {
+		profile.Degree = *reqBody.Degree
+	}
+	if reqBody.Hobbies != nil {
+		profile.Hobbies = *reqBody.Hobbies
+	}
+	if reqBody.YOG != nil {
+		year, err := strconv.Atoi(*reqBody.YOG)
+		if err == nil {
+			profile.YearOfGraduation = year
+		}
+	}
+
+	result := initializers.DB.Save(&profile)
+	if result.Error != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Profile Edited.",
+		"profile": profile,
+	})
+}
+
+func AddAchievement(c *fiber.Ctx) error {
+	// userID := c.GetRespHeader("loggedInUserID")
+	// parsedUserID, _ := uuid.Parse(userID)
 
 	var reqBody schemas.AchievementCreateSchema
 	if err := c.BodyParser(&reqBody); err != nil {
@@ -25,7 +87,7 @@ func AddAchievement(c *fiber.Ctx) error {
 	for _, achievement := range reqBody.Achievements {
 
 		var achievementModel models.Achievement
-		achievementModel.UserID = parsedUserID
+		// achievementModel.UserID = parsedUserID
 
 		if achievement.ID == "" {
 			achievementModel.Title = achievement.Title
