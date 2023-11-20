@@ -34,4 +34,5 @@ func UserRouter(app *fiber.App) {
 	userRoutes.Delete("/me", controllers.DeactivateMe)
 
 	userRoutes.Post("/report", controllers.AddReport)
+	userRoutes.Post("/feedback", controllers.AddFeedback)
 }

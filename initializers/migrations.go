@@ -58,6 +58,7 @@ func AutoMigrate() {
 		&models.Report{},
 		&models.Notification{},
 		&models.SearchQuery{},
+		&models.Feedback{},
 	)
 	fmt.Println("Migrations Finished!")
 }

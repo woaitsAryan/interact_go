@@ -40,5 +40,4 @@ func main() {
 	routers.Config(app)
 
 	app.Listen(":" + initializers.CONFIG.PORT)
-
 }
