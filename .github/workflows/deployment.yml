@@ -15,9 +15,9 @@ jobs:
 
       - name: Pull Changes
         run: git pull origin main
-        working-directory: /home/prathamm0409/interact/interact_go
+        working-directory: /home/prathammishra/interact/interact_go
 
       - name: Build and Deploy
         run: |
           sudo docker compose up --build -d
-        working-directory: /home/prathamm0409/interact/interact_go
+        working-directory: /home/prathammishra/interact/interact_go
