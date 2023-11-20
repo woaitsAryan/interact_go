@@ -10,6 +10,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    restart: always
     ports:
       - 8000:${PORT}
     depends_on:
@@ -30,7 +31,7 @@ services:
       dockerfile: db.Dockerfile
     restart: always
     ports:
-      - :${DB_PORT}
+      - 5432:${DB_PORT}
     env_file:
       - .env
     environment:

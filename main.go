@@ -4,6 +4,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
+	"github.com/Pratham-Mishra04/interact/populate"
 	"github.com/Pratham-Mishra04/interact/routers"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
@@ -17,7 +18,9 @@ func init() {
 	initializers.ConnectToCache()
 	initializers.AutoMigrate()
 
-	// populate.FillDummies()
+	if initializers.CONFIG.POPULATE_DUMMIES {
+		populate.FillDummies()
+	}
 
 	config.InitializeOAuthGoogle()
 }
@@ -30,10 +33,13 @@ func main() {
 	})
 
 	app.Use(helmet.New())
-	app.Use(logger.New())
 	app.Use(config.CORS())
 	app.Use(config.RATE_LIMITER())
 	// app.Use(config.API_CHECKER)
+
+	if initializers.CONFIG.ENV == initializers.DevelopmentEnv {
+		app.Use(logger.New())
+	}
 
 	app.Static("/", "./public")
 

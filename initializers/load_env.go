@@ -18,13 +18,11 @@ const (
 type Config struct {
 	PORT                 string      `mapstructure:"PORT"`
 	ENV                  Environment `mapstructure:"ENV"`
-	DB_URL               string      `mapstructure:"DB_URL"`
 	DB_HOST              string      `mapstructure:"DB_HOST"`
 	DB_PORT              string      `mapstructure:"DB_PORT"`
 	DB_NAME              string      `mapstructure:"DB_NAME"`
 	DB_USER              string      `mapstructure:"DB_USER"`
 	DB_PASSWORD          string      `mapstructure:"DB_PASSWORD"`
-	BACKUP_DIR           string      `mapstructure:"BACKUP_DIR"`
 	REDIS_HOST           string      `mapstructure:"REDIS_HOST"`
 	REDIS_PORT           string      `mapstructure:"REDIS_PORT"`
 	REDIS_PASSWORD       string      `mapstructure:"REDIS_PASSWORD"`
@@ -38,6 +36,7 @@ type Config struct {
 	GOOGLE_CLIENT_ID     string      `mapstructure:"GOOGLE_CLIENT_ID"`
 	GOOGLE_CLIENT_SECRET string      `mapstructure:"GOOGLE_CLIENT_SECRET"`
 	GOOGLE_OAUTH_STATE   string      `mapstructure:"GOOGLE_OAUTH_STATE"`
+	POPULATE_DUMMIES     bool        `mapstructure:"POPULATE_DUMMIES"`
 }
 
 var CONFIG Config

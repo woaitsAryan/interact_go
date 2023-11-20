@@ -120,6 +120,10 @@ func AddTask(taskType string) func(c *fiber.Ctx) error {
 			parsedID, _ := uuid.Parse(projectMemberID)
 			go routines.MarkProjectHistory(project.ID, parsedID, 9, nil, nil, nil, nil, &task.ID)
 
+			for _, user := range users {
+				go routines.SendTaskNotification(user.ID, parsedID, project.ID)
+			}
+
 			return c.Status(201).JSON(fiber.Map{
 				"status":  "success",
 				"message": "",

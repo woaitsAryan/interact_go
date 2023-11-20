@@ -43,6 +43,6 @@ func AddFeedback(c *fiber.Ctx) error {
 
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",
-		"message": "Feedback Added",
+		"message": "Feedback Submitted",
 	})
 }

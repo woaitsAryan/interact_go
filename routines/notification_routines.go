@@ -42,6 +42,19 @@ func SendInvitationAcceptedNotification(creatorID uuid.UUID, acceptorID uuid.UUI
 	}
 }
 
+func SendTaskNotification(userID uuid.UUID, senderID uuid.UUID, projectID uuid.UUID) {
+	notification := models.Notification{
+		NotificationType: 11,
+		UserID:           userID,
+		SenderID:         senderID,
+		ProjectID:        &projectID,
+	}
+	result := initializers.DB.Create(&notification)
+	if result.Error != nil {
+		helpers.LogDatabaseError("Error whiling creating notification-SendTaskNotification", result.Error, "go_routine")
+	}
+}
+
 func MarkReadNotifications(UnreadNotifications []uuid.UUID) {
 	for _, unreadNotificationID := range UnreadNotifications {
 		var notification models.Notification
