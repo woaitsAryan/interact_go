@@ -44,22 +44,30 @@ func GetEarlyAccessToken(c *fiber.Ctx) error {
 
 	access_token := generateRandomString(32)
 
+	var eaModel models.EarlyAccess
+
 	var earlyAccessModel models.EarlyAccess
 	if err := initializers.DB.First(&earlyAccessModel, "email = ?", reqBody.Email).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			e := models.EarlyAccess{
 				Email:          reqBody.Email,
 				Token:          access_token,
+				MailSent:       false,
 				ExpirationTime: time.Now().Add(config.EARLY_ACCESS_TOKEN_TTL),
 			}
 			result := initializers.DB.Create(&e)
 			if result.Error != nil {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 			}
+
+			eaModel = e
 		} else {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 		}
 	} else {
+		if earlyAccessModel.CreatedAt.Add(time.Hour * 24).After(time.Now()) {
+			return &fiber.Error{Code: 401, Message: "Token request limit: only once per day"}
+		}
 		earlyAccessModel.Token = access_token
 		earlyAccessModel.ExpirationTime = time.Now().Add(config.EARLY_ACCESS_TOKEN_TTL)
 
@@ -67,11 +75,25 @@ func GetEarlyAccessToken(c *fiber.Ctx) error {
 		if result.Error != nil {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 		}
+
+		eaModel = earlyAccessModel
 	}
 
-	err := helpers.SendMail(config.EARLY_ACCESS_EMAIL_SUBJECT, config.EARLY_ACCESS_EMAIL_BODY+access_token, "Interact User", reqBody.Email, "<div><strong>This is Valid for next 7 days!</strong></div><a href="+initializers.CONFIG.FRONTEND_URL+"/signup"+">Click Here to complete your signup!</a>")
+	// err := helpers.SendMail(config.EARLY_ACCESS_EMAIL_SUBJECT, config.EARLY_ACCESS_EMAIL_BODY+access_token, "Interact User", reqBody.Email, "<div><strong>This is Valid for next 7 days!</strong></div><a href="+initializers.CONFIG.FRONTEND_URL+"/signup"+">Click Here to complete your signup!</a>")
+	// if err != nil {
+	// 	return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	// }
+
+	err := helpers.SendEarlyAccessMail("Interact User", reqBody.Email, access_token)
 	if err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	eaModel.MailSent = true
+
+	result := initializers.DB.Save(&eaModel)
+	if result.Error != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
 
 	return c.Status(201).JSON(fiber.Map{

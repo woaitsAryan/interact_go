@@ -213,7 +213,8 @@ func ChangeMemberRole(c *fiber.Ctx) error {
 	}
 
 	var reqBody struct {
-		Role models.ProjectRole
+		Title string             `json:"title"`
+		Role  models.ProjectRole `json:"role"`
 	}
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
@@ -248,6 +249,10 @@ func ChangeMemberRole(c *fiber.Ctx) error {
 	}
 
 	membership.Role = reqBody.Role
+
+	if reqBody.Title != "" {
+		membership.Title = reqBody.Title
+	}
 
 	result := initializers.DB.Save(&membership)
 	if result.Error != nil {

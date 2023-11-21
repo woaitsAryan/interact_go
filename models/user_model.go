@@ -151,6 +151,7 @@ type EarlyAccess struct {
 	ID             uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"-"`
 	Email          string    `gorm:"unique;not null" json:"-"`
 	Token          string    `json:"-"`
+	MailSent       bool      `gorm:"default:false" json:"-"`
 	CreatedAt      time.Time `gorm:"default:current_timestamp;index:idx_created_at,sort:desc" json:"-"`
 	ExpirationTime time.Time `json:"expirationTime"`
 }

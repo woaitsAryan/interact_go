@@ -33,6 +33,7 @@ type Config struct {
 	ML_URL               string      `mapstructure:"ML_URL"`
 	API_TOKEN            string      `mapstructure:"API_TOKEN"`
 	SENDGRID_KEY         string      `mapstructure:"SENDGRID_KEY"`
+	GMAIL_KEY            string      `mapstructure:"GMAIL_KEY"`
 	GOOGLE_CLIENT_ID     string      `mapstructure:"GOOGLE_CLIENT_ID"`
 	GOOGLE_CLIENT_SECRET string      `mapstructure:"GOOGLE_CLIENT_SECRET"`
 	GOOGLE_OAUTH_STATE   string      `mapstructure:"GOOGLE_OAUTH_STATE"`
