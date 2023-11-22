@@ -34,8 +34,9 @@ func SendEarlyAccessMail(recipientName string, recipientEmail string, token stri
 
 	t.Execute(&body, struct {
 		Name  string
+		Email string
 		Token string
-	}{Name: recipientName, Token: token})
+	}{Name: recipientName, Email: recipientEmail, Token: token})
 
 	if err != nil {
 		return err

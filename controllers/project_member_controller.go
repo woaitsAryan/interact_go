@@ -259,6 +259,9 @@ func ChangeMemberRole(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
 
+	cache.RemoveProject(membership.Project.Slug)
+	cache.RemoveProject("-workspace--" + membership.Project.Slug)
+
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "User membership updated.",

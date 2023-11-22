@@ -40,7 +40,7 @@ func GetMe(c *fiber.Ctx) error {
 	var user models.User
 	initializers.DB.
 		Preload("Profile").
-		Preload("Profile>Achievements").
+		Preload("Profile.Achievements").
 		First(&user, "id = ?", userID)
 
 	return c.Status(200).JSON(fiber.Map{

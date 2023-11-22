@@ -19,8 +19,8 @@ type UserUpdateSchema struct {
 	Bio        *string         `json:"bio" validate:"max=500"`
 	Title      *string         `json:"title"`
 	Tagline    *string         `json:"tagline" validate:"max=25"`
-	Tags       *pq.StringArray `json:"tags" validate:"dive,alpha"`
-	Links      *pq.StringArray `json:"links" validate:"dive,url"`
+	Tags       *pq.StringArray `json:"tags"`
+	Links      *pq.StringArray `json:"links"`
 }
 
 type ProfileUpdateSchema struct {
