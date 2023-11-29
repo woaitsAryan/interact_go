@@ -5,7 +5,6 @@ import (
 )
 
 func SaveFile(c *fiber.Ctx, fieldName string, path string, resize bool, d1 int, d2 int) (string, error) {
-
 	form, err := c.MultipartForm()
 	if err != nil {
 		return "", err
@@ -27,7 +26,7 @@ func SaveFile(c *fiber.Ctx, fieldName string, path string, resize bool, d1 int, 
 	}
 
 	if resize {
-		picName, err := ResizeImage(filePath, d1, d2)
+		picName, err := ResizeSavedImage(filePath, d1, d2)
 		if err != nil {
 			return "", err
 		}
@@ -35,5 +34,4 @@ func SaveFile(c *fiber.Ctx, fieldName string, path string, resize bool, d1 int, 
 	}
 
 	return c.GetRespHeader("loggedInUserID") + "-" + file.Filename, nil
-
 }

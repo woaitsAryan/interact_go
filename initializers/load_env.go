@@ -37,6 +37,8 @@ type Config struct {
 	GOOGLE_CLIENT_ID     string      `mapstructure:"GOOGLE_CLIENT_ID"`
 	GOOGLE_CLIENT_SECRET string      `mapstructure:"GOOGLE_CLIENT_SECRET"`
 	GOOGLE_OAUTH_STATE   string      `mapstructure:"GOOGLE_OAUTH_STATE"`
+	GCP_PROJECT          string      `mapstructure:"GCP_PROJECT"`
+	GCP_BUCKET           string      `mapstructure:"GCP_BUCKET"`
 	POPULATE_DUMMIES     bool        `mapstructure:"POPULATE_DUMMIES"`
 }
 

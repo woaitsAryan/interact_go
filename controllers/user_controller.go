@@ -119,13 +119,15 @@ func UpdateMe(c *fiber.Ctx) error {
 	oldProfilePic := user.ProfilePic
 	oldCoverPic := user.CoverPic
 
-	picName, err := utils.SaveFile(c, "profilePic", "user/profilePics", true, 500, 500)
+	// picName, err := utils.SaveFile(c, "profilePic", "user/profilePics", true, 500, 500)
+	picName, err := utils.UploadFile(c, "profilePic", helpers.UserProfileClient, 500, 500)
 	if err != nil {
 		return err
 	}
 	reqBody.ProfilePic = &picName
 
-	coverName, err := utils.SaveFile(c, "coverPic", "user/coverPics", true, 900, 400)
+	// coverName, err := utils.SaveFile(c, "coverPic", "user/coverPics", true, 900, 400)
+	coverName, err := utils.UploadFile(c, "coverPic", helpers.UserCoverClient, 900, 400)
 	if err != nil {
 		return err
 	}
@@ -173,14 +175,16 @@ func UpdateMe(c *fiber.Ctx) error {
 	}
 
 	if *reqBody.ProfilePic != "" {
-		err := utils.DeleteFile("user/profilePics", oldProfilePic)
+		// err := utils.DeleteFile("user/profilePics", oldProfilePic)
+		err := helpers.UserProfileClient.DeleteBucketFile(oldProfilePic)
 		if err != nil {
 			initializers.Logger.Warnw("Error while deleting user profile pic", "Error", err)
 		}
 	}
 
 	if *reqBody.CoverPic != "" {
-		err := utils.DeleteFile("user/coverPics", oldCoverPic)
+		err := helpers.UserCoverClient.DeleteBucketFile(oldCoverPic)
+		// err := utils.DeleteFile("user/coverPics", oldCoverPic)
 		if err != nil {
 			initializers.Logger.Warnw("Error while deleting user cover pic", "Error", err)
 		}

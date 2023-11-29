@@ -1,7 +1,10 @@
 package utils
 
 import (
+	"bytes"
+	"image"
 	"image/jpeg"
+	"mime/multipart"
 	"os"
 	"path"
 	"strings"
@@ -9,7 +12,7 @@ import (
 	"github.com/nfnt/resize"
 )
 
-func ResizeImage(picPath string, d1 int, d2 int) (string, error) {
+func ResizeSavedImage(picPath string, d1 int, d2 int) (string, error) {
 	file, err := os.Open(picPath)
 	if err != nil {
 		return "", err
@@ -49,4 +52,27 @@ func ResizeImage(picPath string, d1 int, d2 int) (string, error) {
 	resizedPic := resizedPicArr[len(resizedPicArr)-1]
 
 	return resizedPic, nil
+}
+
+func ResizeFormImage(file *multipart.FileHeader, d1 int, d2 int) (*bytes.Buffer, error) {
+	src, err := file.Open()
+	if err != nil {
+		return nil, err
+	}
+	defer src.Close()
+
+	img, _, err := image.Decode(src)
+	if err != nil {
+		return nil, err
+	}
+
+	resizedImg := resize.Resize(uint(d1), uint(d2), img, resize.Lanczos3)
+
+	// Encode the resized image to a buffer
+	var buf bytes.Buffer
+	if err := jpeg.Encode(&buf, resizedImg, nil); err != nil {
+		return nil, err
+	}
+
+	return &buf, nil
 }

@@ -27,7 +27,7 @@ func SaveMultipleFiles(c *fiber.Ctx, fieldName string, path string, resize bool,
 		}
 
 		if resize {
-			picName, err := ResizeImage(filePath, d1, d2)
+			picName, err := ResizeSavedImage(filePath, d1, d2)
 			if err != nil {
 				return []string{}, err
 			}

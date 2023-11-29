@@ -131,7 +131,8 @@ func AddPost(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: err.Error()}
 	}
 
-	images, err := utils.SaveMultipleFiles(c, "images", "post", true, 1280, 720)
+	// images, err := utils.SaveMultipleFiles(c, "images", "post", true, 1280, 720)
+	images, err := utils.UploadMultipleFiles(c, "images", helpers.PostClient, 1280, 720)
 	if err != nil {
 		return err
 	}
@@ -265,7 +266,8 @@ func DeletePost(c *fiber.Ctx) error {
 	}
 
 	for _, image := range post.Images {
-		err := utils.DeleteFile("post", image)
+		// err := utils.DeleteFile("post", image)
+		err := helpers.PostClient.DeleteBucketFile(image)
 		if err != nil {
 			initializers.Logger.Warnf("Error while deleting post pic", err)
 		}

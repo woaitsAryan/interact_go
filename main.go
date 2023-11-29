@@ -17,6 +17,7 @@ func init() {
 	initializers.AddLogger()
 	initializers.ConnectToCache()
 	initializers.AutoMigrate()
+	helpers.InitializeBucketClients()
 
 	if initializers.CONFIG.POPULATE_DUMMIES {
 		populate.FillDummies()

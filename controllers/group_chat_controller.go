@@ -74,7 +74,8 @@ func AddGroupChat(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Error Parsing the Loggedin User ID."}
 	}
 
-	picName, err := utils.SaveFile(c, "coverPic", "chat", true, 720, 720)
+	// picName, err := utils.SaveFile(c, "coverPic", "chat", true, 720, 720)
+	picName, err := utils.UploadFile(c, "coverPic", helpers.ChatClient, 720, 720)
 	if err != nil {
 		return err
 	}
@@ -158,7 +159,8 @@ func AddProjectChat(c *fiber.Ctx) error { //! check for project memberships of t
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	picName, err := utils.SaveFile(c, "coverPic", "chat", true, 720, 720)
+	// picName, err := utils.SaveFile(c, "coverPic", "chat", true, 720, 720)
+	picName, err := utils.UploadFile(c, "coverPic", helpers.ChatClient, 720, 720)
 	if err != nil {
 		return err
 	}
@@ -399,7 +401,8 @@ func EditGroupChat(c *fiber.Ctx) error {
 	}
 	groupChat.AdminOnly = reqBody.AdminOnly
 
-	picName, err := utils.SaveFile(c, "coverPic", "chat", true, 720, 720)
+	// picName, err := utils.SaveFile(c, "coverPic", "chat", true, 720, 720)
+	picName, err := utils.UploadFile(c, "coverPic", helpers.ChatClient, 720, 720)
 	if err != nil {
 		return err
 	}
@@ -416,7 +419,8 @@ func EditGroupChat(c *fiber.Ctx) error {
 	}
 
 	if picName != "" {
-		err := utils.DeleteFile("chat", oldGroupPic)
+		// err := utils.DeleteFile("chat", oldGroupPic)
+		err := helpers.ChatClient.DeleteBucketFile(oldGroupPic)
 		if err != nil {
 			initializers.Logger.Warnw("Error while deleting group cover pic", "Error", err)
 		}

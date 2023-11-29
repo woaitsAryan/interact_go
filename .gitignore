@@ -5,3 +5,4 @@ interact.exe*
 /log
 /database
 .DS_Store
+bucket-key.json
