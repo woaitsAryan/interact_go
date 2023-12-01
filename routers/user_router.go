@@ -25,6 +25,7 @@ func UserRouter(app *fiber.App) {
 	userRoutes.Patch("/update_password", controllers.UpdatePassword)
 	userRoutes.Patch("/update_email", controllers.UpdateEmail)
 	userRoutes.Patch("/update_phone_number", controllers.UpdatePhoneNo)
+	userRoutes.Patch("/update_resume", controllers.UpdateResume)
 	userRoutes.Delete("/deactive", controllers.Deactive)
 
 	userRoutes.Patch("/me", controllers.UpdateMe)

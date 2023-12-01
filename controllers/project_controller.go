@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"log"
 	"reflect"
 
 	"github.com/Pratham-Mishra04/interact/cache"
@@ -422,11 +421,7 @@ func UpdateProject(c *fiber.Ctx) error {
 	}
 
 	if reqBody.CoverPic != "" {
-		// err := utils.DeleteFile("project/coverPics", oldProjectPic)
-		err := helpers.ProjectClient.DeleteBucketFile(oldProjectPic)
-		if err != nil {
-			initializers.Logger.Warnw("Error while deleting project cover pic", "Error", err)
-		}
+		go routines.DeleteFromBucket(helpers.ProjectClient, oldProjectPic)
 	}
 
 	projectMemberID := c.GetRespHeader("projectMemberID")
@@ -478,11 +473,7 @@ func DeleteProject(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	// err = utils.DeleteFile("project/coverPics", coverPic)
-	err = helpers.ProjectClient.DeleteBucketFile(coverPic)
-	if err != nil {
-		log.Printf("Error while deleting project cover pic: %e", err)
-	}
+	go routines.DeleteFromBucket(helpers.ProjectClient, coverPic)
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",

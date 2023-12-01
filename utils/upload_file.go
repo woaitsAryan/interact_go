@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/Pratham-Mishra04/interact/helpers"
@@ -36,4 +38,39 @@ func UploadFile(c *fiber.Ctx, fieldName string, client *helpers.BucketClient, d1
 	}
 
 	return resizedPicPath, nil
+}
+
+func UploadResume(c *fiber.Ctx) (string, error) {
+	form, err := c.MultipartForm()
+	if err != nil {
+		return "", err
+	}
+
+	files := form.File["resume"]
+	if files == nil {
+		return "", nil
+	}
+
+	file := files[0]
+
+	fileContent, err := file.Open()
+	if err != nil {
+		return "", err
+	}
+	defer fileContent.Close()
+
+	var buffer bytes.Buffer
+	if _, err := io.Copy(&buffer, fileContent); err != nil {
+		return "", err
+	}
+
+	timestamp := time.Now().UTC().Format(time.RFC3339)
+	filePath := fmt.Sprintf("%s-%s-%s", c.GetRespHeader("loggedInUserID"), file.Filename, timestamp)
+
+	err = helpers.UserResumeBucket.UploadBucketFile(&buffer, filePath)
+	if err != nil {
+		return "", err
+	}
+
+	return filePath, nil
 }

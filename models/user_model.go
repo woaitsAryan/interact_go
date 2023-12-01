@@ -22,6 +22,7 @@ type User struct { //TODO Add numProjects field to display on user explore card
 	Tagline                   string               `json:"tagline"`
 	Tags                      pq.StringArray       `gorm:"type:text[]" json:"tags"`
 	Links                     pq.StringArray       `gorm:"type:text[]" json:"links"`
+	Resume                    string               `gorm:"type:text" json:"-"`
 	PasswordResetToken        string               `json:"-"`
 	PasswordResetTokenExpires time.Time            `json:"-"`
 	Views                     int                  `json:"views"`
@@ -70,6 +71,7 @@ func (u *User) AfterFind(tx *gorm.DB) error {
 		u.Memberships = nil
 		u.Projects = nil
 		u.Posts = nil
+		u.Resume = ""
 	}
 	return nil
 }

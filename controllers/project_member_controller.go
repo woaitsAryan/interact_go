@@ -89,12 +89,6 @@ func AddMember(c *fiber.Ctx) error {
 				return &fiber.Error{Code: 400, Message: "Have already invited this User."}
 			}
 
-			var existingApplication models.Application
-			err = initializers.DB.Where("user_id=? AND project_id=? AND (status=0 OR status=1)", user.ID, parsedProjectID).First(&existingApplication).Error
-			if err == nil {
-				return &fiber.Error{Code: 400, Message: "User has already applied for this project."}
-			}
-
 			var invitation models.Invitation
 			invitation.ProjectID = &parsedProjectID
 			invitation.UserID = user.ID

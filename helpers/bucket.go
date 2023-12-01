@@ -26,6 +26,7 @@ var PostClient *BucketClient
 var ChatClient *BucketClient
 var UserProfileClient *BucketClient
 var UserCoverClient *BucketClient
+var UserResumeBucket *BucketClient
 
 func createNewBucketClient(uploadPath string) *BucketClient {
 	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "bucket-key.json") // FILE PATH
@@ -48,6 +49,7 @@ func InitializeBucketClients() {
 	ChatClient = createNewBucketClient("chats/")
 	UserProfileClient = createNewBucketClient("users/profilePics/")
 	UserCoverClient = createNewBucketClient("users/coverPics/")
+	UserResumeBucket = createNewBucketClient("users/resumes/")
 }
 
 func (c *BucketClient) UploadBucketFile(buffer *bytes.Buffer, object string) error {

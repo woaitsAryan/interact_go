@@ -8,7 +8,6 @@ import (
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/schemas"
-	"github.com/Pratham-Mishra04/interact/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -35,6 +34,13 @@ func GetApplication(c *fiber.Ctx) error {
 
 	if application.UserID != parsedLoggedInUserID && application.Project.UserID != parsedLoggedInUserID {
 		return &fiber.Error{Code: 403, Message: "Do not have the permission to perform this action."}
+	}
+
+	if application.IncludeEmail {
+		application.Email = application.User.Email
+	}
+	if application.IncludeResume {
+		application.Resume = application.User.Resume
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -132,6 +138,12 @@ func AddApplication(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "You already are a collaborator of this project."}
 	}
 
+	var invitation models.Invitation
+	err = initializers.DB.Where("user_id=? AND project_id=? AND status=0", user.ID, opening.ProjectID).First(&invitation).Error
+	if err == nil {
+		return &fiber.Error{Code: 400, Message: "You already are invited to join this project."}
+	}
+
 	var reqBody schemas.ApplicationCreateSchema
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
@@ -141,19 +153,14 @@ func AddApplication(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: err.Error()}
 	}
 
-	resumePath, err := utils.SaveFile(c, "resume", "project/openings/applications", false, 0, 0)
-	if err != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error."}
-	}
-
 	newApplication := models.Application{
-		OpeningID: parsedOpeningID,
-		ProjectID: opening.ProjectID,
-		UserID:    parsedUserID,
-		Content:   reqBody.Content,
-		Resume:    resumePath,
-		Links:     reqBody.Links,
-		Email:     reqBody.Email,
+		OpeningID:     parsedOpeningID,
+		ProjectID:     opening.ProjectID,
+		UserID:        parsedUserID,
+		Content:       reqBody.Content,
+		Links:         reqBody.Links,
+		IncludeEmail:  reqBody.IncludeEmail,
+		IncludeResume: reqBody.IncludeResume,
 	}
 
 	result := initializers.DB.Create(&newApplication)

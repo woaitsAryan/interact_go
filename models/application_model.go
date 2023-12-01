@@ -19,8 +19,10 @@ type Application struct {
 	CreatedAt     time.Time        `gorm:"default:current_timestamp" json:"createdAt"`
 	Status        int              `json:"status"` //* -1 rejected, 0 submitted, 1 under review, 2 accepted
 	Content       string           `gorm:"type:text;not null" json:"content"`
-	Resume        string           `gorm:"type:varchar(255)" json:"resume"`
+	Resume        string           `gorm:"type:text" json:"resume"`
 	Links         pq.StringArray   `gorm:"type:text[]" json:"links"`
+	IncludeEmail  bool             `gorm:"default:false" json:"-"`
+	IncludeResume bool             `gorm:"default:false" json:"-"`
 	Notifications []Notification   `gorm:"foreignKey:ApplicationID;constraint:OnDelete:CASCADE" json:"-"`
 	History       []ProjectHistory `gorm:"foreignKey:ApplicationID;constraint:OnDelete:CASCADE" json:"-"`
 }

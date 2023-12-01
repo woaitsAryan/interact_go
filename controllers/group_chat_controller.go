@@ -419,11 +419,7 @@ func EditGroupChat(c *fiber.Ctx) error {
 	}
 
 	if picName != "" {
-		// err := utils.DeleteFile("chat", oldGroupPic)
-		err := helpers.ChatClient.DeleteBucketFile(oldGroupPic)
-		if err != nil {
-			initializers.Logger.Warnw("Error while deleting group cover pic", "Error", err)
-		}
+		go routines.DeleteFromBucket(helpers.ChatClient, oldGroupPic)
 	}
 
 	return c.Status(200).JSON(fiber.Map{

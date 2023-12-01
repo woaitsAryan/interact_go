@@ -175,19 +175,11 @@ func UpdateMe(c *fiber.Ctx) error {
 	}
 
 	if *reqBody.ProfilePic != "" {
-		// err := utils.DeleteFile("user/profilePics", oldProfilePic)
-		err := helpers.UserProfileClient.DeleteBucketFile(oldProfilePic)
-		if err != nil {
-			initializers.Logger.Warnw("Error while deleting user profile pic", "Error", err)
-		}
+		go routines.DeleteFromBucket(helpers.UserProfileClient, oldProfilePic)
 	}
 
 	if *reqBody.CoverPic != "" {
-		err := helpers.UserCoverClient.DeleteBucketFile(oldCoverPic)
-		// err := utils.DeleteFile("user/coverPics", oldCoverPic)
-		if err != nil {
-			initializers.Logger.Warnw("Error while deleting user cover pic", "Error", err)
-		}
+		go routines.DeleteFromBucket(helpers.UserCoverClient, oldCoverPic)
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -332,6 +324,41 @@ func UpdatePhoneNo(c *fiber.Ctx) error {
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "User updated successfully",
+	})
+}
+
+func UpdateResume(c *fiber.Ctx) error {
+	userID := c.GetRespHeader("loggedInUserID")
+
+	var user models.User
+	if err := initializers.DB.First(&user, "id = ?", userID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return &fiber.Error{Code: 400, Message: "No user of this ID found."}
+		}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	resumePath, err := utils.UploadResume(c)
+	if err != nil {
+		return helpers.AppError{Code: 500, Message: config.SERVER_ERROR, Err: err}
+	}
+
+	oldResume := user.Resume
+
+	user.Resume = resumePath
+
+	if err := initializers.DB.Save(&user).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	if oldResume != "" {
+		go routines.DeleteFromBucket(helpers.UserResumeBucket, oldResume)
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "User updated successfully",
+		"resume":  resumePath,
 	})
 }
 

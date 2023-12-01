@@ -6,6 +6,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/schemas"
 	"github.com/Pratham-Mishra04/interact/utils"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
@@ -266,11 +267,7 @@ func DeletePost(c *fiber.Ctx) error {
 	}
 
 	for _, image := range post.Images {
-		// err := utils.DeleteFile("post", image)
-		err := helpers.PostClient.DeleteBucketFile(image)
-		if err != nil {
-			initializers.Logger.Warnf("Error while deleting post pic", err)
-		}
+		go routines.DeleteFromBucket(helpers.PostClient, image)
 	}
 
 	var messages []models.Message

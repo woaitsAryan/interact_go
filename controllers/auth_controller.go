@@ -59,6 +59,7 @@ func CreateSendToken(c *fiber.Ctx, user models.User, statusCode int, message str
 		"user":    user,
 		"email":   user.Email,
 		"phoneNo": user.PhoneNo,
+		"resume":  user.Resume,
 	})
 }
 
