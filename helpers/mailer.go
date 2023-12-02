@@ -54,6 +54,35 @@ func SendEarlyAccessMail(recipientName string, recipientEmail string, token stri
 	if err := d.DialAndSend(m); err != nil {
 		return err
 	}
-
 	return nil
+}
+
+func SendChatMail(recipientName string, recipientEmail string, chatUserName string) {
+	var body bytes.Buffer
+	path := config.TEMPLATE_DIR + "chat.html"
+	t, err := template.ParseFiles(path)
+	if err != nil {
+		LogDatabaseError("Error while sending Chat Mail-SendChatMail", err, "go_routine")
+	}
+
+	t.Execute(&body, struct {
+		Name         string
+		ChatUserName string
+	}{Name: recipientName, ChatUserName: chatUserName})
+
+	if err != nil {
+		LogDatabaseError("Error while sending Chat Mail-SendChatMail", err, "go_routine")
+	}
+
+	m := gomail.NewMessage()
+	m.SetHeader("From", config.GMAIL_SENDER)
+	m.SetHeader("To", recipientEmail)
+	m.SetHeader("Subject", "You have a new chat!")
+	m.SetBody("text/html", body.String())
+
+	d := gomail.NewDialer("smtp.gmail.com", 587, config.GMAIL_SENDER, initializers.CONFIG.GMAIL_KEY)
+
+	if err := d.DialAndSend(m); err != nil {
+		LogDatabaseError("Error while sending Chat Mail-SendChatMail", err, "go_routine")
+	}
 }

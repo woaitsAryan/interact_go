@@ -302,6 +302,7 @@ func AddChat(c *fiber.Ctx) error {
 	}
 
 	go routines.SendChatNotification(parsedUserID, parsedChatUserID)
+	go helpers.SendChatMail(chatUser.Name, chatUser.Email, user.Name)
 
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",

@@ -42,7 +42,9 @@ func Search(c *fiber.Ctx, index int) func(db *gorm.DB) *gorm.DB {
 			}
 			return db
 		case 3: //* openings
-			db = db.Where("LOWER(title) LIKE ? OR ? = ANY (tags)  ", "%"+searchStr+"%", searchStr)
+			db = db.Joins("JOIN projects ON openings.project_id = projects.id").
+				Where("LOWER(openings.title) LIKE ? OR LOWER(projects.title) LIKE ? OR ? = ANY (openings.tags) OR ? = ANY (projects.tags)",
+					"%"+searchStr+"%", "%"+searchStr+"%", searchStr, searchStr)
 			return db
 		case 4: //* search_queries
 			db = db.Where("LOWER(query) LIKE ?", "%"+searchStr+"%")

@@ -50,11 +50,8 @@ func GetApplication(c *fiber.Ctx) error {
 	})
 }
 
-func GetAllApplicationsOfOpening(c *fiber.Ctx) error { //! Save memberships in redux for frontend security
+func GetAllApplicationsOfOpening(c *fiber.Ctx) error {
 	openingID := c.Params("openingID")
-	loggedInUserID := c.GetRespHeader("loggedInUserID")
-
-	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
 	parsedOpeningID, err := uuid.Parse(openingID)
 	if err != nil {
@@ -62,34 +59,16 @@ func GetAllApplicationsOfOpening(c *fiber.Ctx) error { //! Save memberships in r
 	}
 
 	var applications []models.Application
-	if err := initializers.DB.Preload("User").Where("opening_id=?", parsedOpeningID).Find(&applications).Error; err != nil {
+	if err := initializers.DB.Preload("User").Where("opening_id=?", parsedOpeningID).Order("created_at DESC").Find(&applications).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	var opening models.Opening
-	if err := initializers.DB.Preload("Project").First(&opening, "id = ?", parsedOpeningID).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-	}
-
-	if len(applications) > 0 {
-		var memberships []models.Membership
-		if err := initializers.DB.Where("project_id=?", applications[0].ProjectID).Find(&memberships).Error; err != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	for i, application := range applications {
+		if application.IncludeEmail {
+			applications[i].Email = application.User.Email
 		}
-		check := false
-
-		for _, membership := range memberships {
-			if membership.UserID == parsedLoggedInUserID {
-				check = true
-			}
-		}
-
-		if opening.Project.UserID == parsedLoggedInUserID {
-			check = true
-		}
-
-		if !check {
-			return &fiber.Error{Code: 403, Message: "Do not have the permission to perform this action."}
+		if application.IncludeResume {
+			applications[i].Resume = application.User.Resume
 		}
 	}
 

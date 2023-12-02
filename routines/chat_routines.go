@@ -44,5 +44,4 @@ func UpdateChatLastRead(chatID uuid.UUID, messages []models.Message, loggedInUse
 			}
 		}
 	}
-
 }

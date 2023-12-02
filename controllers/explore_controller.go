@@ -121,22 +121,33 @@ func GetLatestPosts(c *fiber.Ctx) error {
 }
 
 func GetTrendingOpenings(c *fiber.Ctx) error {
-	//TODO add openings of the matched project name
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
 	paginatedDB := API.Paginator(c)(initializers.DB)
 	var openings []models.Opening
 
-	searchedDB := API.Search(c, 3)(paginatedDB)
+	searchStr := c.Query("search", "")
+	if searchStr == "" {
+		if err := paginatedDB.Preload("Project").
+			Joins("JOIN projects ON openings.project_id = projects.id").
+			Where("openings.active=true").
+			Select("openings.*, (projects.total_no_views * 0.5 + openings.no_of_applications * 0.3) / (1 + EXTRACT(EPOCH FROM age(NOW(), openings.created_at)) / 3600 / 24 / 15) AS t_ratio").
+			Order("t_ratio DESC").
+			Find(&openings).Error; err != nil {
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		}
+	} else {
+		searchedDB := API.Search(c, 3)(paginatedDB)
 
-	if err := searchedDB.Preload("Project").
-		Order("no_of_applications DESC").
-		Where("active=true").
-		Find(&openings).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		if err := searchedDB.Preload("Project").
+			Where("openings.active=true").
+			Select("openings.*, (projects.total_no_views * 0.5 + openings.no_of_applications * 0.3) / (1 + EXTRACT(EPOCH FROM age(NOW(), openings.created_at)) / 3600 / 24 / 15) AS t_ratio").
+			Order("t_ratio DESC").
+			Find(&openings).Error; err != nil {
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		}
 	}
-
 	var filteredOpenings []models.Opening
 	for _, opening := range openings {
 		if opening.Project.UserID != parsedLoggedInUserID && !opening.Project.IsPrivate {
