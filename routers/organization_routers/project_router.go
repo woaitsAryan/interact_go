@@ -9,9 +9,9 @@ import (
 
 func ProjectRouter(app *fiber.App) {
 
-	projectRoutes := app.Group("/org/projects", middlewares.OrgProtect, middlewares.OrgRoleAuthorization(models.Manager))
-	projectRoutes.Post("/", controllers.AddProject)
+	projectRoutes := app.Group("/org/:orgID/projects", middlewares.Protect)
+	projectRoutes.Post("/", middlewares.OrgRoleAuthorization(models.Manager), controllers.AddProject)
 
-	projectRoutes.Patch("/:projectID", controllers.UpdateProject)
-	projectRoutes.Delete("/:projectID", controllers.DeleteProject)
+	projectRoutes.Patch("/:projectID", middlewares.OrgRoleAuthorization(models.Senior), controllers.UpdateProject)
+	projectRoutes.Delete("/:projectID", middlewares.OrgRoleAuthorization(models.Manager), controllers.DeleteProject)
 }

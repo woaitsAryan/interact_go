@@ -16,7 +16,11 @@ func GetInvitations(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var invitations []models.Invitation
-	if err := initializers.DB.Preload("GroupChat").Preload("Project").Preload("Organization").Where("user_id = ? ", loggedInUserID).Order("created_at DESC").Find(&invitations).Error; err != nil {
+	if err := initializers.DB.Preload("GroupChat").
+		Preload("Project").
+		Preload("Organization").
+		Preload("Organization.User").
+		Where("user_id = ? ", loggedInUserID).Order("created_at DESC").Find(&invitations).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
@@ -74,6 +78,7 @@ func AcceptInvitation(c *fiber.Ctx) error {
 			UserID:         invitation.UserID,
 			OrganizationID: *invitation.OrganizationID,
 			Role:           models.Member,
+			Title:          invitation.Title,
 		}
 
 		result := initializers.DB.Create(&membership)

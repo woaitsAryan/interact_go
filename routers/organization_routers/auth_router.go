@@ -9,5 +9,5 @@ import (
 func AuthRouter(app *fiber.App) {
 	oauthRoutes := app.Group("/org")
 	oauthRoutes.Post("/signup", validators.UserCreateValidator, organization_controllers.SignUp)
-	app.Post("/login", organization_controllers.LogIn)
+	oauthRoutes.Post("/login", organization_controllers.LogIn)
 }

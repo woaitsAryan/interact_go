@@ -35,7 +35,7 @@ type GroupChat struct { //TODO store number of members in model to show in invit
 	CoverPic        string                `gorm:"type:text; default:default.jpg" json:"coverPic"`
 	UserID          uuid.UUID             `gorm:"type:uuid;not null" json:"userID"`
 	User            User                  `gorm:"" json:"user"`
-	OrganizationID  *uuid.UUID            `gorm:"type:uuid;" json:"organizationID"`
+	OrganizationID  *uuid.UUID            `gorm:"type:uuid;" json:"orgID"`
 	Organization    Organization          `gorm:"" json:"organization"`
 	ProjectID       *uuid.UUID            `gorm:"type:uuid;" json:"projectID"`
 	Project         Project               `gorm:"" json:"project"`

@@ -5,22 +5,72 @@ import (
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
+func GetNonMembers(c *fiber.Ctx) error {
+	orgID := c.Params("orgID")
+
+	var organization models.Organization
+	if err := initializers.DB.Where("id = ?", orgID).Preload("Memberships").First(&organization).Error; err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid Organization ID"}
+	}
+
+	var membershipUserIDs []string
+
+	for _, membership := range organization.Memberships {
+		membershipUserIDs = append(membershipUserIDs, membership.UserID.String())
+	}
+
+	membershipUserIDs = append(membershipUserIDs, organization.UserID.String())
+
+	searchedDB := API.Search(c, 0)(initializers.DB)
+
+	var users []models.User
+	if err := searchedDB.Where("id NOT IN (?)", membershipUserIDs).Limit(10).Find(&users).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status": "success",
+		"users":  users,
+	})
+}
+
+func GetMemberships(c *fiber.Ctx) error {
+	orgID := c.Params("orgID")
+
+	var organization models.Organization
+	if err := initializers.DB.Where("id = ?", orgID).
+		Preload("Memberships").
+		Preload("Memberships.User").
+		Preload("Invitations").
+		Preload("Invitations.User").
+		First(&organization).Error; err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid Organization ID"}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":       "success",
+		"organization": organization,
+	})
+}
+
 func AddMember(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
-	organizationID := c.Params("organizationID")
+	orgID := c.Params("orgID")
 
-	parsedOrganizationID, err := uuid.Parse(organizationID)
+	parsedOrganizationID, err := uuid.Parse(orgID)
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Organization ID"}
 	}
 
 	var reqBody struct {
-		UserID string
+		UserID string `json:"userID"`
+		Title  string `json:"title"`
 	}
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
@@ -37,7 +87,7 @@ func AddMember(c *fiber.Ctx) error {
 	var organization models.Organization
 	if err := initializers.DB.First(&organization, "id = ? and user_id=?", parsedOrganizationID, loggedInUserID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
+			return &fiber.Error{Code: 400, Message: "No Organization of this ID found."}
 		}
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
@@ -58,7 +108,7 @@ func AddMember(c *fiber.Ctx) error {
 			var invitation models.Invitation
 			invitation.OrganizationID = &parsedOrganizationID
 			invitation.UserID = user.ID
-			invitation.Title = string(models.Member)
+			invitation.Title = reqBody.Title
 
 			result := initializers.DB.Create(&invitation)
 
@@ -119,11 +169,11 @@ func RemoveMember(c *fiber.Ctx) error {
 }
 
 func LeaveOrganization(c *fiber.Ctx) error {
-	organizationID := c.Params("organizationID")
+	orgID := c.Params("orgID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var membership models.OrganizationMembership
-	if err := initializers.DB.Preload("Organization").First(&membership, "user_id=? AND organization_id = ?", loggedInUserID, organizationID).Error; err != nil {
+	if err := initializers.DB.Preload("Organization").First(&membership, "user_id=? AND organization_id = ?", loggedInUserID, orgID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Membership of this ID found."}
 		}

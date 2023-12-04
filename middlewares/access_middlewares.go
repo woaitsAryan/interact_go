@@ -10,10 +10,10 @@ import (
 )
 
 func checkOrgAccess(UserRole models.OrganizationRole, AuthorizedRole models.OrganizationRole) bool {
-	if UserRole == models.Owner {
+	if UserRole == models.Manager {
 		return true
-	} else if UserRole == models.Manager {
-		return AuthorizedRole != models.Owner
+	} else if UserRole == models.Senior {
+		return AuthorizedRole != models.Manager
 	} else if UserRole == models.Member {
 		return AuthorizedRole == models.Member
 	}
@@ -38,15 +38,22 @@ func OrgRoleAuthorization(Role models.OrganizationRole) func(*fiber.Ctx) error {
 		loggedInUserID := c.GetRespHeader("loggedInUserID")
 		orgID := c.Params("orgID")
 		taskID := c.Params("taskID")
+		membershipID := c.Params("membershipID")
 
 		var organization models.Organization
 		if orgID != "" {
-			if err := initializers.DB.Preload("Memberships").First(organization, "id=?", orgID).Error; err != nil {
+			if err := initializers.DB.Preload("Memberships").First(&organization, "id=?", orgID).Error; err != nil {
 				if err == gorm.ErrRecordNotFound {
 					return &fiber.Error{Code: 400, Message: "No Organization of this ID Found."}
 				}
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 			}
+		} else if membershipID != "" {
+			var membership models.OrganizationMembership
+			if err := initializers.DB.Preload("Organization").Preload("Organization.Memberships").First(&membership, "id = ?", membershipID).Error; err != nil {
+				return &fiber.Error{Code: 400, Message: "Invalid Organization."}
+			}
+			organization = membership.Organization
 		} else if taskID != "" {
 			var task models.Task
 			if err := initializers.DB.Preload("Organization").Preload("Organization.Memberships").First(&task, "id = ?", taskID).Error; err != nil {

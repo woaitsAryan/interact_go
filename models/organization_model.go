@@ -12,6 +12,7 @@ type Organization struct {
 	User              User                     `gorm:"" json:"user"`
 	OrganizationTitle string                   `gorm:"unique" json:"title"`
 	Memberships       []OrganizationMembership `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE" json:"memberships"`
+	Invitations       []Invitation             `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE" json:"invitations"`
 	History           []OrganizationHistory    `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE" json:"history"`
 	CreatedAt         time.Time                `gorm:"default:current_timestamp" json:"createdAt"`
 }
@@ -20,8 +21,8 @@ type OrganizationRole string
 
 const (
 	Member  OrganizationRole = "Member"
+	Senior  OrganizationRole = "Senior"
 	Manager OrganizationRole = "Manager"
-	Owner   OrganizationRole = "Owner"
 )
 
 //* Member can only view.
@@ -31,17 +32,18 @@ const (
 
 type OrganizationMembership struct {
 	ID             uuid.UUID        `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	OrganizationID uuid.UUID        `gorm:"type:uuid;not null" json:"organizationID"`
+	OrganizationID uuid.UUID        `gorm:"type:uuid;not null" json:"orgID"`
 	Organization   Organization     `gorm:"" json:"organization"`
 	UserID         uuid.UUID        `gorm:"type:uuid;not null" json:"userID"`
 	User           User             `gorm:"" json:"user"`
+	Title          string           `gorm:"type:varchar(25);not null" json:"title"`
 	Role           OrganizationRole `gorm:"type:text" json:"role"`
 	CreatedAt      time.Time        `gorm:"default:current_timestamp" json:"createdAt"`
 }
 
 type OrganizationHistory struct {
 	ID             uuid.UUID   `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	OrganizationID uuid.UUID   `gorm:"type:uuid;not null" json:"organizationID"`
+	OrganizationID uuid.UUID   `gorm:"type:uuid;not null" json:"orgID"`
 	HistoryType    int         `json:"historyType"`
 	UserID         uuid.UUID   `gorm:"type:uuid;not null" json:"userID"`
 	User           User        `json:"user"`

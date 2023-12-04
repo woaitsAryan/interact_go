@@ -9,7 +9,7 @@ import (
 
 type Recruitment struct {
 	ID             uuid.UUID         `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	OrganizationID uuid.UUID         `gorm:"type:uuid;not null" json:"organizationID"`
+	OrganizationID uuid.UUID         `gorm:"type:uuid;not null" json:"orgID"`
 	Organization   Organization      `gorm:"" json:"organization"`
 	Title          string            `gorm:"type:varchar(255);not null" json:"title"`
 	Description    string            `gorm:"type:text;not null" json:"description"`

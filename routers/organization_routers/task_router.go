@@ -2,6 +2,7 @@ package organization_routers
 
 import (
 	"github.com/Pratham-Mishra04/interact/controllers"
+	"github.com/Pratham-Mishra04/interact/controllers/organization_controllers"
 	"github.com/Pratham-Mishra04/interact/middlewares"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/gofiber/fiber/v2"
@@ -9,15 +10,16 @@ import (
 
 func TaskRouter(app *fiber.App) {
 
-	taskRoutes := app.Group("/org/tasks", middlewares.Protect)
-	taskRoutes.Get("/:taskID", middlewares.OrgRoleAuthorization(models.Member), controllers.GetTask("task"))
-	taskRoutes.Post("/:orgID", middlewares.OrgRoleAuthorization(models.Manager), controllers.AddTask("org_task"))
-	taskRoutes.Patch("/:taskID", middlewares.OrgRoleAuthorization(models.Manager), controllers.EditTask("task"))
-	taskRoutes.Delete("/:taskID", middlewares.OrgRoleAuthorization(models.Manager), controllers.DeleteTask("task"))
+	taskRoutes := app.Group("/org/:orgID/tasks", middlewares.Protect)
+	taskRoutes.Get("/", middlewares.OrgRoleAuthorization(models.Member), organization_controllers.GetOrganizationTasks)
+	taskRoutes.Get("/:taskID", middlewares.OrgRoleAuthorization(models.Senior), controllers.GetTask("task"))
+	taskRoutes.Post("/", middlewares.OrgRoleAuthorization(models.Senior), controllers.AddTask("org_task"))
+	taskRoutes.Patch("/:taskID", middlewares.OrgRoleAuthorization(models.Senior), controllers.EditTask("task"))
+	taskRoutes.Delete("/:taskID", middlewares.OrgRoleAuthorization(models.Senior), controllers.DeleteTask("task"))
 
 	taskRoutes.Patch("/completed/:taskID", controllers.MarkTaskCompleted("task")) //* Access Check inside controller
-	taskRoutes.Patch("/users/:taskID", middlewares.OrgRoleAuthorization(models.Manager), controllers.AddTaskUser("task"))
-	taskRoutes.Delete("/users/:taskID/:userID", middlewares.OrgRoleAuthorization(models.Manager), controllers.RemoveTaskUser("task"))
+	taskRoutes.Patch("/users/:taskID", middlewares.OrgRoleAuthorization(models.Senior), controllers.AddTaskUser("task"))
+	taskRoutes.Delete("/users/:taskID/:userID", middlewares.OrgRoleAuthorization(models.Senior), controllers.RemoveTaskUser("task"))
 
 	taskRoutes.Post("/sub/:taskID", middlewares.TaskUsersCheck, controllers.AddTask("subtask"))
 	taskRoutes.Patch("/sub/:taskID", middlewares.SubTaskUsersAuthorization, controllers.EditTask("subtask"))

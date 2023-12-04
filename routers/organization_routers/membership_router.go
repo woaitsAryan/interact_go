@@ -9,10 +9,13 @@ import (
 
 func MembershipRouter(app *fiber.App) {
 
-	app.Delete("/org/membership/:organizationID", middlewares.OrgProtect, middlewares.OrgRoleAuthorization(models.Member), organization_controllers.LeaveOrganization)
+	app.Delete("/org/:orgID/membership", middlewares.Protect, middlewares.OrgRoleAuthorization(models.Member), organization_controllers.LeaveOrganization)
 
-	membershipRoutes := app.Group("/org/membership", middlewares.Protect, middlewares.OrgRoleAuthorization(models.Owner))
-	membershipRoutes.Post("/:organizationID", organization_controllers.AddMember)
+	app.Get("/org/:orgID/membership", middlewares.Protect, middlewares.OrgRoleAuthorization(models.Member), organization_controllers.GetMemberships)
+
+	membershipRoutes := app.Group("/org/:orgID/membership", middlewares.Protect, middlewares.OrgRoleAuthorization(models.Manager))
+	membershipRoutes.Get("/non_members", organization_controllers.GetNonMembers)
+	membershipRoutes.Post("/", organization_controllers.AddMember)
 	membershipRoutes.Patch("/:membershipID", organization_controllers.ChangeMemberRole)
 	membershipRoutes.Delete("/:membershipID", organization_controllers.RemoveMember)
 }

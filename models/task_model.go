@@ -11,7 +11,7 @@ type Task struct {
 	ID             uuid.UUID      `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	ProjectID      *uuid.UUID     `gorm:"" json:"projectID"`
 	Project        Project        `gorm:"" json:"project"`
-	OrganizationID *uuid.UUID     `gorm:"" json:"organizationID"`
+	OrganizationID *uuid.UUID     `gorm:"" json:"orgID"`
 	Organization   Organization   `gorm:"" json:"organization"`
 	Deadline       time.Time      `gorm:"default:current_timestamp" json:"deadline"`
 	Title          string         `gorm:"type:text;not null" json:"title"`
