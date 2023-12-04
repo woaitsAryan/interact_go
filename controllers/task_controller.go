@@ -103,7 +103,7 @@ func AddTask(taskType string) func(c *fiber.Ctx) error {
 			}
 
 			task := models.Task{
-				ProjectID:   project.ID,
+				ProjectID:   &project.ID,
 				Title:       reqBody.Title,
 				Description: reqBody.Description,
 				Tags:        reqBody.Tags,
@@ -123,6 +123,59 @@ func AddTask(taskType string) func(c *fiber.Ctx) error {
 			for _, user := range users {
 				go routines.SendTaskNotification(user.ID, parsedID, project.ID)
 			}
+
+			return c.Status(201).JSON(fiber.Map{
+				"status":  "success",
+				"message": "",
+				"task":    task,
+			})
+
+		case "org_task":
+			orgID := c.Params("orgID")
+
+			var organization models.Organization
+			if err := initializers.DB.Preload("Memberships").Preload("Memberships.User").First(&organization, "id = ?", orgID).Error; err != nil {
+				if err == gorm.ErrRecordNotFound {
+					return &fiber.Error{Code: 400, Message: "No Organization of this ID found."}
+				}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			}
+
+			var orgMembers []models.User
+			for _, membership := range organization.Memberships {
+				orgMembers = append(orgMembers, membership.User)
+			}
+
+			for _, userID := range reqBody.Users {
+				if GetUserIndex(userID, orgMembers) != -1 {
+					var user models.User
+					if err := initializers.DB.First(&user, "id = ?", userID).Error; err == nil {
+						users = append(users, user)
+					}
+				}
+			}
+
+			task := models.Task{
+				OrganizationID: &organization.ID,
+				Title:          reqBody.Title,
+				Description:    reqBody.Description,
+				Tags:           reqBody.Tags,
+				Deadline:       reqBody.Dateline,
+				Users:          users,
+			}
+
+			result := initializers.DB.Create(&task)
+			if result.Error != nil {
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			}
+
+			// projectMemberID := c.GetRespHeader("projectMemberID")
+			// parsedID, _ := uuid.Parse(projectMemberID)
+			// go routines.MarkProjectHistory(project.ID, parsedID, 9, nil, nil, nil, nil, &task.ID)
+
+			// for _, user := range users {
+			// 	go routines.SendTaskNotification(user.ID, parsedID, project.ID)
+			// }
 
 			return c.Status(201).JSON(fiber.Map{
 				"status":  "success",

@@ -87,9 +87,9 @@ func Protect(c *fiber.Ctx) error {
 		return err
 	}
 
-	if user.OrganizationStatus {
-		return &fiber.Error{Code: 403, Message: "Organizational Accounts cannot access this route."}
-	}
+	// if user.OrganizationStatus {
+	// 	return &fiber.Error{Code: 403, Message: "Organizational Accounts cannot access this route."}
+	// }
 
 	c.Set("loggedInUserID", user.ID.String())
 

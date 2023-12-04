@@ -37,29 +37,49 @@ func OrgRoleAuthorization(Role models.OrganizationRole) func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		loggedInUserID := c.GetRespHeader("loggedInUserID")
 		orgID := c.Params("orgID")
+		taskID := c.Params("taskID")
 
-		var orgMembership models.OrganizationMembership
-		if err := initializers.DB.Preload("Organization").First(orgMembership, "organization_id = ? AND user_id=?", orgID, loggedInUserID).Error; err != nil {
-			if err == gorm.ErrRecordNotFound {
-				var org models.Organization
-				if err := initializers.DB.First(org, "user_id=?", loggedInUserID).Error; err != nil {
-					if err == gorm.ErrRecordNotFound {
-						return &fiber.Error{Code: 403, Message: "Cannot access this organization"}
-					}
-					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		var organization models.Organization
+		if orgID != "" {
+			if err := initializers.DB.Preload("Memberships").First(organization, "id=?", orgID).Error; err != nil {
+				if err == gorm.ErrRecordNotFound {
+					return &fiber.Error{Code: 400, Message: "No Organization of this ID Found."}
+				}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			}
+		} else if taskID != "" {
+			var task models.Task
+			if err := initializers.DB.Preload("Organization").Preload("Organization.Memberships").First(&task, "id = ?", taskID).Error; err != nil {
+				var subTask models.SubTask
+				if err := initializers.DB.Preload("Task").Preload("Task.Organization").Preload("Task.Organization.Memberships").First(&subTask, "id = ?", taskID).Error; err != nil {
+					return &fiber.Error{Code: 400, Message: "Invalid Organization."}
+				}
+				organization = subTask.Task.Organization
+			} else {
+				organization = task.Organization
+			}
+		}
+
+		if organization.UserID.String() == loggedInUserID {
+			c.Set("orgMemberID", c.GetRespHeader("loggedInUserID"))
+			return c.Next()
+		}
+
+		var check bool
+		for _, membership := range organization.Memberships {
+			if membership.UserID.String() == loggedInUserID {
+				if !checkOrgAccess(membership.Role, Role) {
+					return &fiber.Error{Code: 403, Message: "You don't have the Permission to perform this action."}
 				}
 				c.Set("orgMemberID", c.GetRespHeader("loggedInUserID"))
-				return c.Next()
+				c.Set("loggedInUserID", membership.Organization.UserID.String())
+				check = true
+				break
 			}
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 		}
-
-		if !checkOrgAccess(orgMembership.Role, Role) {
-			return &fiber.Error{Code: 403, Message: "You don't have the Permission to perform this action."}
+		if !check {
+			return &fiber.Error{Code: 403, Message: "Cannot access this Organization."}
 		}
-
-		c.Set("orgMemberID", c.GetRespHeader("loggedInUserID"))
-		c.Set("loggedInUserID", orgMembership.Organization.UserID.String())
 
 		return c.Next()
 	}
