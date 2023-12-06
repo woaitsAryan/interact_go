@@ -328,7 +328,7 @@ func AddProject(c *fiber.Ctx) error {
 			if err := initializers.DB.Where("id=?", parsedID).First(&user).Error; err != nil {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 			}
-			if !user.Verified && initializers.CONFIG.ENV == "production" {
+			if !user.Verified {
 				return &fiber.Error{Code: 401, Message: config.VERIFICATION_ERROR}
 			}
 
@@ -356,7 +356,13 @@ func AddProject(c *fiber.Ctx) error {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 			}
 
-			go routines.MarkProjectHistory(newProject.ID, parsedID, -1, nil, nil, nil, nil, nil)
+			orgMemberID := c.GetRespHeader("orgMemberID")
+			if orgMemberID != "" {
+				parsedOrgMemberID, _ := uuid.Parse(orgMemberID)
+				go routines.MarkProjectHistory(newProject.ID, parsedOrgMemberID, -1, nil, nil, nil, nil, nil)
+			} else {
+				go routines.MarkProjectHistory(newProject.ID, parsedID, -1, nil, nil, nil, nil, nil)
+			}
 
 			return c.Status(201).JSON(fiber.Map{
 				"status":  "success",
@@ -426,7 +432,14 @@ func UpdateProject(c *fiber.Ctx) error {
 
 	projectMemberID := c.GetRespHeader("projectMemberID")
 	parsedID, _ := uuid.Parse(projectMemberID)
-	go routines.MarkProjectHistory(project.ID, parsedID, 2, nil, nil, nil, nil, nil)
+
+	orgMemberID := c.GetRespHeader("orgMemberID")
+	if orgMemberID != "" {
+		parsedOrgMemberID, _ := uuid.Parse(orgMemberID)
+		go routines.MarkProjectHistory(project.ID, parsedOrgMemberID, 2, nil, nil, nil, nil, nil)
+	} else {
+		go routines.MarkProjectHistory(project.ID, parsedID, 2, nil, nil, nil, nil, nil)
+	}
 
 	cache.RemoveProject(project.Slug)
 	cache.RemoveProject("-workspace--" + project.Slug)

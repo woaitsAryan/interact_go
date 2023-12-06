@@ -73,13 +73,15 @@ func OrgRoleAuthorization(Role models.OrganizationRole) func(*fiber.Ctx) error {
 		}
 
 		var check bool
+		check = false
+
 		for _, membership := range organization.Memberships {
 			if membership.UserID.String() == loggedInUserID {
 				if !checkOrgAccess(membership.Role, Role) {
 					return &fiber.Error{Code: 403, Message: "You don't have the Permission to perform this action."}
 				}
 				c.Set("orgMemberID", c.GetRespHeader("loggedInUserID"))
-				c.Set("loggedInUserID", membership.Organization.UserID.String())
+				c.Set("loggedInUserID", organization.UserID.String())
 				check = true
 				break
 			}
@@ -155,6 +157,8 @@ func ProjectRoleAuthorization(Role models.ProjectRole) func(*fiber.Ctx) error {
 		}
 
 		var check bool
+		check = false
+
 		for _, membership := range project.Memberships {
 			if membership.UserID.String() == loggedInUserID {
 				if !checkProjectAccess(membership.Role, Role) {

@@ -135,6 +135,8 @@ func RemoveMember(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
+	orgMemberID := c.GetRespHeader("orgMemberID")
+
 	parsedMembershipID, err := uuid.Parse(membershipID)
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Membership ID"}
@@ -148,18 +150,18 @@ func RemoveMember(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	if membership.Organization.UserID != parsedLoggedInUserID {
-		return &fiber.Error{Code: 403, Message: "You do not have the permission to perform this action."}
+	if membership.UserID.String() == orgMemberID {
+		return &fiber.Error{Code: 400, Message: "Cannot remove yourself using this route."}
 	}
 
-	if membership.Role == "Owner" {
-		return &fiber.Error{Code: 403, Message: "Invalid Route to perform this action."}
+	if membership.Organization.UserID != parsedLoggedInUserID {
+		return &fiber.Error{Code: 403, Message: "You do not have the permission to perform this action."}
 	}
 
 	result := initializers.DB.Delete(&membership)
 
 	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while deleting membership."}
+		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
 	return c.Status(204).JSON(fiber.Map{
@@ -194,6 +196,9 @@ func LeaveOrganization(c *fiber.Ctx) error {
 func ChangeMemberRole(c *fiber.Ctx) error {
 	membershipID := c.Params("membershipID")
 
+	orgChangedUserID := c.GetRespHeader("loggedInUserID")
+	loggedInUserID := c.GetRespHeader("orgMemberID")
+
 	parsedMembershipID, err := uuid.Parse(membershipID)
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Membership ID"}
@@ -214,11 +219,15 @@ func ChangeMemberRole(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	if reqBody.Role != models.Member && reqBody.Role != models.Manager {
-		return &fiber.Error{Code: 403, Message: "Invalid route to perform this action."}
+	if orgChangedUserID == loggedInUserID {
+		membership.Role = reqBody.Role
+	} else {
+		if reqBody.Role != models.Manager && membership.Role != models.Manager {
+			membership.Role = reqBody.Role
+		} else {
+			return &fiber.Error{Code: 403, Message: "You don't have the privileges to perform this action."}
+		}
 	}
-
-	membership.Role = reqBody.Role
 
 	result := initializers.DB.Save(&membership)
 

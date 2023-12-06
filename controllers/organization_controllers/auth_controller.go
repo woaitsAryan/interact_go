@@ -14,7 +14,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func createSendToken(c *fiber.Ctx, user models.User, statusCode int, message string, orgID string) error {
+func createSendToken(c *fiber.Ctx, user models.User, statusCode int, message string, org models.Organization) error {
 	access_token_claim := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": user.ID,
 		"crt": time.Now().Unix(),
@@ -48,13 +48,13 @@ func createSendToken(c *fiber.Ctx, user models.User, statusCode int, message str
 	})
 
 	return c.Status(statusCode).JSON(fiber.Map{
-		"status":  "success",
-		"message": message,
-		"token":   access_token,
-		"user":    user,
-		"email":   user.Email,
-		"phoneNo": user.PhoneNo,
-		"orgID":   orgID,
+		"status":       "success",
+		"message":      message,
+		"token":        access_token,
+		"user":         user,
+		"email":        user.Email,
+		"phoneNo":      user.PhoneNo,
+		"organization": org,
 	})
 }
 
@@ -96,7 +96,7 @@ func SignUp(c *fiber.Ctx) error {
 
 	go routines.SendWelcomeNotification(newOrg.ID)
 
-	return createSendToken(c, newOrg, 201, "Organization Created", organization.ID.String())
+	return createSendToken(c, newOrg, 201, "Organization Created", organization)
 }
 
 func LogIn(c *fiber.Ctx) error {
@@ -129,5 +129,5 @@ func LogIn(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	return createSendToken(c, user, 200, "Logged In", organization.ID.String())
+	return createSendToken(c, user, 200, "Logged In", organization)
 }

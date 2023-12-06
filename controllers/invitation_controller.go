@@ -183,7 +183,7 @@ func GetUnreadInvitationCount(c *fiber.Ctx) error {
 	var count int64
 	if err := initializers.DB.
 		Model(models.Invitation{}).
-		Where("user_id=? AND read=?", loggedInUserID, false).
+		Where("user_id=? AND status=0", loggedInUserID).
 		Count(&count).
 		Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}

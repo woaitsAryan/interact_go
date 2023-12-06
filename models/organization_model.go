@@ -32,7 +32,7 @@ const (
 
 type OrganizationMembership struct {
 	ID             uuid.UUID        `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	OrganizationID uuid.UUID        `gorm:"type:uuid;not null" json:"orgID"`
+	OrganizationID uuid.UUID        `gorm:"type:uuid;not null" json:"organizationID"`
 	Organization   Organization     `gorm:"" json:"organization"`
 	UserID         uuid.UUID        `gorm:"type:uuid;not null" json:"userID"`
 	User           User             `gorm:"" json:"user"`

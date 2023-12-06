@@ -41,6 +41,8 @@ func GetOrganizationTasks(c *fiber.Ctx) error {
 	var tasks []models.Task
 	if err := initializers.DB.
 		Preload("Users").
+		Preload("SubTasks").
+		Preload("SubTasks.Users").
 		Find(&tasks, "organization_id = ? ", orgID).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}

@@ -76,8 +76,10 @@ func GetMyLikes(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var likes []models.Like
-	initializers.DB.
-		Find(&likes, "user_id = ?", loggedInUserID)
+	if err := initializers.DB.
+		Find(&likes, "user_id = ?", loggedInUserID).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
 
 	var likeIDs []string
 	for _, like := range likes {
@@ -94,6 +96,34 @@ func GetMyLikes(c *fiber.Ctx) error {
 		"status":  "success",
 		"message": "User Found",
 		"likes":   likeIDs,
+	})
+}
+
+func GetMyOrgMemberships(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	populate := c.Query("populate", "false")
+
+	var memberships []models.OrganizationMembership
+
+	if populate == "true" {
+		if err := initializers.DB.
+			Preload("Organization").
+			Preload("Organization.User").
+			Find(&memberships, "user_id = ?", loggedInUserID).Error; err != nil {
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		}
+	} else {
+		if err := initializers.DB.
+			Find(&memberships, "user_id = ?", loggedInUserID).Error; err != nil {
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":      "success",
+		"message":     "User Found",
+		"memberships": memberships,
 	})
 }
 
