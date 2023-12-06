@@ -26,8 +26,8 @@ func MessagingRouter(app *fiber.App) {
 	messagingRoutes.Get("/accept/:chatID", controllers.AcceptChat)
 
 	messagingRoutes.Post("/chat", controllers.AddChat)
-	messagingRoutes.Post("/group", controllers.AddGroupChat)
-	messagingRoutes.Post("/project/:projectID", middlewares.ProjectRoleAuthorization(models.ProjectEditor), controllers.AddProjectChat)
+	messagingRoutes.Post("/group", controllers.AddGroupChat("Group"))
+	messagingRoutes.Post("/project/:projectID", middlewares.ProjectRoleAuthorization(models.ProjectEditor), controllers.AddGroupChat("Project"))
 
 	messagingRoutes.Patch("/chat/last_read/:chatID", controllers.UpdateLastRead)
 
@@ -35,16 +35,16 @@ func MessagingRouter(app *fiber.App) {
 	messagingRoutes.Post("/chat/unblock", controllers.UnblockChat)
 	messagingRoutes.Post("/chat/reset", controllers.ResetChat)
 
-	messagingRoutes.Post("/group/members/add/:chatID", middlewares.GroupChatAdminAuthorization(), controllers.AddGroupChatMembers)
+	messagingRoutes.Post("/group/members/add/:chatID", middlewares.GroupChatAdminAuthorization(), controllers.AddGroupChatMembers("Group"))
 	messagingRoutes.Post("/group/members/remove/:chatID", middlewares.GroupChatAdminAuthorization(), controllers.RemoveGroupChatMember)
 
 	messagingRoutes.Patch("/group/:chatID", middlewares.GroupChatAdminAuthorization(), controllers.EditGroupChat)
 	messagingRoutes.Patch("/group/role/:chatID", middlewares.GroupChatAdminAuthorization(), controllers.EditGroupChatRole)
 
-	messagingRoutes.Delete("/:chatID", controllers.DeleteChat)
+	messagingRoutes.Delete("/:chatID", middlewares.GroupChatAdminAuthorization(), controllers.DeleteChat)
 	messagingRoutes.Delete("/group/:chatID", middlewares.GroupChatAdminAuthorization(), controllers.DeleteGroupChat)
 
-	messagingRoutes.Delete("/group/leave/:chatID", controllers.LeaveGroupChat)
+	messagingRoutes.Delete("/group/leave/:chatID", controllers.LeaveGroupChat) //TODO when admin leaves, then make the first joined person as admin
 
 	messagingRoutes.Get("/content/:chatID", controllers.GetMessages)
 	messagingRoutes.Get("/content/group/:chatID", controllers.GetGroupChatMessages)
@@ -55,12 +55,9 @@ func MessagingRouter(app *fiber.App) {
 	messagingRoutes.Delete("/content/:messageID", controllers.DeleteMessage)
 	messagingRoutes.Delete("/content/project/:messageID", controllers.DeleteMessage)
 
-	messagingRoutes.Post("/group/project/members/add/:chatID", middlewares.ProjectRoleAuthorization(models.ProjectManager), controllers.AddProjectChatMembers)
-	messagingRoutes.Post("/group/project/members/remove/:chatID", middlewares.ProjectRoleAuthorization(models.ProjectManager), controllers.RemoveGroupChatMember)
+	messagingRoutes.Post("/group/project/members/add/:chatID", middlewares.GroupChatAdminAuthorization(), controllers.AddGroupChatMembers("Project"))
+	messagingRoutes.Post("/group/project/members/remove/:chatID", middlewares.GroupChatAdminAuthorization(), controllers.RemoveGroupChatMember)
 
-	messagingRoutes.Patch("/group/project/:chatID", middlewares.ProjectRoleAuthorization(models.ProjectManager), controllers.EditGroupChat)
-	messagingRoutes.Patch("/group/project/role/:chatID", middlewares.ProjectRoleAuthorization(models.ProjectManager), controllers.EditGroupChatRole)
-
-	messagingRoutes.Delete("/group/project/:chatID", middlewares.ProjectRoleAuthorization(models.ProjectManager), controllers.DeleteGroupChat)
-
+	messagingRoutes.Post("/group/organization/members/add/:chatID", middlewares.GroupChatAdminAuthorization(), controllers.AddGroupChatMembers("Organization"))
+	messagingRoutes.Post("/group/organization/members/remove/:chatID", middlewares.GroupChatAdminAuthorization(), controllers.RemoveGroupChatMember)
 }

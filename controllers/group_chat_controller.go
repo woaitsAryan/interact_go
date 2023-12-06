@@ -25,6 +25,7 @@ func GetGroupChat(c *fiber.Ctx) error {
 		Preload("Invitations").
 		Preload("Invitations.User").
 		Preload("Project").
+		Preload("Organization").
 		Where("id = ?", chatID).
 		First(&chat).Error
 	if err != nil {
@@ -56,290 +57,308 @@ func GetGroupChat(c *fiber.Ctx) error {
 	})
 }
 
-func AddGroupChat(c *fiber.Ctx) error {
-	var reqBody struct {
-		Title       string   `json:"title"`
-		Description string   `json:"description"`
-		UserIDs     []string `json:"userIDs"`
-	}
-	if err := c.BodyParser(&reqBody); err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
-	}
-
-	loggedInUserID := c.GetRespHeader("loggedInUserID")
-	chatUserIDs := reqBody.UserIDs
-
-	parsedLoggedInUserID, err := uuid.Parse(loggedInUserID)
-	if err != nil {
-		return &fiber.Error{Code: 500, Message: "Error Parsing the Loggedin User ID."}
-	}
-
-	// picName, err := utils.SaveFile(c, "coverPic", "chat", true, 720, 720)
-	picName, err := utils.UploadFile(c, "coverPic", helpers.ChatClient, 720, 720)
-	if err != nil {
-		return err
-	}
-
-	chat := models.GroupChat{
-		UserID:      parsedLoggedInUserID,
-		Title:       reqBody.Title,
-		Description: reqBody.Description,
-	}
-
-	if picName != "" {
-		chat.CoverPic = picName
-	}
-
-	result := initializers.DB.Create(&chat)
-	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
-	}
-
-	chatMembership := models.GroupChatMembership{
-		UserID:      parsedLoggedInUserID,
-		GroupChatID: chat.ID,
-		Role:        models.ChatAdmin,
-	}
-	result = initializers.DB.Create(&chatMembership)
-	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
-	}
-
-	for _, chatUserID := range chatUserIDs {
-		parsedUserID, err := uuid.Parse(chatUserID)
-		if err != nil {
-			return &fiber.Error{Code: 500, Message: "Error Parsing the User ID."}
+func AddGroupChat(chatType string) func(c *fiber.Ctx) error {
+	return func(c *fiber.Ctx) error {
+		var reqBody struct {
+			Title       string   `json:"title"`
+			Description string   `json:"description"`
+			UserIDs     []string `json:"userIDs"`
 		}
-		if parsedUserID == parsedLoggedInUserID {
-			continue
+		if err := c.BodyParser(&reqBody); err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
 		}
-		invitation := models.Invitation{
-			UserID:      parsedUserID,
-			GroupChatID: &chat.ID,
-		}
-		result := initializers.DB.Create(&invitation)
+		chatUserIDs := reqBody.UserIDs
 
-		if result.Error != nil {
-			return &fiber.Error{Code: 500, Message: "Internal Server Error while creating invitations"}
+		var chat models.GroupChat
+
+		if chatType == "Group" {
+			loggedInUserID := c.GetRespHeader("loggedInUserID")
+			parsedLoggedInUserID, err := uuid.Parse(loggedInUserID)
+			if err != nil {
+				return &fiber.Error{Code: 500, Message: "Error Parsing the Loggedin User ID."}
+			}
+
+			picName, err := utils.UploadFile(c, "coverPic", helpers.ChatClient, 720, 720)
+			if err != nil {
+				return err
+			}
+
+			chat := models.GroupChat{
+				UserID:      parsedLoggedInUserID,
+				Title:       reqBody.Title,
+				Description: reqBody.Description,
+			}
+
+			if picName != "" {
+				chat.CoverPic = picName
+			}
+
+			result := initializers.DB.Create(&chat)
+			if result.Error != nil {
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			}
+
+			chatMembership := models.GroupChatMembership{
+				UserID:      parsedLoggedInUserID,
+				GroupChatID: chat.ID,
+				Role:        models.ChatAdmin,
+			}
+			result = initializers.DB.Create(&chatMembership)
+			if result.Error != nil {
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			}
+
+			for _, chatUserID := range chatUserIDs {
+				parsedUserID, err := uuid.Parse(chatUserID)
+				if err != nil {
+					return &fiber.Error{Code: 500, Message: "Error Parsing the User ID."}
+				}
+				if parsedUserID == parsedLoggedInUserID {
+					continue
+				}
+				invitation := models.Invitation{
+					UserID:      parsedUserID,
+					GroupChatID: &chat.ID,
+				}
+				result := initializers.DB.Create(&invitation)
+
+				if result.Error != nil {
+					return &fiber.Error{Code: 500, Message: "Internal Server Error while creating invitations"}
+				}
+			}
+		} else {
+			var parsedLoggedInUserID uuid.UUID
+			if chatType == "Project" { //TODO check for project and organization memberships of the users in reqBody
+				userID := c.GetRespHeader("projectMemberID")
+				if userID == "" {
+					userID = c.GetRespHeader("loggedInUserID")
+				}
+
+				parsedLoggedInUserID, err := uuid.Parse(userID)
+				if err != nil {
+					return &fiber.Error{Code: 500, Message: "Error Parsing the LoggedIn User ID."}
+				}
+
+				projectID := c.Params("projectID")
+
+				var project models.Project
+				if err := initializers.DB.Where("id = ?", projectID).First(&project).Error; err != nil {
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+				}
+
+				picName, err := utils.UploadFile(c, "coverPic", helpers.ChatClient, 720, 720)
+				if err != nil {
+					return err
+				}
+
+				chat = models.GroupChat{
+					UserID:      parsedLoggedInUserID,
+					Title:       reqBody.Title,
+					Description: reqBody.Description,
+					ProjectID:   &project.ID,
+				}
+
+				if picName != "" {
+					chat.CoverPic = picName
+				}
+
+				result := initializers.DB.Create(&chat)
+				if result.Error != nil {
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				}
+
+				projectMemberID := c.GetRespHeader("projectMemberID")
+				parsedID, _ := uuid.Parse(projectMemberID)
+				go routines.MarkProjectHistory(project.ID, parsedID, 8, nil, nil, nil, nil, nil)
+
+			} else if chatType == "Organization" {
+				userID := c.GetRespHeader("orgMemberID")
+				if userID == "" {
+					userID = c.GetRespHeader("loggedInUserID")
+				}
+
+				parsedLoggedInUserID, err := uuid.Parse(userID)
+				if err != nil {
+					return &fiber.Error{Code: 500, Message: "Error Parsing the LoggedIn User ID."}
+				}
+
+				orgID := c.Params("orgID")
+
+				var organization models.Organization
+				if err := initializers.DB.Where("id = ?", orgID).First(&organization).Error; err != nil {
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+				}
+
+				picName, err := utils.UploadFile(c, "coverPic", helpers.ChatClient, 720, 720)
+				if err != nil {
+					return err
+				}
+
+				chat = models.GroupChat{
+					UserID:      parsedLoggedInUserID,
+					Title:       reqBody.Title,
+					Description: reqBody.Description,
+					ProjectID:   &organization.ID,
+				}
+
+				if picName != "" {
+					chat.CoverPic = picName
+				}
+
+				result := initializers.DB.Create(&chat)
+				if result.Error != nil {
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				}
+
+				// orgMemberID := c.GetRespHeader("orgMemberID")
+				// parsedID, _ := uuid.Parse(orgMemberID)
+				// go routines.MarkProjectHistory(project.ID, parsedID, 8, nil, nil, nil, nil, nil)
+			}
+
+			for _, chatUserID := range chatUserIDs {
+				parsedChatUserID, err := uuid.Parse(chatUserID)
+				if err != nil {
+					return &fiber.Error{Code: 500, Message: "Invalid User ID."} //TODO errors config for all types of error messages
+				}
+
+				groupChatMembership := models.GroupChatMembership{
+					UserID:      parsedChatUserID,
+					GroupChatID: chat.ID,
+					Role:        models.ChatMember,
+				}
+
+				if parsedChatUserID == parsedLoggedInUserID {
+					groupChatMembership.Role = models.ChatAdmin
+				}
+
+				result := initializers.DB.Create(&groupChatMembership)
+				if result.Error != nil {
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				}
+			}
+
+			var chat models.GroupChat
+			if err := initializers.DB.Preload("Memberships").Preload("Memberships.User").Find(&chat, "id = ? ", chat.ID).Error; err != nil {
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			}
 		}
+
+		return c.Status(200).JSON(fiber.Map{
+			"status":  "success",
+			"message": "Chat Created",
+			"chat":    chat,
+		})
 	}
-
-	return c.Status(200).JSON(fiber.Map{
-		"status":  "success",
-		"message": "Chat Created",
-		"chat":    chat,
-	})
 }
 
-func AddProjectChat(c *fiber.Ctx) error { //! check for project memberships of the users in reqBody
-	var reqBody struct {
-		Title       string   `json:"title"`
-		Description string   `json:"description"`
-		UserIDs     []string `json:"userIDs"`
-	}
-	if err := c.BodyParser(&reqBody); err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
-	}
+func AddGroupChatMembers(chatType string) func(c *fiber.Ctx) error {
+	return func(c *fiber.Ctx) error {
+		var reqBody struct {
+			UserIDs []string `json:"userIDs"`
+		}
 
-	userID := c.GetRespHeader("projectMemberID")
-	if userID == "" {
-		userID = c.GetRespHeader("loggedInUserID")
-	}
-	chatUserIDs := reqBody.UserIDs
+		if err := c.BodyParser(&reqBody); err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
+		}
+		chatUserIDs := reqBody.UserIDs
+		groupChatID := c.Params("chatID")
 
-	parsedLoggedInUserID, err := uuid.Parse(userID)
-	if err != nil {
-		return &fiber.Error{Code: 500, Message: "Error Parsing the LoggedIn User ID."}
-	}
-
-	projectID := c.Params("projectID")
-
-	var project models.Project
-	if err := initializers.DB.Where("id = ?", projectID).First(&project).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-	}
-
-	// picName, err := utils.SaveFile(c, "coverPic", "chat", true, 720, 720)
-	picName, err := utils.UploadFile(c, "coverPic", helpers.ChatClient, 720, 720)
-	if err != nil {
-		return err
-	}
-
-	groupChat := models.GroupChat{
-		UserID:      parsedLoggedInUserID,
-		Title:       reqBody.Title,
-		Description: reqBody.Description,
-		ProjectID:   &project.ID,
-	}
-
-	if picName != "" {
-		groupChat.CoverPic = picName
-	}
-
-	result := initializers.DB.Create(&groupChat)
-	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
-	}
-
-	projectMemberID := c.GetRespHeader("projectMemberID")
-	parsedID, _ := uuid.Parse(projectMemberID)
-	go routines.MarkProjectHistory(project.ID, parsedID, 8, nil, nil, nil, nil, nil)
-
-	for _, chatUserID := range chatUserIDs {
-		parsedChatUserID, err := uuid.Parse(chatUserID)
+		var chat models.GroupChat
+		err := initializers.DB.First(&chat, "id = ?", groupChatID).Error
 		if err != nil {
-			return &fiber.Error{Code: 500, Message: "Invalid User ID."} //TODO errors config for all types of error messages
+			return &fiber.Error{Code: 400, Message: "No chat of this id found."}
 		}
 
-		groupChatMembership := models.GroupChatMembership{
-			UserID:      parsedChatUserID,
-			GroupChatID: groupChat.ID,
-			Role:        models.ChatMember,
-		}
+		if chatType == "Group" {
+			userID := c.GetRespHeader("loggedInUserID")
+			parsedLoggedInUserID, err := uuid.Parse(userID)
+			if err != nil {
+				return &fiber.Error{Code: 500, Message: "Error Parsing the LoggedIn User ID."}
+			}
 
-		if parsedChatUserID == parsedLoggedInUserID {
-			groupChatMembership.Role = models.ChatAdmin
-		}
+			var invitations []models.Invitation
 
-		result := initializers.DB.Create(&groupChatMembership)
-		if result.Error != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			for _, chatUserID := range chatUserIDs {
+				parsedUserID, err := uuid.Parse(chatUserID)
+				if err != nil {
+					return &fiber.Error{Code: 500, Message: "Error Parsing the User ID."}
+				}
+				if parsedUserID == parsedLoggedInUserID {
+					continue
+				}
+
+				var existingMembership models.GroupChatMembership
+				err = initializers.DB.First(&existingMembership, "group_chat_id = ? AND user_id = ?", groupChatID, parsedUserID).Error
+				if err == nil {
+					continue
+				}
+
+				var existingInvitation models.Invitation
+				err = initializers.DB.First(&existingInvitation, "group_chat_id = ? AND user_id = ? AND status=0", groupChatID, parsedUserID).Error
+				if err == nil {
+					continue
+				}
+
+				invitation := models.Invitation{
+					UserID:      parsedUserID,
+					GroupChatID: &chat.ID,
+				}
+
+				result := initializers.DB.Create(&invitation)
+				if result.Error != nil {
+					return &fiber.Error{Code: 500, Message: "Internal Server Error while creating invitations"}
+				}
+
+				invitations = append(invitations, invitation)
+			}
+
+			return c.Status(200).JSON(fiber.Map{
+				"status":      "success",
+				"message":     "Invitations Sent",
+				"invitations": invitations,
+			})
+		} else {
+			var memberships []models.GroupChatMembership
+
+			for _, chatUserID := range chatUserIDs {
+				parsedUserID, err := uuid.Parse(chatUserID)
+				if err != nil {
+					return &fiber.Error{Code: 500, Message: "Error Parsing the User ID."}
+				}
+
+				var existingMembership models.GroupChatMembership
+				err = initializers.DB.First(&existingMembership, "group_chat_id = ? AND user_id = ?", groupChatID, parsedUserID).Error
+				if err == nil {
+					continue
+				}
+
+				var projectMembership models.Membership
+				err = initializers.DB.First(&projectMembership, "project_id = ? AND user_id = ?", chat.ProjectID, parsedUserID).Error
+				if err != nil {
+					continue
+				}
+
+				groupChatMembership := models.GroupChatMembership{
+					UserID:      parsedUserID,
+					GroupChatID: chat.ID,
+					Role:        models.ChatMember,
+				}
+
+				result := initializers.DB.Create(&groupChatMembership)
+				if result.Error != nil {
+					return &fiber.Error{Code: 500, Message: "Internal Server Error while creating memberships"}
+				}
+
+				memberships = append(memberships, groupChatMembership)
+			}
+
+			return c.Status(200).JSON(fiber.Map{
+				"status":      "success",
+				"message":     "Invitations Sent",
+				"memberships": memberships,
+			})
 		}
 	}
-
-	var chat models.GroupChat
-	if err := initializers.DB.Preload("Memberships").Preload("Memberships.User").Find(&chat, "id = ? ", groupChat.ID).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-	}
-
-	return c.Status(201).JSON(fiber.Map{
-		"status":  "success",
-		"message": "Chat Created",
-		"chat":    chat,
-	})
-}
-
-func AddGroupChatMembers(c *fiber.Ctx) error {
-	var reqBody struct {
-		UserIDs []string `json:"userIDs"`
-	}
-	if err := c.BodyParser(&reqBody); err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
-	}
-	chatUserIDs := reqBody.UserIDs
-
-	groupChatID := c.Params("chatID")
-	userID := c.GetRespHeader("loggedInUserID")
-	parsedLoggedInUserID, err := uuid.Parse(userID)
-	if err != nil {
-		return &fiber.Error{Code: 500, Message: "Error Parsing the LoggedIn User ID."}
-	}
-
-	var chat models.GroupChat
-	err = initializers.DB.First(&chat, "id = ?", groupChatID).Error
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "No chat of this id found."}
-	}
-
-	var invitations []models.Invitation
-
-	for _, chatUserID := range chatUserIDs {
-		parsedUserID, err := uuid.Parse(chatUserID)
-		if err != nil {
-			return &fiber.Error{Code: 500, Message: "Error Parsing the User ID."}
-		}
-		if parsedUserID == parsedLoggedInUserID {
-			continue
-		}
-
-		var existingMembership models.GroupChatMembership
-		err = initializers.DB.First(&existingMembership, "group_chat_id = ? AND user_id = ?", groupChatID, parsedUserID).Error
-		if err == nil {
-			continue
-		}
-
-		var existingInvitation models.Invitation
-		err = initializers.DB.First(&existingInvitation, "group_chat_id = ? AND user_id = ? AND status=0", groupChatID, parsedUserID).Error
-		if err == nil {
-			continue
-		}
-
-		invitation := models.Invitation{
-			UserID:      parsedUserID,
-			GroupChatID: &chat.ID,
-		}
-
-		result := initializers.DB.Create(&invitation)
-		if result.Error != nil {
-			return &fiber.Error{Code: 500, Message: "Internal Server Error while creating invitations"}
-		}
-
-		invitations = append(invitations, invitation)
-	}
-
-	return c.Status(200).JSON(fiber.Map{
-		"status":      "success",
-		"message":     "Invitations Sent",
-		"invitations": invitations,
-	})
-}
-
-func AddProjectChatMembers(c *fiber.Ctx) error {
-	var reqBody struct {
-		UserIDs []string `json:"userIDs"`
-	}
-	if err := c.BodyParser(&reqBody); err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
-	}
-	chatUserIDs := reqBody.UserIDs
-
-	groupChatID := c.Params("chatID")
-
-	var chat models.GroupChat
-	err := initializers.DB.First(&chat, "id = ?", groupChatID).Error
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "No chat of this id found."}
-	}
-
-	var memberships []models.GroupChatMembership
-
-	for _, chatUserID := range chatUserIDs {
-		parsedUserID, err := uuid.Parse(chatUserID)
-		if err != nil {
-			return &fiber.Error{Code: 500, Message: "Error Parsing the User ID."}
-		}
-
-		var existingMembership models.GroupChatMembership
-		err = initializers.DB.First(&existingMembership, "group_chat_id = ? AND user_id = ?", groupChatID, parsedUserID).Error
-		if err == nil {
-			continue
-		}
-
-		var projectMembership models.Membership
-		err = initializers.DB.First(&projectMembership, "project_id = ? AND user_id = ?", chat.ProjectID, parsedUserID).Error
-		if err != nil {
-			continue
-		}
-
-		groupChatMembership := models.GroupChatMembership{
-			UserID:      parsedUserID,
-			GroupChatID: chat.ID,
-			Role:        models.ChatMember,
-		}
-
-		result := initializers.DB.Create(&groupChatMembership)
-		if result.Error != nil {
-			return &fiber.Error{Code: 500, Message: "Internal Server Error while creating memberships"}
-		}
-
-		memberships = append(memberships, groupChatMembership)
-	}
-
-	return c.Status(200).JSON(fiber.Map{
-		"status":      "success",
-		"message":     "Invitations Sent",
-		"memberships": memberships,
-	})
 }
 
 func RemoveGroupChatMember(c *fiber.Ctx) error {

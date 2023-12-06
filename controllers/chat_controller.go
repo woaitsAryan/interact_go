@@ -194,6 +194,46 @@ func GetProjectChats(c *fiber.Ctx) error {
 	})
 }
 
+func GetOrgChats(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	var groupChats []models.GroupChat
+	if err := initializers.DB.
+		Preload("User").
+		Preload("Organization").
+		Preload("LatestMessage").
+		Preload("LatestMessage.User").
+		Preload("Memberships").
+		Preload("Memberships.User").
+		Joins("JOIN group_chat_memberships ON group_chat_memberships.group_chat_id = group_chats.id").
+		Where("group_chat_memberships.user_id = ? AND group_chats.organization_id IS NOT NULL", loggedInUserID).
+		Find(&groupChats).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	var organizations []models.Organization
+
+	for _, chat := range groupChats {
+		check := false
+		for _, project := range organizations {
+			if *chat.ProjectID == project.ID {
+				check = true
+				break
+			}
+		}
+		if !check {
+			organizations = append(organizations, chat.Organization)
+		}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":        "success",
+		"message":       "",
+		"chats":         groupChats,
+		"organizations": organizations,
+	})
+}
+
 func GetUnreadChats(c *fiber.Ctx) error { //* Personal Only
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
@@ -469,7 +509,7 @@ func ResetChat(c *fiber.Ctx) error {
 	})
 }
 
-func DeleteChat(c *fiber.Ctx) error {
+func DeleteChat(c *fiber.Ctx) error { //TODO have a history for project and organizations
 	chatID := c.Params("chatID")
 
 	parsedChatID, err := uuid.Parse(chatID)

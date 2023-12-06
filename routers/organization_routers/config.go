@@ -11,6 +11,7 @@ func Config(app *fiber.App) {
 	app.Get("/org/:orgID", middlewares.Protect, middlewares.OrgRoleAuthorization(models.Member), organization_controllers.GetOrganization)
 
 	AuthRouter(app)
+	ChatRouter(app)
 	PostRouter(app)
 	ProjectRouter(app)
 	ProjectApplicationRouter(app)
