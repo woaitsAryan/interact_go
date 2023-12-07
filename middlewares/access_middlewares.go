@@ -184,15 +184,37 @@ func GroupChatAdminAuthorization() func(*fiber.Ctx) error {
 		loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 		var chatMembership models.GroupChatMembership
-		err := initializers.DB.First(&chatMembership, "group_chat_id = ? AND user_id = ?", groupChatID, loggedInUserID).Error
+		err := initializers.DB.Preload("GroupChat.Project").Preload("GroupChat.Project.Memberships").Preload("GroupChat.Organization.Memberships").First(&chatMembership, "group_chat_id = ? AND user_id = ?", groupChatID, loggedInUserID).Error
+
 		if err != nil {
 			return &fiber.Error{Code: 400, Message: "No chat of this id found."}
 		}
 
-		if chatMembership.Role != models.ChatAdmin {
+		var accessGranted = false
+		if chatMembership.Role == models.ChatAdmin {
+			accessGranted = true
+		} else if chatMembership.GroupChat.ProjectID != nil {
+			roleMemberships := chatMembership.GroupChat.Project.Memberships
+			for _, membership := range roleMemberships {
+				if membership.UserID.String() == loggedInUserID &&
+					(membership.Role == "Editor" || membership.Role == "Manager") {
+					accessGranted = true
+					break
+				}
+			}
+		} else if chatMembership.GroupChat.OrganizationID != nil {
+			organisationMemberships := chatMembership.GroupChat.Organization.Memberships
+			for _, membership := range organisationMemberships {
+				if membership.UserID.String() == loggedInUserID &&
+					(membership.Role == "Manager") {
+					accessGranted = true
+					break
+				}
+			}
+		}
+		if !accessGranted {
 			return &fiber.Error{Code: 403, Message: "You do not have the permission to perform this action."}
 		}
-
 		return c.Next()
 	}
 }
