@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Pratham-Mishra04/interact/config"
+	"github.com/Pratham-Mishra04/interact/controllers/auth_controllers"
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
@@ -283,7 +284,7 @@ func UpdatePassword(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	return CreateSendToken(c, user, 200, "Password updated successfully")
+	return auth_controllers.CreateSendToken(c, user, 200, "Password updated successfully")
 }
 
 func UpdateEmail(c *fiber.Ctx) error {

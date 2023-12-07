@@ -2,20 +2,21 @@ package routers
 
 import (
 	"github.com/Pratham-Mishra04/interact/controllers"
+	"github.com/Pratham-Mishra04/interact/controllers/auth_controllers"
 	"github.com/Pratham-Mishra04/interact/middlewares"
 	"github.com/Pratham-Mishra04/interact/validators"
 	"github.com/gofiber/fiber/v2"
 )
 
 func UserRouter(app *fiber.App) {
-	app.Post("/signup", validators.UserCreateValidator, middlewares.EarlyAccessCheck, controllers.SignUp)
-	app.Post("/login", controllers.LogIn)
-	app.Post("/refresh", controllers.Refresh)
+	app.Post("/signup", validators.UserCreateValidator, middlewares.EarlyAccessCheck, auth_controllers.SignUp)
+	app.Post("/login", auth_controllers.LogIn)
+	app.Post("/refresh", auth_controllers.Refresh)
 
-	app.Post("/early_access", controllers.GetEarlyAccessToken)
+	app.Post("/early_access", auth_controllers.GetEarlyAccessToken)
 
-	app.Post("/recovery", controllers.SendResetURL)
-	app.Post("/recovery/verify", controllers.ResetPassword)
+	app.Post("/recovery", auth_controllers.SendResetURL)
+	app.Post("/recovery/verify", auth_controllers.ResetPassword)
 
 	userRoutes := app.Group("/users", middlewares.Protect)
 	userRoutes.Get("/me", controllers.GetMe)

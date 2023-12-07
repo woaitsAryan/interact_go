@@ -1,4 +1,4 @@
-package controllers
+package messaging_controllers
 
 import (
 	"time"

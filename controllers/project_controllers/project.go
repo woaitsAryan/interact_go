@@ -1,4 +1,4 @@
-package controllers
+package project_controllers
 
 import (
 	"reflect"

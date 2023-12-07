@@ -1,7 +1,7 @@
 package organization_routers
 
 import (
-	"github.com/Pratham-Mishra04/interact/controllers"
+	"github.com/Pratham-Mishra04/interact/controllers/project_controllers"
 	"github.com/Pratham-Mishra04/interact/middlewares"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/gofiber/fiber/v2"
@@ -9,11 +9,11 @@ import (
 
 func ProjectOpeningRouter(app *fiber.App) {
 
-	app.Get("/openings/:openingID", controllers.GetOpening)
+	app.Get("/openings/:openingID", project_controllers.GetOpening)
 
 	openingRoutes := app.Group("/org/:orgID/openings", middlewares.OrgProtect, middlewares.OrgRoleAuthorization(models.Senior))
-	openingRoutes.Get("/applications/:openingID", controllers.GetAllApplicationsOfOpening)
-	openingRoutes.Post("/:projectID", controllers.AddOpening)
-	openingRoutes.Patch("/:openingID", controllers.EditOpening)
-	openingRoutes.Delete("/:openingID", controllers.DeleteOpening)
+	openingRoutes.Get("/applications/:openingID", project_controllers.GetAllApplicationsOfOpening)
+	openingRoutes.Post("/:projectID", project_controllers.AddOpening)
+	openingRoutes.Patch("/:openingID", project_controllers.EditOpening)
+	openingRoutes.Delete("/:openingID", project_controllers.DeleteOpening)
 }

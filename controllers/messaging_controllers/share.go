@@ -1,4 +1,4 @@
-package controllers
+package messaging_controllers
 
 import (
 	"github.com/Pratham-Mishra04/interact/config"
