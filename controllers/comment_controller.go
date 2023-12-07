@@ -64,6 +64,7 @@ func AddComment(c *fiber.Ctx) error {
 		Content   string `json:"content"`
 		PostID    string `json:"postID"`
 		ProjectID string `json:"projectID"`
+		EventID   string `json:"eventID"`
 	}
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
@@ -71,6 +72,7 @@ func AddComment(c *fiber.Ctx) error {
 
 	postID := reqBody.PostID
 	projectID := reqBody.ProjectID
+	eventID := reqBody.EventID
 
 	comment := models.Comment{
 		UserID:  parsedUserID,
@@ -91,10 +93,16 @@ func AddComment(c *fiber.Ctx) error {
 		}
 		comment.ProjectID = &parsedProjectID
 		go routines.IncrementProjectCommentsAndSendNotification(parsedProjectID, parsedUserID)
+	} else if eventID != "" {
+		parsedEventID, err := uuid.Parse(eventID)
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid ID."}
+		}
+		comment.EventID = &parsedEventID
+		go routines.IncrementEventCommentsAndSendNotification(parsedEventID, parsedUserID)
 	}
 
 	result := initializers.DB.Create(&comment)
-
 	if result.Error != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
@@ -163,7 +171,10 @@ func DeleteComment(c *fiber.Ctx) error {
 	}
 
 	var comment models.Comment
-	if err := initializers.DB.Preload("Post").Preload("Project").First(&comment, "id = ?", parsedCommentID).Error; err != nil {
+	if err := initializers.DB.Preload("Post").
+		Preload("Project").
+		Preload("Organization").
+		First(&comment, "id = ?", parsedCommentID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
 		}
@@ -179,6 +190,10 @@ func DeleteComment(c *fiber.Ctx) error {
 			if comment.Project.UserID != parsedLoggedInUserID {
 				return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
 			}
+		} else if comment.EventID != nil {
+			if comment.Event.OrganizationID != parsedLoggedInUserID {
+				return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
+			}
 		} else {
 			return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
 		}
@@ -186,6 +201,7 @@ func DeleteComment(c *fiber.Ctx) error {
 
 	postID := comment.PostID
 	projectID := comment.ProjectID
+	eventID := comment.EventID
 
 	if err := initializers.DB.Delete(&comment).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
@@ -195,6 +211,8 @@ func DeleteComment(c *fiber.Ctx) error {
 		go routines.DecrementPostComments(*postID)
 	} else if projectID != nil {
 		go routines.DecrementProjectComments(*projectID)
+	} else if eventID != nil {
+		go routines.DecrementEventComments(*eventID)
 	}
 
 	return c.Status(204).JSON(fiber.Map{

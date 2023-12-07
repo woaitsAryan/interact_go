@@ -20,6 +20,8 @@ type Message struct {
 	Opening   Opening    `json:"opening"`
 	ProfileID *uuid.UUID `gorm:"type:uuid" json:"profileID"` // shared profile
 	Profile   User       `gorm:"" json:"profile"`
+	EventID   *uuid.UUID `gorm:"type:uuid" json:"eventID"` // shared event
+	Event     Event      `gorm:"" json:"event"`
 	// MessageID *uuid.UUID `gorm:"type:uuid" json:"messageID"` // replied message
 	// Message   Message    `json:"message"`
 	Content   string    `gorm:"type:text;not null" json:"content"`
@@ -42,6 +44,8 @@ type GroupChatMessage struct {
 	Opening   Opening    `json:"opening"`
 	ProfileID *uuid.UUID `gorm:"type:uuid" json:"profileID"` // shared profile
 	Profile   User       `gorm:"foreignKey:ProfileID;" json:"profile"`
+	EventID   *uuid.UUID `gorm:"type:uuid" json:"eventID"` // shared event
+	Event     Event      `gorm:"" json:"event"`
 	// MessageID *uuid.UUID `gorm:"type:uuid" json:"messageID"` // replied message
 	// Message   Project    `json:"message"`
 	// Read      bool       `gorm:"default:false" json:"read"`

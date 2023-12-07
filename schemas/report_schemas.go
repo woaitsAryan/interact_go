@@ -6,5 +6,6 @@ type ReportCreateSchema struct {
 	UserID     string `json:"userID"`
 	PostID     string `json:"postID"`
 	ProjectID  string `json:"projectID"`
+	EventID    string `json:"eventID"`
 	OpeningID  string `json:"openingID"`
 }

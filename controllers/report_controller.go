@@ -27,19 +27,17 @@ func AddReport(c *fiber.Ctx) error {
 	var existingReport models.Report
 	if reqBody.UserID != "" {
 		initializers.DB.Where("reporter_id=? AND user_id=?", parsedLoggedInUserID, reqBody.UserID).First(&existingReport)
-	}
-	if reqBody.PostID != "" {
+	} else if reqBody.PostID != "" {
 		initializers.DB.Where("reporter_id=? AND post_id=?", parsedLoggedInUserID, reqBody.PostID).First(&existingReport)
-	}
-	if reqBody.ProjectID != "" {
+	} else if reqBody.ProjectID != "" {
 		initializers.DB.Where("reporter_id=? AND project_id=?", parsedLoggedInUserID, reqBody.ProjectID).First(&existingReport)
-	}
-	if reqBody.OpeningID != "" {
+	} else if reqBody.EventID != "" {
+		initializers.DB.Where("reporter_id=? AND event_id=?", parsedLoggedInUserID, reqBody.EventID).First(&existingReport)
+	} else if reqBody.OpeningID != "" {
 		initializers.DB.Where("reporter_id=? AND opening_id=?", parsedLoggedInUserID, reqBody.OpeningID).First(&existingReport)
 	}
 
 	if existingReport.ID != uuid.Nil {
-
 		return c.Status(400).JSON(fiber.Map{
 			"status":  "success",
 			"message": "You have already filed a report.",
@@ -58,22 +56,25 @@ func AddReport(c *fiber.Ctx) error {
 			return &fiber.Error{Code: 400, Message: "Invalid User ID"}
 		}
 		report.UserID = &parsedUserID
-	}
-	if reqBody.PostID != "" {
+	} else if reqBody.PostID != "" {
 		parsedPostID, err := uuid.Parse(reqBody.PostID)
 		if err != nil {
 			return &fiber.Error{Code: 400, Message: "Invalid Post ID"}
 		}
 		report.PostID = &parsedPostID
-	}
-	if reqBody.ProjectID != "" {
+	} else if reqBody.ProjectID != "" {
 		parsedProjectID, err := uuid.Parse(reqBody.ProjectID)
 		if err != nil {
 			return &fiber.Error{Code: 400, Message: "Invalid Project ID"}
 		}
 		report.ProjectID = &parsedProjectID
-	}
-	if reqBody.OpeningID != "" {
+	} else if reqBody.EventID != "" {
+		parsedEventID, err := uuid.Parse(reqBody.EventID)
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid Event ID"}
+		}
+		report.EventID = &parsedEventID
+	} else if reqBody.OpeningID != "" {
 		parsedOpeningID, err := uuid.Parse(reqBody.OpeningID)
 		if err != nil {
 			return &fiber.Error{Code: 400, Message: "Invalid Opening ID"}

@@ -42,7 +42,7 @@ type GroupChat struct { //TODO store number of members in model to show in invit
 	CreatedAt       time.Time             `gorm:"default:current_timestamp" json:"createdAt"`
 	Memberships     []GroupChatMembership `gorm:"foreignKey:GroupChatID;constraint:OnDelete:CASCADE" json:"memberships"`
 	Messages        []GroupChatMessage    `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE" json:"messages"`
-	LatestMessageID uuid.UUID             `gorm:"type:uuid" json:"latestMessageID"`
+	LatestMessageID *uuid.UUID            `gorm:"type:uuid" json:"latestMessageID"`
 	LatestMessage   *GroupChatMessage     `gorm:"foreignKey:LatestMessageID;constraint:OnDelete:CASCADE" json:"latestMessage"`
 	Invitations     []Invitation          `gorm:"foreignKey:GroupChatID;constraint:OnDelete:CASCADE" json:"invitations"`
 }

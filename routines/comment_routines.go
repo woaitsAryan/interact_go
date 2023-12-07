@@ -16,7 +16,7 @@ func IncrementPostCommentsAndSendNotification(postID uuid.UUID, loggedInUserID u
 		result := initializers.DB.Save(&post)
 
 		if result.Error != nil {
-			helpers.LogDatabaseError("Error while updating Post-IncrementPostCommentsAndSendNotification", err, "go_routine")
+			helpers.LogDatabaseError("Error while updating Post-IncrementPostCommentsAndSendNotification", result.Error, "go_routine")
 		}
 
 		if loggedInUserID != post.UserID {
@@ -43,7 +43,7 @@ func IncrementProjectCommentsAndSendNotification(projectID uuid.UUID, loggedInUs
 		result := initializers.DB.Save(&project)
 
 		if result.Error != nil {
-			helpers.LogDatabaseError("Error while updating Project-IncrementProjectCommentsAndSendNotification", err, "go_routine")
+			helpers.LogDatabaseError("Error while updating Project-IncrementProjectCommentsAndSendNotification", result.Error, "go_routine")
 		}
 
 		if loggedInUserID != project.UserID {
@@ -56,6 +56,33 @@ func IncrementProjectCommentsAndSendNotification(projectID uuid.UUID, loggedInUs
 
 			if err := initializers.DB.Create(&notification).Error; err != nil {
 				helpers.LogDatabaseError("Error while creating Notification-IncrementProjectCommentsAndSendNotification", err, "go_routine")
+			}
+		}
+	}
+}
+
+func IncrementEventCommentsAndSendNotification(eventID uuid.UUID, loggedInUserID uuid.UUID) {
+	var event models.Event
+	if err := initializers.DB.Preload("Organization").First(&event, "id=?", eventID).Error; err != nil {
+		helpers.LogDatabaseError("No Event of this ID found-IncrementEventCommentsAndSendNotification.", err, "go_routine")
+	} else {
+		event.NoComments++
+		result := initializers.DB.Save(&event)
+
+		if result.Error != nil {
+			helpers.LogDatabaseError("Error while updating Event-IncrementEventCommentsAndSendNotification", result.Error, "go_routine")
+		}
+
+		if loggedInUserID != event.Organization.UserID {
+			notification := models.Notification{
+				SenderID:         loggedInUserID,
+				NotificationType: 13,
+				UserID:           event.Organization.UserID,
+				EventID:          &event.ID,
+			}
+
+			if err := initializers.DB.Create(&notification).Error; err != nil {
+				helpers.LogDatabaseError("Error while creating Notification-IncrementEventCommentsAndSendNotification", err, "go_routine")
 			}
 		}
 	}
@@ -85,6 +112,20 @@ func DecrementProjectComments(projectID uuid.UUID) {
 
 		if result.Error != nil {
 			helpers.LogDatabaseError("Error while updating Project-DecrementProjectComments", err, "go_routine")
+		}
+	}
+}
+
+func DecrementEventComments(eventID uuid.UUID) {
+	var event models.Event
+	if err := initializers.DB.First(&event, "id=?", eventID).Error; err != nil {
+		helpers.LogDatabaseError("No Event of this ID found-DecrementEventComments.", err, "go_routine")
+	} else {
+		event.NoComments--
+		result := initializers.DB.Save(&event)
+
+		if result.Error != nil {
+			helpers.LogDatabaseError("Error while updating Event-DecrementEventComments", err, "go_routine")
 		}
 	}
 }

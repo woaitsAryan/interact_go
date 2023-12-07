@@ -58,6 +58,14 @@ func GetOrganizationTasks(c *fiber.Ctx) error {
 func GetOrganizationChats(c *fiber.Ctx) error {
 	orgID := c.Params("orgID")
 
+	var organization models.Organization
+	if err := initializers.DB.
+		Preload("Memberships").
+		Preload("Memberships.User").
+		Find(&organization, "id = ? ", orgID).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
 	var chats []models.GroupChat
 	if err := initializers.DB.
 		Preload("User").
@@ -68,8 +76,9 @@ func GetOrganizationChats(c *fiber.Ctx) error {
 	}
 
 	return c.Status(200).JSON(fiber.Map{
-		"status":  "success",
-		"message": "",
-		"chats":   chats,
+		"status":       "success",
+		"message":      "",
+		"chats":        chats,
+		"organization": organization,
 	})
 }

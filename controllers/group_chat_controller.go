@@ -70,6 +70,7 @@ func AddGroupChat(chatType string) func(c *fiber.Ctx) error {
 		chatUserIDs := reqBody.UserIDs
 
 		var chat models.GroupChat
+		var parsedLoggedInUserID uuid.UUID
 
 		if chatType == "Group" {
 			loggedInUserID := c.GetRespHeader("loggedInUserID")
@@ -127,17 +128,18 @@ func AddGroupChat(chatType string) func(c *fiber.Ctx) error {
 				}
 			}
 		} else {
-			var parsedLoggedInUserID uuid.UUID
 			if chatType == "Project" { //TODO check for project and organization memberships of the users in reqBody
 				userID := c.GetRespHeader("projectMemberID")
 				if userID == "" {
 					userID = c.GetRespHeader("loggedInUserID")
 				}
 
-				parsedLoggedInUserID, err := uuid.Parse(userID)
+				parsedUserID, err := uuid.Parse(userID)
 				if err != nil {
 					return &fiber.Error{Code: 500, Message: "Error Parsing the LoggedIn User ID."}
 				}
+
+				parsedLoggedInUserID = parsedUserID
 
 				projectID := c.Params("projectID")
 
@@ -173,14 +175,9 @@ func AddGroupChat(chatType string) func(c *fiber.Ctx) error {
 
 			} else if chatType == "Organization" {
 				userID := c.GetRespHeader("orgMemberID")
-				if userID == "" {
-					userID = c.GetRespHeader("loggedInUserID")
-				}
+				parsedUserID, _ := uuid.Parse(userID)
 
-				parsedLoggedInUserID, err := uuid.Parse(userID)
-				if err != nil {
-					return &fiber.Error{Code: 500, Message: "Error Parsing the LoggedIn User ID."}
-				}
+				parsedLoggedInUserID = parsedUserID
 
 				orgID := c.Params("orgID")
 
@@ -195,10 +192,10 @@ func AddGroupChat(chatType string) func(c *fiber.Ctx) error {
 				}
 
 				chat = models.GroupChat{
-					UserID:      parsedLoggedInUserID,
-					Title:       reqBody.Title,
-					Description: reqBody.Description,
-					ProjectID:   &organization.ID,
+					UserID:         parsedLoggedInUserID,
+					Title:          reqBody.Title,
+					Description:    reqBody.Description,
+					OrganizationID: &organization.ID,
 				}
 
 				if picName != "" {
@@ -237,13 +234,12 @@ func AddGroupChat(chatType string) func(c *fiber.Ctx) error {
 				}
 			}
 
-			var chat models.GroupChat
 			if err := initializers.DB.Preload("Memberships").Preload("Memberships.User").Find(&chat, "id = ? ", chat.ID).Error; err != nil {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 			}
 		}
 
-		return c.Status(200).JSON(fiber.Map{
+		return c.Status(201).JSON(fiber.Map{
 			"status":  "success",
 			"message": "Chat Created",
 			"chat":    chat,

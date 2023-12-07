@@ -54,6 +54,7 @@ func AutoMigrate() {
 		&models.Organization{},
 		&models.OrganizationMembership{},
 		&models.OrganizationHistory{},
+		&models.Event{},
 
 		&models.Report{},
 		&models.Notification{},

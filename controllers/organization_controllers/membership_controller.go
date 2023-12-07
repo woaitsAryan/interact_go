@@ -205,7 +205,8 @@ func ChangeMemberRole(c *fiber.Ctx) error {
 	}
 
 	var reqBody struct {
-		Role models.OrganizationRole
+		Role  models.OrganizationRole `json:"role"`
+		Title string                  `json:"title"`
 	}
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
@@ -218,6 +219,8 @@ func ChangeMemberRole(c *fiber.Ctx) error {
 		}
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
+
+	membership.Title = reqBody.Title
 
 	if orgChangedUserID == loggedInUserID {
 		membership.Role = reqBody.Role

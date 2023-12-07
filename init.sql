@@ -9,7 +9,7 @@ CREATE TABLE chats (
     last_reset_by_accepting_user TIMESTAMP DEFAULT current_timestamp,
     blocked_by_creating_user BOOLEAN DEFAULT false,
     blocked_by_accepting_user BOOLEAN DEFAULT false,
-    accepted BOOLEAN DEFAULT false,
+    accepted BOOLEAN DEFAULT false
 );
 
 CREATE TABLE group_chats (
@@ -21,5 +21,5 @@ CREATE TABLE group_chats (
     user_id UUID NOT NULL,
     organization_id UUID,
     project_id UUID,
-    created_at TIMESTAMP DEFAULT current_timestamp,
+    created_at TIMESTAMP DEFAULT current_timestamp
 );

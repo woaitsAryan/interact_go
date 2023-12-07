@@ -23,6 +23,7 @@ func GetNotifications(c *fiber.Ctx) error {
 		Preload("Sender").
 		Preload("Post").
 		Preload("Project").
+		Preload("Event").
 		Preload("Opening").
 		Preload("Application").
 		Where("user_id=?", loggedInUserID).
@@ -48,6 +49,7 @@ func GetUnreadNotifications(c *fiber.Ctx) error {
 		Preload("Sender").
 		Preload("Post").
 		Preload("Project").
+		Preload("Event").
 		Preload("Opening").
 		Preload("Application").
 		Where("user_id=? AND read=?", loggedInUserID, false).

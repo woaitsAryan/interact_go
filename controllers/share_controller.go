@@ -21,6 +21,7 @@ func ShareItem(shareType string) func(c *fiber.Ctx) error {
 			Chats     pq.StringArray `json:"chats"`
 			PostID    string         `json:"postID"`
 			ProjectID string         `json:"projectID"`
+			EventID   string         `json:"eventID"`
 			OpeningID string         `json:"openingID"`
 			ProfileID string         `json:"profileID"`
 		}
@@ -71,6 +72,13 @@ func ShareItem(shareType string) func(c *fiber.Ctx) error {
 				}
 				message.ProjectID = &parsedProjectID
 				go routines.IncrementProjectShare(parsedProjectID)
+			case "event":
+				parsedEventID, err := uuid.Parse(reqBody.EventID)
+				if err != nil {
+					return &fiber.Error{Code: 400, Message: "Invalid Event ID."}
+				}
+				message.EventID = &parsedEventID
+				go routines.IncrementEventShare(parsedEventID)
 			case "opening":
 				parsedOpeningID, err := uuid.Parse(reqBody.OpeningID)
 				if err != nil {
@@ -94,7 +102,7 @@ func ShareItem(shareType string) func(c *fiber.Ctx) error {
 		}
 		return c.Status(200).JSON(fiber.Map{
 			"status":  "success",
-			"message": "Post Shared",
+			"message": "Shared",
 		})
 
 	}

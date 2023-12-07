@@ -11,6 +11,7 @@ type Like struct {
 	UserID    uuid.UUID  `gorm:"type:uuid;not null" json:"likedByID"`
 	PostID    *uuid.UUID `gorm:"type:uuid" json:"postID"`
 	ProjectID *uuid.UUID `gorm:"type:uuid" json:"projectID"`
+	EventID   *uuid.UUID `gorm:"type:uuid" json:"eventID"`
 	CommentID *uuid.UUID `gorm:"type:uuid" json:"commentID"`
 	CreatedAt time.Time  `gorm:"default:current_timestamp" json:"likedAt"`
 }

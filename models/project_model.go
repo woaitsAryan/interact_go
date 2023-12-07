@@ -20,8 +20,8 @@ type Project struct {
 	User              User                  `gorm:"" json:"user"`
 	CreatedAt         time.Time             `gorm:"default:current_timestamp" json:"createdAt"`
 	Tags              pq.StringArray        `gorm:"type:text[]" json:"tags"`
-	NoLikes           int                   `json:"noLikes"`
-	NoShares          int                   `json:"noShares"`
+	NoLikes           int                   `gorm:"default:0" json:"noLikes"`
+	NoShares          int                   `gorm:"default:0" json:"noShares"`
 	NoComments        int                   `gorm:"default:0" json:"noComments"`
 	TotalNoViews      int                   `gorm:"default:0" json:"totalNoViews"`
 	Category          string                `gorm:"type:text;not null" json:"category"`

@@ -12,6 +12,8 @@ type Comment struct {
 	Post      Post       `gorm:"" json:"post"`
 	ProjectID *uuid.UUID `gorm:"type:uuid" json:"projectID"`
 	Project   Project    `gorm:"" json:"project"`
+	EventID   *uuid.UUID `gorm:"type:uuid" json:"eventID"`
+	Event     Event      `gorm:"" json:"event"`
 	UserID    uuid.UUID  `gorm:"type:uuid;not null" json:"userID"`
 	User      User       `gorm:"" json:"user"`
 	Content   string     `gorm:"type:text;not null" json:"content"`

@@ -15,7 +15,7 @@ func IncrementPostShare(postID uuid.UUID) {
 		post.NoShares++
 		result := initializers.DB.Save(post)
 		if result.Error != nil {
-			helpers.LogDatabaseError("Error while updating Post-IncrementPostShare", err, "go_routine")
+			helpers.LogDatabaseError("Error while updating Post-IncrementPostShare", result.Error, "go_routine")
 		}
 	}
 }
@@ -28,7 +28,20 @@ func IncrementProjectShare(projectID uuid.UUID) {
 		project.NoShares++
 		result := initializers.DB.Save(project)
 		if result.Error != nil {
-			helpers.LogDatabaseError("Error while updating Project-IncrementProjectShare", err, "go_routine")
+			helpers.LogDatabaseError("Error while updating Project-IncrementProjectShare", result.Error, "go_routine")
+		}
+	}
+}
+
+func IncrementEventShare(eventID uuid.UUID) {
+	var event models.Event
+	if err := initializers.DB.First(&event, "id=?", eventID).Error; err != nil {
+		helpers.LogDatabaseError("No Event of this ID found-IncrementEventShare.", err, "go_routine")
+	} else {
+		event.NoShares++
+		result := initializers.DB.Save(event)
+		if result.Error != nil {
+			helpers.LogDatabaseError("Error while updating Event-IncrementEventShare", result.Error, "go_routine")
 		}
 	}
 }

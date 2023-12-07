@@ -12,6 +12,7 @@ func Config(app *fiber.App) {
 
 	AuthRouter(app)
 	ChatRouter(app)
+	EventRouter(app)
 	PostRouter(app)
 	ProjectRouter(app)
 	ProjectApplicationRouter(app)

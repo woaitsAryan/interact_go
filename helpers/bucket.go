@@ -22,6 +22,7 @@ type BucketClient struct {
 }
 
 var ProjectClient *BucketClient
+var EventClient *BucketClient
 var PostClient *BucketClient
 var ChatClient *BucketClient
 var UserProfileClient *BucketClient
@@ -45,6 +46,7 @@ func createNewBucketClient(uploadPath string) *BucketClient {
 
 func InitializeBucketClients() {
 	ProjectClient = createNewBucketClient("projects/")
+	EventClient = createNewBucketClient("events/")
 	PostClient = createNewBucketClient("posts/")
 	ChatClient = createNewBucketClient("chats/")
 	UserProfileClient = createNewBucketClient("users/profilePics/")

@@ -21,7 +21,7 @@ func IncrementPostLikesAndSendNotification(postID uuid.UUID, loggedInUserID uuid
 
 		result := initializers.DB.Save(&post)
 		if result.Error != nil {
-			helpers.LogDatabaseError("Error while updating Post-IncrementPostLikesAndSendNotification", err, "go_routine")
+			helpers.LogDatabaseError("Error while updating Post-IncrementPostLikesAndSendNotification", result.Error, "go_routine")
 		}
 	}
 
@@ -53,7 +53,7 @@ func DecrementPostLikes(postID uuid.UUID) {
 
 		result := initializers.DB.Save(&post)
 		if result.Error != nil {
-			helpers.LogDatabaseError("Error while updating Post-DecrementPostLikes", err, "go_routine")
+			helpers.LogDatabaseError("Error while updating Post-DecrementPostLikes", result.Error, "go_routine")
 		}
 	}
 }
@@ -71,7 +71,7 @@ func IncrementProjectLikesAndSendNotification(projectID uuid.UUID, loggedInUserI
 
 		result := initializers.DB.Save(&project)
 		if result.Error != nil {
-			helpers.LogDatabaseError("Error while updating Project-IncrementProjectLikesAndSendNotification", err, "go_routine")
+			helpers.LogDatabaseError("Error while updating Project-IncrementProjectLikesAndSendNotification", result.Error, "go_routine")
 		}
 	}
 
@@ -103,7 +103,7 @@ func DecrementProjectLikes(projectID uuid.UUID) {
 
 		result := initializers.DB.Save(&project)
 		if result.Error != nil {
-			helpers.LogDatabaseError("Error while updating Project-DecrementProjectLikes", err, "go_routine")
+			helpers.LogDatabaseError("Error while updating Project-DecrementProjectLikes", result.Error, "go_routine")
 		}
 	}
 }
@@ -121,7 +121,7 @@ func IncrementCommentLikes(commentID uuid.UUID, loggedInUserID uuid.UUID) {
 
 		result := initializers.DB.Save(&comment)
 		if result.Error != nil {
-			helpers.LogDatabaseError("Error while updating Post Comment-IncrementPostCommentLikes", err, "go_routine")
+			helpers.LogDatabaseError("Error while updating Post Comment-IncrementPostCommentLikes", result.Error, "go_routine")
 		}
 	}
 }
@@ -139,7 +139,56 @@ func DecrementCommentLikes(commentID uuid.UUID) {
 
 		result := initializers.DB.Save(&comment)
 		if result.Error != nil {
-			helpers.LogDatabaseError("Error while updating Post Comment-DecrementPostCommentLikes", err, "go_routine")
+			helpers.LogDatabaseError("Error while updating Post Comment-DecrementPostCommentLikes", result.Error, "go_routine")
+		}
+	}
+}
+
+func IncrementEventLikesAndSendNotification(eventID uuid.UUID, loggedInUserID uuid.UUID) {
+	var event models.Event
+	if err := initializers.DB.Preload("Organization").First(&event, "id = ?", eventID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			helpers.LogDatabaseError("No Event of this ID found-IncrementEventLikesAndSendNotification.", err, "go_routine")
+		} else {
+			helpers.LogDatabaseError("Error while fetching Event-IncrementEventLikesAndSendNotification", err, "go_routine")
+		}
+	} else {
+		event.NoLikes++
+
+		result := initializers.DB.Save(&event)
+		if result.Error != nil {
+			helpers.LogDatabaseError("Error while updating Event-IncrementEventLikesAndSendNotification", result.Error, "go_routine")
+		}
+	}
+
+	if loggedInUserID != event.Organization.UserID {
+		notification := models.Notification{
+			NotificationType: 12,
+			UserID:           event.Organization.UserID,
+			SenderID:         loggedInUserID,
+			EventID:          &event.ID,
+		}
+
+		if err := initializers.DB.Create(&notification).Error; err != nil {
+			helpers.LogDatabaseError("Error while creating Notification-IncrementEventLikesAndSendNotification", err, "go_routine")
+		}
+	}
+}
+
+func DecrementEventLikes(eventID uuid.UUID) {
+	var event models.Event
+	if err := initializers.DB.First(&event, "id = ?", eventID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			helpers.LogDatabaseError("No Event of this ID found-DecrementEventLikes.", err, "go_routine")
+		} else {
+			helpers.LogDatabaseError("Error while fetching Event-DecrementEventLikes", err, "go_routine")
+		}
+	} else {
+		event.NoLikes--
+
+		result := initializers.DB.Save(&event)
+		if result.Error != nil {
+			helpers.LogDatabaseError("Error while updating Event-DecrementEventLikes", result.Error, "go_routine")
 		}
 	}
 }

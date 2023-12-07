@@ -21,6 +21,8 @@ notification type:
 *9 - Chat request
 *10 - Accepted Project Invitation
 *11 - User assigned you a task in project
+*12 - User liked your event
+*13 - User commented on your event
 */
 
 type Notification struct {
@@ -34,6 +36,8 @@ type Notification struct {
 	Post             Post        `json:"post"`
 	ProjectID        *uuid.UUID  `gorm:"type:uuid" json:"projectID"`
 	Project          Project     `json:"project"`
+	EventID          *uuid.UUID  `gorm:"type:uuid" json:"eventID"`
+	Event            Event       `json:"event"`
 	OpeningID        *uuid.UUID  `gorm:"type:uuid" json:"openingID"`
 	Opening          Opening     `json:"opening"`
 	ApplicationID    *uuid.UUID  `gorm:"type:uuid" json:"applicationID"`
