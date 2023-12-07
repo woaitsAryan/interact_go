@@ -10,7 +10,6 @@ import (
 	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/schemas"
 	"github.com/Pratham-Mishra04/interact/utils"
-	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -31,27 +30,6 @@ func GetEvent(c *fiber.Ctx) error {
 		"status":  "success",
 		"message": "",
 		"event":   event,
-	})
-}
-
-func GetOrgEvents(c *fiber.Ctx) error {
-	orgID := c.Params("orgID")
-
-	paginatedDB := API.Paginator(c)(initializers.DB)
-
-	var events []models.Event //TODO add last edited n all fields
-	if err := paginatedDB.
-		Preload("Organization").
-		Where("organization_id = ?", orgID).
-		Order("created_at DESC").
-		Find(&events).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-	}
-
-	return c.Status(200).JSON(fiber.Map{
-		"status":  "success",
-		"message": "",
-		"events":  events,
 	})
 }
 
