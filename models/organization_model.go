@@ -41,19 +41,40 @@ type OrganizationMembership struct {
 	CreatedAt      time.Time        `gorm:"default:current_timestamp" json:"createdAt"`
 }
 
+/*
+history type:
+*-1 - Organization created 
+*0 - User created an event 
+*1 - User deleted an event
+*2 - User updated an event
+*3 - User invited a member
+*4 - User withdraw an invitation 
+*5 - User removed a member
+*6 - User made a post
+*7 - User deleted a post
+*8 - User edited a post
+*9 - User added a project
+*10 - User deleted a project
+*11 - User edited a project
+*12 - User added a task
+*13 - User deleted a task
+*/
+
 type OrganizationHistory struct {
-	ID             uuid.UUID   `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	OrganizationID uuid.UUID   `gorm:"type:uuid;not null" json:"orgID"`
-	HistoryType    int         `json:"historyType"`
-	UserID         uuid.UUID   `gorm:"type:uuid;not null" json:"userID"`
-	User           User        `json:"user"`
-	PostID         *uuid.UUID  `gorm:"type:uuid" json:"postID"`
-	Post           Post        `json:"post"`
-	ProjectID      *uuid.UUID  `gorm:"type:uuid" json:"projectID"`
-	Project        Project     `json:"project"`
-	OpeningID      *uuid.UUID  `gorm:"type:uuid" json:"openingID"`
-	Opening        Opening     `json:"opening"`
-	ApplicationID  *uuid.UUID  `gorm:"type:uuid" json:"applicationID"`
-	Application    Application `json:"application"`
-	CreatedAt      time.Time   `gorm:"default:current_timestamp" json:"createdAt"`
+	ID             uuid.UUID  `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	OrganizationID uuid.UUID  `gorm:"type:uuid;not null" json:"orgID"`
+	HistoryType    int        `json:"historyType"`
+	UserID         uuid.UUID  `gorm:"type:uuid;not null" json:"userID"`
+	User           User       `json:"user"`
+	PostID         *uuid.UUID `gorm:"type:uuid" json:"postID"`
+	Post           Post       `json:"post"`
+	EventID        *uuid.UUID `gorm:"type:uuid" json:"eventID"`
+	Event          Event      `json:"event"`
+	ProjectID      *uuid.UUID `gorm:"type:uuid" json:"projectID"`
+	Project        Project    `json:"project"`
+	TaskID         *uuid.UUID `gorm:"type:uuid" json:"taskID"`
+	Task           Task       `json:"task"`
+	InvitationID   *uuid.UUID `gorm:"type:uuid" json:"invitationID"`
+	Invitation     Invitation `json:"invitation"`
+	CreatedAt      time.Time  `gorm:"default:current_timestamp" json:"createdAt"`
 }

@@ -159,6 +159,8 @@ func WithdrawInvitation(c *fiber.Ctx) error {
 		if invitation.Organization.UserID.String() != loggedInUserID {
 			return &fiber.Error{Code: 403, Message: "You don't have the permission to perform this action."}
 		}
+		parsedOrgMemberID, _ := uuid.Parse(c.GetRespHeader("orgMemberID"))
+		go routines.MarkOrganizationHistory(*invitation.OrganizationID, parsedOrgMemberID, 4, nil, nil, nil, nil, &invitation.ID) 
 	}
 
 	if invitation.Status == 1 {

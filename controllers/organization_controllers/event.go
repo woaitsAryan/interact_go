@@ -42,7 +42,10 @@ func AddEvent(c *fiber.Ctx) error {
 	if err := helpers.Validate[schemas.EventCreateSchema](reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: err.Error()}
 	}
-
+	parsedUserID, err := uuid.Parse(c.GetRespHeader("orgMemberID"))
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid User ID."}
+	}
 	parsedOrgID, err := uuid.Parse(c.Params("orgID"))
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
@@ -75,6 +78,7 @@ func AddEvent(c *fiber.Ctx) error {
 	// 	parsedOrgMemberID, _ := uuid.Parse(orgMemberID)
 	// 	go routines.MarkOrganizationHistory(event.ID, parsedOrgMemberID, -1, nil, nil, nil, nil, nil)
 	// }
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 0, nil, nil, &event.ID, nil, nil)
 
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",
@@ -85,6 +89,15 @@ func AddEvent(c *fiber.Ctx) error {
 
 func UpdateEvent(c *fiber.Ctx) error {
 	eventID := c.Params("eventID")
+
+	parsedUserID, err := uuid.Parse(c.GetRespHeader("orgMemberID"))
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid User ID."}
+	}
+	parsedOrgID, err := uuid.Parse(c.Params("orgID"))
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
+	}
 
 	var event models.Event
 	if err := initializers.DB.Where("id = ?", eventID).First(&event).Error; err != nil {
@@ -135,6 +148,7 @@ func UpdateEvent(c *fiber.Ctx) error {
 	// 	parsedOrgMemberID, _ := uuid.Parse(orgMemberID)
 	// 	go routines.MarkOrganizationHistory(project.ID, parsedOrgMemberID, 2, nil, nil, nil, nil, nil)
 	// }
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 2, nil, nil, &event.ID, nil, nil)
 
 	//TODO setup event cache
 	// cache.RemoveProject(project.Slug)
@@ -149,6 +163,14 @@ func UpdateEvent(c *fiber.Ctx) error {
 
 func DeleteEvent(c *fiber.Ctx) error {
 	eventID := c.Params("eventID")
+	parsedUserID, err := uuid.Parse(c.GetRespHeader("orgMemberID"))
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid User ID."}
+	}
+	parsedOrgID, err := uuid.Parse(c.Params("orgID"))
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
+	}
 
 	var event models.Event
 	if err := initializers.DB.Where("id = ?", eventID).First(&event).Error; err != nil {
@@ -171,6 +193,7 @@ func DeleteEvent(c *fiber.Ctx) error {
 	// 	parsedOrgMemberID, _ := uuid.Parse(orgMemberID)
 	// 	go routines.MarkOrganizationHistory(project.ID, parsedOrgMemberID, 2, nil, nil, nil, nil, nil)
 	// }
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 1, nil, nil, &event.ID, nil, nil)
 
 	//TODO setup event cache
 	// cache.RemoveProject(project.Slug)

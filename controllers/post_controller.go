@@ -180,6 +180,21 @@ func AddPost(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
+	orgMemberID := c.GetRespHeader("orgMemberID")
+	orgID := c.Params("orgID")
+	if orgMemberID != "" && orgID != ""{
+		parsedOrgID, err := uuid.Parse(orgID)
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
+		}
+
+		parsedOrgMemberID, err := uuid.Parse(orgMemberID)
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid User ID."}
+		}
+		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 6, &newPost.ID, nil, nil, nil, nil)
+	}
+
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Post Added",
@@ -239,6 +254,21 @@ func UpdatePost(c *fiber.Ctx) error {
 		}
 	}
 
+	orgMemberID := c.GetRespHeader("orgMemberID")
+	orgID := c.Params("orgID")
+	if orgMemberID != "" && orgID != ""{
+		parsedOrgID, err := uuid.Parse(orgID)
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
+		}
+
+		parsedOrgMemberID, err := uuid.Parse(orgMemberID)
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid User ID."}
+		}
+		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 8, &post.ID, nil, nil, nil, nil)
+	}
+
 	cache.RemovePost(postID)
 
 	return c.Status(200).JSON(fiber.Map{
@@ -285,6 +315,21 @@ func DeletePost(c *fiber.Ctx) error {
 
 	if err := initializers.DB.Delete(&post).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	orgMemberID := c.GetRespHeader("orgMemberID")
+	orgID := c.Params("orgID")
+	if orgMemberID != "" && orgID != ""{
+		parsedOrgID, err := uuid.Parse(orgID)
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
+		}
+
+		parsedOrgMemberID, err := uuid.Parse(orgMemberID)
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid User ID."}
+		}
+		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 7, &post.ID, nil, nil, nil, nil)
 	}
 
 	return c.Status(204).JSON(fiber.Map{

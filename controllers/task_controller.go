@@ -132,7 +132,9 @@ func AddTask(taskType string) func(c *fiber.Ctx) error {
 
 		case "org_task":
 			orgID := c.Params("orgID")
-
+			orgMemberID := c.GetRespHeader("orgMemberID")
+			parsedOrgMemberID, _ := uuid.Parse(orgMemberID)
+			parsedOrgID, _ := uuid.Parse(orgID)
 			var organization models.Organization
 			if err := initializers.DB.Preload("Memberships").Preload("Memberships.User").First(&organization, "id = ?", orgID).Error; err != nil {
 				if err == gorm.ErrRecordNotFound {
@@ -176,6 +178,8 @@ func AddTask(taskType string) func(c *fiber.Ctx) error {
 			// for _, user := range users {
 			// 	go routines.SendTaskNotification(user.ID, parsedID, project.ID)
 			// }
+
+			go routines.MarkOrganizationHistory(parsedOrgID,parsedOrgMemberID, 12, nil, nil, nil, &task.ID, nil)
 
 			return c.Status(201).JSON(fiber.Map{
 				"status":  "success",
@@ -398,6 +402,20 @@ func DeleteTask(taskType string) func(c *fiber.Ctx) error {
 			result := initializers.DB.Delete(&task)
 			if result.Error != nil {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			}
+			orgMemberID := c.GetRespHeader("orgMemberID")
+			orgID := c.Params("orgID")
+			if orgMemberID != "" && orgID != ""{
+				parsedOrgID, err := uuid.Parse(orgID)
+				if err != nil {
+					return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
+				}
+		
+				parsedOrgMemberID, err := uuid.Parse(orgMemberID)
+				if err != nil {
+					return &fiber.Error{Code: 400, Message: "Invalid User ID."}
+				}
+				go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID,13, nil, nil, nil, &task.ID, nil)
 			}
 
 		case "subtask":
