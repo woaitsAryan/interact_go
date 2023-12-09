@@ -11,7 +11,6 @@ import (
 func MembershipRouter(app *fiber.App) {
 
 	app.Delete("/org/:orgID/membership", middlewares.Protect, middlewares.OrgRoleAuthorization(models.Member), organization_controllers.LeaveOrganization)
-
 	app.Get("/org/:orgID/membership", middlewares.Protect, middlewares.OrgRoleAuthorization(models.Member), organization_controllers.GetMemberships)
 
 	membershipRoutes := app.Group("/org/:orgID/membership", middlewares.Protect, middlewares.OrgRoleAuthorization(models.Manager))
