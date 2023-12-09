@@ -3,6 +3,7 @@ package routers
 import (
 	"github.com/Pratham-Mishra04/interact/controllers"
 	"github.com/Pratham-Mishra04/interact/controllers/explore_controllers"
+	"github.com/Pratham-Mishra04/interact/controllers/organization_controllers"
 	"github.com/Pratham-Mishra04/interact/controllers/project_controllers"
 	"github.com/Pratham-Mishra04/interact/middlewares"
 	"github.com/gofiber/fiber/v2"
@@ -25,9 +26,10 @@ func ExploreRouter(app *fiber.App) {
 	exploreRoutes.Get("/projects/trending", explore_controllers.GetTrendingProjects)
 	exploreRoutes.Get("/projects/recommended", explore_controllers.GetRecommendedProjects)
 
+	exploreRoutes.Get("/events/:eventID", organization_controllers.GetEvent)
 	exploreRoutes.Get("/events/trending", explore_controllers.GetTrendingEvents)
 	exploreRoutes.Get("/events/recommended", explore_controllers.GetRecommendedEvents)
-	exploreRoutes.Get("/events/:orgID", explore_controllers.GetOrgEvents)
+	exploreRoutes.Get("/events/org/:orgID", explore_controllers.GetOrgEvents)
 
 	exploreRoutes.Get("/projects/most_liked", explore_controllers.GetMostLikedProjects)
 	exploreRoutes.Get("/projects/recently_added", middlewares.Protect, explore_controllers.GetLatestProjects)

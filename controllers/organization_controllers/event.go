@@ -21,6 +21,7 @@ func GetEvent(c *fiber.Ctx) error {
 	var event models.Event
 	if err := initializers.DB.
 		Preload("Organization").
+		Preload("Organization.User").
 		Where("id = ?", eventID).
 		First(&event).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
