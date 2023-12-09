@@ -19,7 +19,9 @@ type Event struct {
 	NoLikes           int                `gorm:"default:0" json:"noLikes"`
 	NoShares          int                `gorm:"default:0" json:"noShares"`
 	NoComments        int                `gorm:"default:0" json:"noComments"`
-	EventDate         time.Time          `gorm:"not null" json:"eventDate"`
+	StartTime         time.Time          `gorm:"not null" json:"startTime"`
+	EndTime           time.Time          `gorm:"not null" json:"endTime"`
+	Location          string             `gorm:"not null" json:"location"`
 	Category          string             `gorm:"type:text;not null" json:"category"`
 	OrganizationID    uuid.UUID          `gorm:"type:uuid;not null" json:"organizationID"`
 	Organization      Organization       `gorm:"" json:"organization"`

@@ -1,7 +1,7 @@
 package organization_controllers
 
 import (
-	"reflect"
+	"time"
 
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
@@ -56,6 +56,16 @@ func AddEvent(c *fiber.Ctx) error {
 		return err
 	}
 
+	startTime, err := time.Parse(time.RFC3339, reqBody.StartTime)
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid Start Time."}
+	}
+
+	endTime, err := time.Parse(time.RFC3339, reqBody.EndTime)
+	if err != nil || endTime.Before(startTime) {
+		return &fiber.Error{Code: 400, Message: "Invalid End Time."}
+	}
+
 	event := models.Event{
 		Title:          reqBody.Title,
 		Tagline:        reqBody.Tagline,
@@ -65,7 +75,9 @@ func AddEvent(c *fiber.Ctx) error {
 		Category:       reqBody.Category,
 		Links:          reqBody.Links,
 		OrganizationID: parsedOrgID,
-		EventDate:      reqBody.EventDate,
+		StartTime:      startTime,
+		EndTime:        endTime,
+		Location:       reqBody.Location,
 	}
 
 	result := initializers.DB.Create(&event)
@@ -115,24 +127,43 @@ func UpdateEvent(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	reqBody.CoverPic = picName
 	oldEventPic := event.CoverPic
 
-	eventValue := reflect.ValueOf(&event).Elem()
-	reqBodyValue := reflect.ValueOf(reqBody)
-
-	for i := 0; i < reqBodyValue.NumField(); i++ {
-		field := reqBodyValue.Type().Field(i)
-		fieldValue := reqBodyValue.Field(i)
-
-		if fieldValue.IsZero() {
-			continue
+	if reqBody.Tagline != "" {
+		event.Tagline = reqBody.Tagline
+	}
+	if picName != "" {
+		event.CoverPic = picName
+	}
+	if reqBody.Category != "" {
+		event.Category = reqBody.Category
+	}
+	if reqBody.Description != "" {
+		event.Description = reqBody.Description
+	}
+	if reqBody.Location != "" {
+		event.Location = reqBody.Location
+	}
+	if reqBody.Tags != nil {
+		event.Tags = reqBody.Tags
+	}
+	if reqBody.Links != nil {
+		event.Links = reqBody.Links
+	}
+	if reqBody.StartTime != "" {
+		startTime, err := time.Parse(time.RFC3339, reqBody.StartTime)
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid Start Time."}
+		}
+		event.StartTime = startTime
+	}
+	if reqBody.EndTime != "" {
+		endTime, err := time.Parse(time.RFC3339, reqBody.EndTime)
+		if err != nil || endTime.Before(event.StartTime) {
+			return &fiber.Error{Code: 400, Message: "Invalid End Time."}
 		}
 
-		projectField := eventValue.FieldByName(field.Name)
-		if projectField.IsValid() && projectField.CanSet() {
-			projectField.Set(fieldValue)
-		}
+		event.EndTime = endTime
 	}
 
 	if err := initializers.DB.Save(&event).Error; err != nil {

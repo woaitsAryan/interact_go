@@ -43,12 +43,12 @@ type OrganizationMembership struct {
 
 /*
 history type:
-*-1 - Organization created 
-*0 - User created an event 
+*-1 - Organization created
+*0 - User created an event
 *1 - User deleted an event
 *2 - User updated an event
 *3 - User invited a member
-*4 - User withdraw an invitation 
+*4 - User withdraw an invitation
 *5 - User removed a member
 *6 - User made a post
 *7 - User deleted a post
