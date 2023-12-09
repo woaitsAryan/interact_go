@@ -357,9 +357,12 @@ func AddProject(c *fiber.Ctx) error {
 			}
 
 			orgMemberID := c.GetRespHeader("orgMemberID")
-			if orgMemberID != "" {
+			orgID := c.Params("orgID")
+			if orgMemberID != "" && orgID != "" {
 				parsedOrgMemberID, _ := uuid.Parse(orgMemberID)
+				parsedOrgID, _ := uuid.Parse(orgID)
 				go routines.MarkProjectHistory(newProject.ID, parsedOrgMemberID, -1, nil, nil, nil, nil, nil)
+				go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 9, nil, &newProject.ID, nil, nil, nil)
 			} else {
 				go routines.MarkProjectHistory(newProject.ID, parsedID, -1, nil, nil, nil, nil, nil)
 			}
@@ -434,9 +437,12 @@ func UpdateProject(c *fiber.Ctx) error {
 	parsedID, _ := uuid.Parse(projectMemberID)
 
 	orgMemberID := c.GetRespHeader("orgMemberID")
+	orgID := c.Params("orgID")
 	if orgMemberID != "" {
 		parsedOrgMemberID, _ := uuid.Parse(orgMemberID)
+		parsedOrgID, _ := uuid.Parse(orgID)
 		go routines.MarkProjectHistory(project.ID, parsedOrgMemberID, 2, nil, nil, nil, nil, nil)
+		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 11, nil, &project.ID, nil, nil, nil)
 	} else {
 		go routines.MarkProjectHistory(project.ID, parsedID, 2, nil, nil, nil, nil, nil)
 	}
@@ -484,6 +490,21 @@ func DeleteProject(c *fiber.Ctx) error {
 
 	if err := initializers.DB.Delete(&project).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	orgMemberID := c.GetRespHeader("orgMemberID")
+	orgID := c.Params("orgID")
+	if orgMemberID != "" && orgID != ""{
+		parsedOrgID, err := uuid.Parse(orgID)
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
+		}
+
+		parsedOrgMemberID, err := uuid.Parse(orgMemberID)
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid User ID."}
+		}
+		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 10, nil, &project.ID, nil, nil, nil)
 	}
 
 	go routines.DeleteFromBucket(helpers.ProjectClient, coverPic)

@@ -5,6 +5,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/Pratham-Mishra04/interact/routines"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -63,6 +64,11 @@ func AddMember(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	orgID := c.Params("orgID")
 
+	parsedUserID, err := uuid.Parse(c.GetRespHeader("orgMemberID"))
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid User ID."}
+	}
+
 	parsedOrganizationID, err := uuid.Parse(orgID)
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Organization ID"}
@@ -117,6 +123,8 @@ func AddMember(c *fiber.Ctx) error {
 			}
 
 			invitation.User = user
+			
+			go routines.MarkOrganizationHistory(parsedOrganizationID, parsedUserID, 3, nil, nil, nil, nil, &invitation.ID)
 
 			return c.Status(201).JSON(fiber.Map{
 				"status":     "success",
@@ -136,7 +144,7 @@ func RemoveMember(c *fiber.Ctx) error {
 	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
 	orgMemberID := c.GetRespHeader("orgMemberID")
-
+	parsedOrgMemberID, _ := uuid.Parse(orgMemberID)
 	parsedMembershipID, err := uuid.Parse(membershipID)
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Membership ID"}
@@ -163,6 +171,8 @@ func RemoveMember(c *fiber.Ctx) error {
 	if result.Error != nil {
 		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
+
+	go routines.MarkOrganizationHistory(membership.OrganizationID, parsedOrgMemberID, 5, nil, nil, nil, nil, nil )
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",

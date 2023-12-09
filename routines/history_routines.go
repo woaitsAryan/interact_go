@@ -96,3 +96,39 @@ func MarkProjectHistory(
 		helpers.LogDatabaseError("Error while creating Project History-MarkProjectHistory", err, "go_routine")
 	}
 }
+
+func MarkOrganizationHistory(
+	orgID uuid.UUID,
+	userID uuid.UUID,
+	historyType int,
+	postID *uuid.UUID,
+	projectID *uuid.UUID,
+	eventID *uuid.UUID,
+	taskID *uuid.UUID,
+	invitationID *uuid.UUID) {
+	
+	organizationHistory := models.OrganizationHistory{
+		HistoryType: historyType,
+		OrganizationID: orgID,
+		UserID: userID,
+	}
+
+	if postID != nil {
+		organizationHistory.PostID = postID
+	}
+	if projectID != nil {
+		organizationHistory.ProjectID = projectID
+	}
+	if eventID != nil {
+		organizationHistory.EventID = eventID
+	}
+	if taskID != nil {
+		organizationHistory.TaskID = taskID
+	}
+	if invitationID != nil {
+		organizationHistory.InvitationID = invitationID
+	}
+	if err := initializers.DB.Create(&organizationHistory).Error; err != nil {
+		helpers.LogDatabaseError("Error while creating Organization History-MarkOrganizationHistory", err, "go_routine")
+	}
+}

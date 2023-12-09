@@ -149,7 +149,6 @@ func WithdrawInvitation(c *fiber.Ctx) error {
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "No Invitation of this ID found."}
 	}
-
 	if invitation.ProjectID != nil {
 		if invitation.Project.UserID.String() != loggedInUserID {
 			return &fiber.Error{Code: 403, Message: "You don't have the permission to perform this action."}
@@ -170,6 +169,22 @@ func WithdrawInvitation(c *fiber.Ctx) error {
 	if result.Error != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
+
+	orgMemberID := c.GetRespHeader("orgMemberID")
+	orgID := c.Params("orgID")
+	if orgMemberID != "" && orgID != ""{
+		parsedOrgID, err := uuid.Parse(orgID)
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
+		}
+
+		parsedOrgMemberID, err := uuid.Parse(orgMemberID)
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid User ID."}
+		}
+		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 4, nil, nil, nil, nil, &invitation.ID) 
+	}
+
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",

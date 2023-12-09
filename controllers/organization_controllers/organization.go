@@ -104,3 +104,27 @@ func GetOrgEvents(c *fiber.Ctx) error {
 		"events":  events,
 	})
 }
+
+func GetOrganizationHistory(c *fiber.Ctx) error {
+	orgID := c.Params("orgID")
+
+	paginatedDB := API.Paginator(c)(initializers.DB)
+	var history []models.OrganizationHistory
+
+	if err := paginatedDB.
+		Preload("User").
+		Preload("Post").
+		Preload("Event").
+		Preload("Project").
+		Preload("Task").
+		Preload("Invitation").
+		Where("organization_id=?", orgID).
+		Order("created_at DESC").
+		Find(&history).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"history": history,
+	})
+}

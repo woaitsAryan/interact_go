@@ -95,6 +95,7 @@ func SignUp(c *fiber.Ctx) error {
 	}
 
 	go routines.SendWelcomeNotification(newOrg.ID)
+	go routines.MarkOrganizationHistory(organization.ID, newOrg.ID, -1, nil, nil, nil, nil,nil )
 
 	return createSendToken(c, newOrg, 201, "Organization Created", organization)
 }
