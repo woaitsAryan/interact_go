@@ -10,7 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func UploadFile(c *fiber.Ctx, fieldName string, client *helpers.BucketClient, d1 int, d2 int) (string, error) {
+func UploadFile(c *fiber.Ctx, fieldName string, client *helpers.BucketClient, width int, height int) (string, error) {
 	form, err := c.MultipartForm()
 	if err != nil {
 		return "", err
@@ -23,7 +23,7 @@ func UploadFile(c *fiber.Ctx, fieldName string, client *helpers.BucketClient, d1
 
 	file := files[0]
 
-	resizedImgBuffer, err := ResizeFormImage(file, d1, d2)
+	resizedImgBuffer, err := ResizeFormImage(file, width, height)
 	if err != nil {
 		return "", err
 	}

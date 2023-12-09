@@ -54,7 +54,7 @@ func ResizeSavedImage(picPath string, d1 int, d2 int) (string, error) {
 	return resizedPic, nil
 }
 
-func ResizeFormImage(file *multipart.FileHeader, d1 int, d2 int) (*bytes.Buffer, error) {
+func ResizeFormImage(file *multipart.FileHeader, width int, height int) (*bytes.Buffer, error) {
 	src, err := file.Open()
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func ResizeFormImage(file *multipart.FileHeader, d1 int, d2 int) (*bytes.Buffer,
 		return nil, err
 	}
 
-	resizedImg := resize.Resize(uint(d1), uint(d2), img, resize.Lanczos3)
+	resizedImg := resize.Resize(uint(width), uint(height), img, resize.Lanczos3)
 
 	// Encode the resized image to a buffer
 	var buf bytes.Buffer

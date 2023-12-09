@@ -51,7 +51,7 @@ func AddEvent(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
 	}
 
-	picName, err := utils.UploadFile(c, "coverPic", helpers.EventClient, 2560, 2560)
+	picName, err := utils.UploadFile(c, "coverPic", helpers.EventClient, 1920, 1080)
 	if err != nil {
 		return err
 	}
@@ -123,7 +123,7 @@ func UpdateEvent(c *fiber.Ctx) error {
 	c.BodyParser(&reqBody)
 
 	// picName, err := utils.SaveFile(c, "coverPic", "project/coverPics", true, 2560, 2560)
-	picName, err := utils.UploadFile(c, "coverPic", helpers.EventClient, 2560, 2560)
+	picName, err := utils.UploadFile(c, "coverPic", helpers.EventClient, 1920, 1080)
 	if err != nil {
 		return err
 	}
@@ -174,11 +174,6 @@ func UpdateEvent(c *fiber.Ctx) error {
 		go routines.DeleteFromBucket(helpers.EventClient, oldEventPic)
 	}
 
-	// orgMemberID := c.GetRespHeader("orgMemberID")
-	// if orgMemberID != "" {
-	// 	parsedOrgMemberID, _ := uuid.Parse(orgMemberID)
-	// 	go routines.MarkOrganizationHistory(project.ID, parsedOrgMemberID, 2, nil, nil, nil, nil, nil)
-	// }
 	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 2, nil, nil, &event.ID, nil, nil)
 
 	//TODO setup event cache
@@ -218,12 +213,6 @@ func DeleteEvent(c *fiber.Ctx) error {
 	}
 
 	go routines.DeleteFromBucket(helpers.EventClient, eventPic)
-
-	// orgMemberID := c.GetRespHeader("orgMemberID")
-	// if orgMemberID != "" {
-	// 	parsedOrgMemberID, _ := uuid.Parse(orgMemberID)
-	// 	go routines.MarkOrganizationHistory(project.ID, parsedOrgMemberID, 2, nil, nil, nil, nil, nil)
-	// }
 	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 1, nil, nil, &event.ID, nil, nil)
 
 	//TODO setup event cache
