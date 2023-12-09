@@ -10,7 +10,7 @@ import (
 type Project struct {
 	ID                  uuid.UUID             `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	Title               string                `gorm:"type:text;not null" json:"title"` //TODO Validation error handling for no of chars
-	Slug                string                `gorm:"type:text;not null" json:"slug"`  //TODO Add a prefix numbering for duplicate slugs
+	Slug                string                `gorm:"type:text;not null" json:"slug"`  
 	Tagline             string                `gorm:"type:text;not null" json:"tagline"`
 	CoverPic            string                `gorm:"type:text; default:default.jpg" json:"coverPic"`
 	Hash                string                `gorm:"type:text" json:"hash"`

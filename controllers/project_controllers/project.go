@@ -1,8 +1,8 @@
 package project_controllers
 
 import (
+	"fmt"
 	"reflect"
-
 	"github.com/Pratham-Mishra04/interact/cache"
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
@@ -315,67 +315,73 @@ func AddProject(c *fiber.Ctx) error {
 	}
 
 	slug := slug.Make(reqBody.Title)
-
+	suffix := 0
+	newSlug := slug
 	var existingProject models.Project
-	if err := initializers.DB.Where("slug=?", slug).First(&existingProject).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			parsedID, err := uuid.Parse(c.GetRespHeader("loggedInUserID"))
-			if err != nil {
-				return &fiber.Error{Code: 500, Message: "Error Parsing the Loggedin User ID."}
-			}
+	for {
+		if err := initializers.DB.Where("slug=?", newSlug).First(&existingProject).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				parsedID, err := uuid.Parse(c.GetRespHeader("loggedInUserID"))
+				if err != nil {
+					return &fiber.Error{Code: 500, Message: "Error Parsing the Loggedin User ID."}
+				}
 
-			var user models.User
-			if err := initializers.DB.Where("id=?", parsedID).First(&user).Error; err != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-			}
-			if !user.Verified {
-				return &fiber.Error{Code: 401, Message: config.VERIFICATION_ERROR}
-			}
+				var user models.User
+				if err := initializers.DB.Where("id=?", parsedID).First(&user).Error; err != nil {
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+				}
+				if !user.Verified {
+					return &fiber.Error{Code: 401, Message: config.VERIFICATION_ERROR}
+				}
 
-			// picName, err := utils.SaveFile(c, "coverPic", "project/coverPics", true, 2560, 2560)
-			picName, err := utils.UploadFile(c, "coverPic", helpers.ProjectClient, 2560, 2560)
-			if err != nil {
-				return err
-			}
+				// picName, err := utils.SaveFile(c, "coverPic", "project/coverPics", true, 2560, 2560)
+				picName, err := utils.UploadFile(c, "coverPic", helpers.ProjectClient, 2560, 2560)
+				if err != nil {
+					return err
+				}
 
-			newProject := models.Project{
-				UserID:      parsedID,
-				Title:       reqBody.Title,
-				Slug:        slug,
-				Tagline:     reqBody.Tagline,
-				CoverPic:    picName,
-				Description: reqBody.Description,
-				Tags:        reqBody.Tags,
-				Category:    reqBody.Category,
-				IsPrivate:   reqBody.IsPrivate,
-				Links:       reqBody.Links,
-			}
+				newProject := models.Project{
+					UserID:      parsedID,
+					Title:       reqBody.Title,
+					Slug:        newSlug,
+					Tagline:     reqBody.Tagline,
+					CoverPic:    picName,
+					Description: reqBody.Description,
+					Tags:        reqBody.Tags,
+					Category:    reqBody.Category,
+					IsPrivate:   reqBody.IsPrivate,
+					Links:       reqBody.Links,
+				}
 
-			result := initializers.DB.Create(&newProject)
-			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
-			}
+				result := initializers.DB.Create(&newProject)
+				if result.Error != nil {
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				}
 
-			orgMemberID := c.GetRespHeader("orgMemberID")
-			orgID := c.Params("orgID")
-			if orgMemberID != "" && orgID != "" {
-				parsedOrgMemberID, _ := uuid.Parse(orgMemberID)
-				parsedOrgID, _ := uuid.Parse(orgID)
-				go routines.MarkProjectHistory(newProject.ID, parsedOrgMemberID, -1, nil, nil, nil, nil, nil)
-				go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 9, nil, &newProject.ID, nil, nil, nil)
-			} else {
-				go routines.MarkProjectHistory(newProject.ID, parsedID, -1, nil, nil, nil, nil, nil)
-			}
+				orgMemberID := c.GetRespHeader("orgMemberID")
+				orgID := c.Params("orgID")
+				if orgMemberID != "" && orgID != "" {
+					parsedOrgMemberID, _ := uuid.Parse(orgMemberID)
+					parsedOrgID, _ := uuid.Parse(orgID)
+					go routines.MarkProjectHistory(newProject.ID, parsedOrgMemberID, -1, nil, nil, nil, nil, nil)
+					go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 9, nil, &newProject.ID, nil, nil, nil)
+				} else {
+					go routines.MarkProjectHistory(newProject.ID, parsedID, -1, nil, nil, nil, nil, nil)
+				}
 
-			return c.Status(201).JSON(fiber.Map{
-				"status":  "success",
-				"message": "Project Added",
-				"project": newProject,
-			})
+				return c.Status(201).JSON(fiber.Map{
+					"status":  "success",
+					"message": "Project Added",
+					"project": newProject,
+				})
+				
+			}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		} else {
+			suffix++
+			newSlug = fmt.Sprintf("%s-%d", slug, suffix)
+			existingProject = models.Project{}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-	} else {
-		return &fiber.Error{Code: 400, Message: "This title is not available."}
 	}
 }
 
