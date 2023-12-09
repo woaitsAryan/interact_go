@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type Organization struct {
+type Organization struct { //TODO no of members, no of events and no of projects
 	ID                uuid.UUID                `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	UserID            uuid.UUID                `gorm:"type:uuid;not null" json:"userID"` //user model who is given the organization status
 	User              User                     `gorm:"" json:"user"`
@@ -58,6 +58,7 @@ history type:
 *11 - User edited a project
 *12 - User added a task
 *13 - User deleted a task
+*14 - User edited Org Details
 */
 
 type OrganizationHistory struct {

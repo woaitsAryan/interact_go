@@ -126,3 +126,30 @@ func GetLastViewedProjects(c *fiber.Ctx) error {
 		"projects": projects,
 	})
 }
+
+func GetOrganizationalUser(c *fiber.Ctx) error {
+	username := c.Params("username")
+
+	var user models.User
+	if err := initializers.DB.First(&user, "username=?", username).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return &fiber.Error{Code: 400, Message: "No Organization of this ID Found."}
+		}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	var organization models.Organization
+	if err := initializers.DB.First(&organization, "user_id=?", user.ID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return &fiber.Error{Code: 400, Message: "No Organization of this ID Found."}
+		}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":       "success",
+		"message":      "",
+		"user":         user,
+		"organization": organization,
+	})
+}
