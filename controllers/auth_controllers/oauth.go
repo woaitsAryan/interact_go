@@ -122,49 +122,43 @@ func GoogleCallback(c *fiber.Ctx) error {
 		var user models.User
 		if err := initializers.DB.Session(&gorm.Session{SkipHooks: true}).Preload("OAuth").First(&user, "email = ?", userInfo.Email).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
-				return c.Redirect(initializers.CONFIG.FRONTEND_URL+"/login?msg=nouser", fiber.StatusTemporaryRedirect)
+				newUser := models.User{
+					Name:              userInfo.Name,
+					Email:             userInfo.Email,
+					Username:          userInfo.Email,
+					PasswordChangedAt: time.Now(),
+				}
 
-				// newUser := models.User{
-				// 	Name:              userInfo.Name,
-				// 	Email:             userInfo.Email,
-				// 	Username:          userInfo.Email,
-				// 	PasswordChangedAt: time.Now(),
-				// }
+				result := initializers.DB.Create(&newUser)
+				if result.Error != nil {
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				}
 
-				// result := initializers.DB.Create(&newUser)
-				// if result.Error != nil {
-				// 	return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
-				// }
+				profile := models.Profile{
+					UserID: newUser.ID,
+				}
 
-				// profile := models.Profile{
-				// 	UserID: newUser.ID,
-				// }
+				result = initializers.DB.Create(&profile)
+				if result.Error != nil {
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				}
 
-				// result = initializers.DB.Create(&profile)
-				// if result.Error != nil {
-				// 	return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
-				// }
+				oauth := models.OAuth{
+					UserID:              newUser.ID,
+					Provider:            "Google",
+					OnBoardingCompleted: false,
+				}
 
-				// oauth := models.OAuth{
-				// 	UserID:              newUser.ID,
-				// 	Provider:            "Google",
-				// 	OnBoardingCompleted: false,
-				// }
+				result = initializers.DB.Create(&oauth)
+				if result.Error != nil {
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				}
 
-				// result = initializers.DB.Create(&oauth)
-				// if result.Error != nil {
-				// 	return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
-				// }
-
-				// return RedirectToSignUp(c, newUser)
+				return RedirectToSignUp(c, newUser)
 			} else {
 				return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 			}
 		}
-
-		// if user.OrganizationStatus {
-		// 	return &fiber.Error{Code: 403, Message: "Cannot Sign in to organizational accounts."}
-		// }
 
 		if user.OAuth.ID == uuid.Nil || user.OAuth.OnBoardingCompleted {
 			return RedirectToLogin(c, user)
