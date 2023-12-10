@@ -8,7 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func UploadMultipleFiles(c *fiber.Ctx, fieldName string, client *helpers.BucketClient, d1 int, d2 int) ([]string, error) {
+func UploadMultipleImages(c *fiber.Ctx, fieldName string, client *helpers.BucketClient, width int, height int) ([]string, error) {
 	form, err := c.MultipartForm()
 	if err != nil {
 		return []string{}, err
@@ -21,7 +21,7 @@ func UploadMultipleFiles(c *fiber.Ctx, fieldName string, client *helpers.BucketC
 
 	var savedImages []string
 	for _, file := range files {
-		resizedImgBuffer, err := ResizeFormImage(file, d1, d2)
+		resizedImgBuffer, err := ResizeFormImage(file, width, height)
 		if err != nil {
 			continue
 		}

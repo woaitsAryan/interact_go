@@ -101,7 +101,7 @@ func SignUp(c *fiber.Ctx) error {
 	c.Set("loggedInUserID", newUser.ID.String())
 
 	// picName, err := utils.SaveFile(c, "profilePic", "user/profilePics", false, 500, 500)
-	picName, err := utils.UploadFile(c, "profilePic", helpers.UserProfileClient, 500, 500)
+	picName, err := utils.UploadImage(c, "profilePic", helpers.UserProfileClient, 500, 500)
 	if err != nil {
 		initializers.Logger.Warnw("Error in Saving Profile Pic on Sign Up", "Err", err)
 	} else {
@@ -161,7 +161,7 @@ func OAuthSignUp(c *fiber.Ctx) error {
 	c.Set("loggedInUserID", user.ID.String())
 
 	// picName, err := utils.SaveFile(c, "profilePic", "user/profilePics", false, 500, 500)
-	picName, err := utils.UploadFile(c, "profilePic", helpers.UserProfileClient, 500, 500)
+	picName, err := utils.UploadImage(c, "profilePic", helpers.UserProfileClient, 500, 500)
 	if err != nil {
 		initializers.Logger.Warnw("Error in Saving Profile Pic on Sign Up", "Err", err)
 	} else {

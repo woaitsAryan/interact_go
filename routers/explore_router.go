@@ -26,10 +26,10 @@ func ExploreRouter(app *fiber.App) {
 	exploreRoutes.Get("/projects/trending", explore_controllers.GetTrendingProjects)
 	exploreRoutes.Get("/projects/recommended", explore_controllers.GetRecommendedProjects)
 
-	exploreRoutes.Get("/events/:eventID", organization_controllers.GetEvent)
 	exploreRoutes.Get("/events/trending", explore_controllers.GetTrendingEvents)
 	exploreRoutes.Get("/events/recommended", explore_controllers.GetRecommendedEvents)
 	exploreRoutes.Get("/events/org/:orgID", explore_controllers.GetOrgEvents)
+	exploreRoutes.Get("/events/:eventID", organization_controllers.GetEvent)
 
 	exploreRoutes.Get("/projects/most_liked", explore_controllers.GetMostLikedProjects)
 	exploreRoutes.Get("/projects/recently_added", middlewares.Protect, explore_controllers.GetLatestProjects)
@@ -37,6 +37,10 @@ func ExploreRouter(app *fiber.App) {
 
 	exploreRoutes.Get("/users/trending", explore_controllers.GetTrendingUsers)
 	exploreRoutes.Get("/users/recommended", explore_controllers.GetRecommendedUsers)
+
+	exploreRoutes.Get("/orgs/trending", explore_controllers.GetTrendingOrganizationalUsers)
+	exploreRoutes.Get("/orgs/recommended", explore_controllers.GetRecommendedOrganizationalUsers)
+	exploreRoutes.Get("/orgs/:username", explore_controllers.GetOrganizationalUser)
 
 	exploreRoutes.Get("/users/similar/:username", explore_controllers.GetSimilarUsers)
 	exploreRoutes.Get("/projects/similar/:slug", explore_controllers.GetSimilarProjects)

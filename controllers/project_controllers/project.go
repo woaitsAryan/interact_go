@@ -3,6 +3,7 @@ package project_controllers
 import (
 	"fmt"
 	"reflect"
+
 	"github.com/Pratham-Mishra04/interact/cache"
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
@@ -335,7 +336,7 @@ func AddProject(c *fiber.Ctx) error {
 				}
 
 				// picName, err := utils.SaveFile(c, "coverPic", "project/coverPics", true, 2560, 2560)
-				picName, err := utils.UploadFile(c, "coverPic", helpers.ProjectClient, 2560, 2560)
+				picName, err := utils.UploadImage(c, "coverPic", helpers.ProjectClient, 2560, 2560)
 				if err != nil {
 					return err
 				}
@@ -375,7 +376,6 @@ func AddProject(c *fiber.Ctx) error {
 					"message": "Project Added",
 					"project": newProject,
 				})
-				
 			}
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 		} else {
@@ -402,7 +402,7 @@ func UpdateProject(c *fiber.Ctx) error {
 	c.BodyParser(&reqBody)
 
 	// picName, err := utils.SaveFile(c, "coverPic", "project/coverPics", true, 2560, 2560)
-	picName, err := utils.UploadFile(c, "coverPic", helpers.ProjectClient, 2560, 2560)
+	picName, err := utils.UploadImage(c, "coverPic", helpers.ProjectClient, 2560, 2560)
 	if err != nil {
 		return err
 	}
@@ -501,7 +501,7 @@ func DeleteProject(c *fiber.Ctx) error {
 
 	orgMemberID := c.GetRespHeader("orgMemberID")
 	orgID := c.Params("orgID")
-	if orgMemberID != "" && orgID != ""{
+	if orgMemberID != "" && orgID != "" {
 		parsedOrgID, err := uuid.Parse(orgID)
 		if err != nil {
 			return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}

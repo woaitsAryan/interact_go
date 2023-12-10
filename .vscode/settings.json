@@ -20,6 +20,7 @@
     },
     "peacock.color": "#ffffff",
     "cSpell.words": [
+        "gorm",
         "SENDGRID"
     ]
 }

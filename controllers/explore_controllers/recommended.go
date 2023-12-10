@@ -154,3 +154,29 @@ func GetRecommendedEvents(c *fiber.Ctx) error { //TODO ML Implementation
 		"events": events,
 	})
 }
+
+func GetRecommendedOrganizationalUsers(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	paginatedDB := API.Paginator(c)(initializers.DB)
+
+	searchedDB := API.Search(c, 0)(paginatedDB)
+
+	var users []models.User
+	if err := searchedDB.
+		Where("active=?", true).
+		Where("organization_status=?", true).
+		Where("id <> ?", loggedInUserID).
+		Where("verified=?", true).
+		Where("username != email").
+		Omit("phone_no").
+		Omit("email").
+		Select("*, (0.6 * no_followers - 0.4 * no_following + 0.3 * total_no_views) / (1 + EXTRACT(EPOCH FROM age(NOW(), created_at)) / 3600 / 24 / 21) AS weighted_average"). //! 21 days
+		Order("weighted_average DESC, created_at ASC").
+		Find(&users).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+	return c.Status(200).JSON(fiber.Map{
+		"status": "success",
+		"users":  users,
+	})
+}

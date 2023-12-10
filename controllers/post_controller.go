@@ -133,7 +133,7 @@ func AddPost(c *fiber.Ctx) error {
 	}
 
 	// images, err := utils.SaveMultipleFiles(c, "images", "post", true, 1280, 720)
-	images, err := utils.UploadMultipleFiles(c, "images", helpers.PostClient, 1280, 720)
+	images, err := utils.UploadMultipleImages(c, "images", helpers.PostClient, 1280, 720)
 	if err != nil {
 		return err
 	}
@@ -182,7 +182,7 @@ func AddPost(c *fiber.Ctx) error {
 
 	orgMemberID := c.GetRespHeader("orgMemberID")
 	orgID := c.Params("orgID")
-	if orgMemberID != "" && orgID != ""{
+	if orgMemberID != "" && orgID != "" {
 		parsedOrgID, err := uuid.Parse(orgID)
 		if err != nil {
 			return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
@@ -256,7 +256,7 @@ func UpdatePost(c *fiber.Ctx) error {
 
 	orgMemberID := c.GetRespHeader("orgMemberID")
 	orgID := c.Params("orgID")
-	if orgMemberID != "" && orgID != ""{
+	if orgMemberID != "" && orgID != "" {
 		parsedOrgID, err := uuid.Parse(orgID)
 		if err != nil {
 			return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
@@ -319,7 +319,7 @@ func DeletePost(c *fiber.Ctx) error {
 
 	orgMemberID := c.GetRespHeader("orgMemberID")
 	orgID := c.Params("orgID")
-	if orgMemberID != "" && orgID != ""{
+	if orgMemberID != "" && orgID != "" {
 		parsedOrgID, err := uuid.Parse(orgID)
 		if err != nil {
 			return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}

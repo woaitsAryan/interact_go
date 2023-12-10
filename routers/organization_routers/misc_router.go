@@ -10,5 +10,7 @@ import (
 func MiscRouter(app *fiber.App) {
 	miscRouter := app.Group("/org/:orgID", middlewares.Protect)
 
+	miscRouter.Get("/", middlewares.Protect, middlewares.OrgRoleAuthorization(models.Member), organization_controllers.GetOrganization)
+	miscRouter.Patch("/", middlewares.OrgRoleAuthorization(models.Senior), organization_controllers.UpdateOrg)
 	miscRouter.Get("/history", middlewares.OrgRoleAuthorization(models.Member), organization_controllers.GetOrganizationHistory)
 }
