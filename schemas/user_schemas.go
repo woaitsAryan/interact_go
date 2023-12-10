@@ -30,6 +30,9 @@ type ProfileUpdateSchema struct {
 	Description *string         `json:"description" validate:"max=1500"`
 	Hobbies     *pq.StringArray `json:"hobbies"`
 	Areas       *pq.StringArray `json:"areas"`
+	Email       *string         `json:"email"`
+	PhoneNo     *string         `json:"phoneNo"`
+	Location    *string         `json:"location"`
 }
 
 type AchievementCreateSchema struct {

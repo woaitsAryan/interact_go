@@ -10,7 +10,7 @@ import (
 type Project struct {
 	ID                  uuid.UUID             `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	Title               string                `gorm:"type:text;not null" json:"title"` //TODO Validation error handling for no of chars
-	Slug                string                `gorm:"type:text;not null" json:"slug"`  
+	Slug                string                `gorm:"type:text;not null" json:"slug"`
 	Tagline             string                `gorm:"type:text;not null" json:"tagline"`
 	CoverPic            string                `gorm:"type:text; default:default.jpg" json:"coverPic"`
 	Hash                string                `gorm:"type:text" json:"hash"`
@@ -28,7 +28,7 @@ type Project struct {
 	IsPrivate           bool                  `gorm:"default:false" json:"isPrivate"`
 	TRatio              int                   `json:"-"`
 	Views               int                   `json:"views"`
-	NumberOfMembers	  	int                   `gorm:"default:1" json:"numberOfMembers"`
+	NumberOfMembers     int                   `gorm:"default:1" json:"noMembers"`
 	Links               pq.StringArray        `gorm:"type:text[]" json:"links"`
 	PrivateLinks        pq.StringArray        `gorm:"type:text[]" json:"-"`
 	Comments            []Comment             `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"comments"`

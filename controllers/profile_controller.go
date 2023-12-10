@@ -8,6 +8,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/schemas"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -62,10 +63,35 @@ func EditProfile(c *fiber.Ctx) error {
 			profile.YearOfGraduation = year
 		}
 	}
+	if reqBody.Email != nil {
+		profile.Email = *reqBody.Email
+	}
+	if reqBody.PhoneNo != nil {
+		profile.PhoneNo = *reqBody.PhoneNo
+	}
+	if reqBody.Location != nil {
+		profile.Location = *reqBody.Location
+	}
 
 	result := initializers.DB.Save(&profile)
 	if result.Error != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+	}
+
+	orgID := c.GetRespHeader("orgID")
+	orgMemberID := c.GetRespHeader("orgMemberID")
+
+	if orgID != "" && orgMemberID != "" {
+		parsedOrgMemberID, err := uuid.Parse(orgMemberID)
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid User ID."}
+		}
+
+		parsedOrgID, err := uuid.Parse(orgID)
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
+		}
+		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 14, nil, nil, nil, nil, nil)
 	}
 
 	return c.Status(200).JSON(fiber.Map{

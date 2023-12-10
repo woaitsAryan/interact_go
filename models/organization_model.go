@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type Organization struct { //TODO no of members, no of events and no of projects
+type Organization struct {
 	ID                uuid.UUID                `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	UserID            uuid.UUID                `gorm:"type:uuid;not null" json:"userID"` //user model who is given the organization status
 	User              User                     `gorm:"" json:"user"`
@@ -14,9 +14,9 @@ type Organization struct { //TODO no of members, no of events and no of projects
 	Memberships       []OrganizationMembership `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE" json:"memberships"`
 	Invitations       []Invitation             `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE" json:"invitations"`
 	History           []OrganizationHistory    `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE" json:"history"`
-	NumberOfMembers   int                      `gorm:"default:1" json:"numberOfMembers"`
-	NumberOfEvents    int                      `gorm:"default:0" json:"numberOfEvents"`
-	NumberOfProjects  int                      `gorm:"default:0" json:"numberOfProjects"`
+	NumberOfMembers   int                      `gorm:"default:0" json:"noMembers"`
+	NumberOfEvents    int                      `gorm:"default:0" json:"noEvents"`
+	NumberOfProjects  int                      `gorm:"default:0" json:"noProjects"`
 	CreatedAt         time.Time                `gorm:"default:current_timestamp" json:"createdAt"`
 }
 

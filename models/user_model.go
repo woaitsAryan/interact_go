@@ -114,6 +114,9 @@ type Profile struct {
 	Description          string         `gorm:"type:text" json:"description"`
 	AreasOfCollaboration pq.StringArray `gorm:"type:text[]" json:"areasOfCollaboration"`
 	Hobbies              pq.StringArray `gorm:"type:text[]" json:"hobbies"`
+	Email                string         `gorm:"type:text" json:"email"`
+	PhoneNo              string         `gorm:"type:text" json:"phoneNo"`
+	Location             string         `gorm:"type:text" json:"location"`
 	Achievements         []Achievement  `gorm:"foreignKey:ProfileID;constraint:OnDelete:CASCADE" json:"achievements"`
 }
 
