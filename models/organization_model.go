@@ -14,6 +14,9 @@ type Organization struct { //TODO no of members, no of events and no of projects
 	Memberships       []OrganizationMembership `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE" json:"memberships"`
 	Invitations       []Invitation             `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE" json:"invitations"`
 	History           []OrganizationHistory    `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE" json:"history"`
+	NumberOfMembers   int                      `gorm:"default:1" json:"numberOfMembers"`
+	NumberOfEvents    int                      `gorm:"default:0" json:"numberOfEvents"`
+	NumberOfProjects  int                      `gorm:"default:0" json:"numberOfProjects"`
 	CreatedAt         time.Time                `gorm:"default:current_timestamp" json:"createdAt"`
 }
 

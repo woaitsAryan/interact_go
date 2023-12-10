@@ -172,7 +172,8 @@ func RemoveMember(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
-	go routines.MarkOrganizationHistory(membership.OrganizationID, parsedOrgMemberID, 5, nil, nil, nil, nil, nil)
+	go routines.DecrementOrgMember(membership.OrganizationID)
+	go routines.MarkOrganizationHistory(membership.OrganizationID, parsedOrgMemberID, 5, nil, nil, nil, nil, nil )
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",

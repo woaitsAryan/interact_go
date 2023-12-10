@@ -366,6 +366,7 @@ func AddProject(c *fiber.Ctx) error {
 					parsedOrgID, _ := uuid.Parse(orgID)
 					go routines.MarkProjectHistory(newProject.ID, parsedOrgMemberID, -1, nil, nil, nil, nil, nil)
 					go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 9, nil, &newProject.ID, nil, nil, nil)
+					go routines.IncrementOrgProject(parsedOrgID)
 				} else {
 					go routines.MarkProjectHistory(newProject.ID, parsedID, -1, nil, nil, nil, nil, nil)
 				}
@@ -511,6 +512,7 @@ func DeleteProject(c *fiber.Ctx) error {
 			return &fiber.Error{Code: 400, Message: "Invalid User ID."}
 		}
 		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 10, nil, &project.ID, nil, nil, nil)
+		go routines.DecrementOrgProject(parsedOrgID)
 	}
 
 	go routines.DeleteFromBucket(helpers.ProjectClient, coverPic)
