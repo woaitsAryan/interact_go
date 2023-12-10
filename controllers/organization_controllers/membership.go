@@ -123,7 +123,7 @@ func AddMember(c *fiber.Ctx) error {
 			}
 
 			invitation.User = user
-			
+
 			go routines.MarkOrganizationHistory(parsedOrganizationID, parsedUserID, 3, nil, nil, nil, nil, &invitation.ID)
 
 			return c.Status(201).JSON(fiber.Map{
@@ -172,7 +172,7 @@ func RemoveMember(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
 	}
 
-	go routines.MarkOrganizationHistory(membership.OrganizationID, parsedOrgMemberID, 5, nil, nil, nil, nil, nil )
+	go routines.MarkOrganizationHistory(membership.OrganizationID, parsedOrgMemberID, 5, nil, nil, nil, nil, nil)
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",
@@ -182,10 +182,10 @@ func RemoveMember(c *fiber.Ctx) error {
 
 func LeaveOrganization(c *fiber.Ctx) error {
 	orgID := c.Params("orgID")
-	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	orgMemberID := c.GetRespHeader("orgMemberID")
 
 	var membership models.OrganizationMembership
-	if err := initializers.DB.Preload("Organization").First(&membership, "user_id=? AND organization_id = ?", loggedInUserID, orgID).Error; err != nil {
+	if err := initializers.DB.First(&membership, "user_id=? AND organization_id = ?", orgMemberID, orgID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Membership of this ID found."}
 		}
