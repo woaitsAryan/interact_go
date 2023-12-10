@@ -51,7 +51,12 @@ func RedirectToLogin(c *fiber.Ctx, user models.User) error {
 		return err
 	}
 
-	return c.Redirect(initializers.CONFIG.FRONTEND_URL+"/login/callback?token="+login_token, fiber.StatusTemporaryRedirect)
+	loginURL := "login"
+	if user.OrganizationStatus {
+		loginURL = "organisation/" + loginURL
+	}
+
+	return c.Redirect(initializers.CONFIG.FRONTEND_URL+"/"+loginURL+"/callback?token="+login_token, fiber.StatusTemporaryRedirect)
 }
 
 func GoogleRedirect(c *fiber.Ctx) error {

@@ -11,7 +11,9 @@ import (
 	"github.com/Pratham-Mishra04/interact/schemas"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 func createSendToken(c *fiber.Ctx, user models.User, statusCode int, message string, org models.Organization) error {
@@ -95,7 +97,7 @@ func SignUp(c *fiber.Ctx) error {
 	}
 
 	go routines.SendWelcomeNotification(newOrg.ID)
-	go routines.MarkOrganizationHistory(organization.ID, newOrg.ID, -1, nil, nil, nil, nil,nil )
+	go routines.MarkOrganizationHistory(organization.ID, newOrg.ID, -1, nil, nil, nil, nil, nil)
 
 	return createSendToken(c, newOrg, 201, "Organization Created", organization)
 }
@@ -117,6 +119,39 @@ func LogIn(c *fiber.Ctx) error {
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(reqBody.Password)); err != nil {
 		return &fiber.Error{Code: 400, Message: "No account with these credentials found."}
+	}
+
+	user.LastLoggedIn = time.Now()
+
+	if err := initializers.DB.Save(&user).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	var organization models.Organization
+	if err := initializers.DB.First(&organization, "user_id=?", user.ID).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return createSendToken(c, user, 200, "Logged In", organization)
+}
+
+func OAuthLogIn(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	var user models.User
+	if err := initializers.DB.Session(&gorm.Session{SkipHooks: true}).First(&user, "id = ? AND organization_status = true", loggedInUserID).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	if user.ID == uuid.Nil {
+		return &fiber.Error{Code: 400, Message: "No organization with these credentials found."}
+	}
+
+	if !user.Active {
+		if time.Now().After(user.DeactivatedAt.Add(30 * 24 * time.Hour)) {
+			return &fiber.Error{Code: 400, Message: "Cannot Log into a deactivated account."}
+		}
+		user.Active = true
 	}
 
 	user.LastLoggedIn = time.Now()
