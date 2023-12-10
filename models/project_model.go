@@ -28,6 +28,7 @@ type Project struct {
 	IsPrivate           bool                  `gorm:"default:false" json:"isPrivate"`
 	TRatio              int                   `json:"-"`
 	Views               int                   `json:"views"`
+	NumberOfMembers	  	int                   `gorm:"default:1" json:"numberOfMembers"`
 	Links               pq.StringArray        `gorm:"type:text[]" json:"links"`
 	PrivateLinks        pq.StringArray        `gorm:"type:text[]" json:"-"`
 	Comments            []Comment             `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"comments"`

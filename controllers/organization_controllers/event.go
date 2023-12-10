@@ -92,6 +92,7 @@ func AddEvent(c *fiber.Ctx) error {
 	// 	go routines.MarkOrganizationHistory(event.ID, parsedOrgMemberID, -1, nil, nil, nil, nil, nil)
 	// }
 	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 0, nil, nil, &event.ID, nil, nil)
+	go routines.IncrementOrgEvent(parsedOrgID)
 
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",
@@ -215,7 +216,7 @@ func DeleteEvent(c *fiber.Ctx) error {
 
 	go routines.DeleteFromBucket(helpers.EventClient, eventPic)
 	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 1, nil, nil, &event.ID, nil, nil)
-
+	go routines.DecrementOrgEvent(parsedOrgID)
 	//TODO setup event cache
 	// cache.RemoveProject(project.Slug)
 	// cache.RemoveProject("-workspace--" + project.Slug)

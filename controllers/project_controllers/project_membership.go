@@ -158,6 +158,8 @@ func RemoveMember(c *fiber.Ctx) error { //TODO add manager cannot remove manager
 	cache.RemoveProject(projectSlug)
 	cache.RemoveProject("-workspace--" + projectSlug)
 
+	go routines.DecrementProjectMember(parsedProjectID)
+
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",
 		"message": "User removed to the project.",
@@ -189,6 +191,8 @@ func LeaveProject(c *fiber.Ctx) error {
 
 	cache.RemoveProject(projectSlug)
 	cache.RemoveProject("-workspace--" + projectSlug)
+
+	go routines.DecrementProjectMember(parsedProjectID)
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",

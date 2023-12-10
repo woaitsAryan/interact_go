@@ -1,0 +1,132 @@
+package routines
+
+import (
+	"github.com/Pratham-Mishra04/interact/helpers"
+	"github.com/Pratham-Mishra04/interact/initializers"
+	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
+
+func IncrementOrgMember(orgID uuid.UUID) {
+	var org models.Organization
+	if err := initializers.DB.First(&org, "id = ?", orgID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			helpers.LogDatabaseError("No Org of this ID found-IncrementMemberCount.", err, "go_routine")
+		} else {
+			helpers.LogDatabaseError("Error while fetching Org-IncrementMemberCount", err, "go_routine")
+		}
+	} else {
+		org.NumberOfMembers++
+
+		result := initializers.DB.Save(&org)
+		if result.Error != nil {
+			helpers.LogDatabaseError("Error while updating Org-IncrementMemberCount", result.Error, "go_routine")
+		}
+	}
+}
+
+func IncrementOrgProject(orgID uuid.UUID) {
+	var org models.Organization
+	if err := initializers.DB.First(&org, "id = ?", orgID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			helpers.LogDatabaseError("No Org of this ID found-IncrementProjectCount.", err, "go_routine")
+		} else {
+			helpers.LogDatabaseError("Error while fetching Org-IncrementProjectCount", err, "go_routine")
+		}	} else {
+		org.NumberOfProjects++
+		if err := initializers.DB.Save(&org).Error; err != nil {
+			helpers.LogDatabaseError("Error while updating Org-IncrementProjecCount", err, "go_routine")
+		}
+	}
+}
+
+func IncrementOrgEvent(orgID uuid.UUID) {
+	var org models.Organization
+	if err := initializers.DB.First(&org, "id = ?", orgID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			helpers.LogDatabaseError("No Org of this ID found-IncrementEventCount.", err, "go_routine")
+		} else {
+			helpers.LogDatabaseError("Error while fetching Org-IncrementEventCount", err, "go_routine")
+		}	} else {
+		org.NumberOfEvents++
+		if err := initializers.DB.Save(&org).Error; err != nil {
+			helpers.LogDatabaseError("Error while updating Org-IncrementEventCount", err, "go_routine")
+		}
+	}
+}
+
+func DecrementOrgMember(orgID uuid.UUID) {
+	var org models.Organization
+	if err := initializers.DB.First(&org, "id = ?", orgID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			helpers.LogDatabaseError("No Org of this ID found-DecrementMemberCount.", err, "go_routine")
+		} else {
+			helpers.LogDatabaseError("Error while fetching Org-DecrementMemberCount", err, "go_routine")
+		}	} else {
+		org.NumberOfMembers--
+		if err := initializers.DB.Save(&org).Error; err != nil {
+			helpers.LogDatabaseError("Error while updating Org-DecrementMemberCount", err, "go_routine")
+		}
+	}
+}
+
+func DecrementOrgProject(orgID uuid.UUID) {
+	var org models.Organization
+	if err := initializers.DB.First(&org, "id = ?", orgID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			helpers.LogDatabaseError("No Org of this ID found-DecrementProjectCount.", err, "go_routine")
+		} else {
+			helpers.LogDatabaseError("Error while fetching Org-DecrementProjectCount", err, "go_routine")
+		}	} else {
+		org.NumberOfProjects--
+		if err := initializers.DB.Save(&org).Error; err != nil {
+			helpers.LogDatabaseError("Error while updating Org-DecrementProjectCount", err, "go_routine")
+		}
+	}
+}
+
+func DecrementOrgEvent(orgID uuid.UUID) {
+	var org models.Organization
+	if err := initializers.DB.First(&org, "id = ?", orgID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			helpers.LogDatabaseError("No Org of this ID found-DecrementEventCount.", err, "go_routine")
+		} else {
+			helpers.LogDatabaseError("Error while fetching Org-DecrementEventCount", err, "go_routine")
+		}	} else {
+		org.NumberOfEvents--
+		if err := initializers.DB.Save(&org).Error; err != nil {
+			helpers.LogDatabaseError("Error while updating Org-DecrementEventCount", err, "go_routine")
+		}
+	}
+}
+
+func IncrementProjectMember(projectID uuid.UUID) {
+	var project models.Project
+	if err := initializers.DB.First(&project, "id = ?", projectID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			helpers.LogDatabaseError("No Project of this ID found-IncrementMemberCount.", err, "go_routine")
+		} else {
+			helpers.LogDatabaseError("Error while fetching Project-IncrementMemberCount", err, "go_routine")
+		}	} else {
+		project.NumberOfMembers++
+		if err := initializers.DB.Save(&project).Error; err != nil {
+			helpers.LogDatabaseError("Error while updating Project-IncrementMemberCount", err, "go_routine")
+		}
+	}
+}
+
+func DecrementProjectMember(projectID uuid.UUID) {
+	var project models.Project
+	if err := initializers.DB.First(&project, "id = ?", projectID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			helpers.LogDatabaseError("No Project of this ID found-DecrementMemberCount.", err, "go_routine")
+		} else {
+			helpers.LogDatabaseError("Error while fetching Project-DecrementMemberCount", err, "go_routine")
+		}	} else {
+		project.NumberOfMembers--
+		if err := initializers.DB.Save(&project).Error; err != nil {
+			helpers.LogDatabaseError("Error while updating Project-DecrementMemberCount", err, "go_routine")
+		}
+	}
+}

@@ -102,6 +102,12 @@ func AcceptInvitation(c *fiber.Ctx) error {
 	if result.Error != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
+	if(invitation.OrganizationID != nil){
+		go routines.IncrementOrgMember(*invitation.OrganizationID)
+	}
+	if(invitation.ProjectID != nil){
+		go routines.IncrementProjectMember(*invitation.ProjectID)
+	}
 
 	go routines.SendInvitationAcceptedNotification(invitation.UserID, parsedLoggedInUserID)
 
