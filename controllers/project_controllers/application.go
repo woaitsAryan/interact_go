@@ -97,6 +97,9 @@ func AddApplication(c *fiber.Ctx) error {
 	if !user.Verified {
 		return &fiber.Error{Code: 401, Message: config.VERIFICATION_ERROR}
 	}
+	if user.OrganizationStatus {
+		return &fiber.Error{Code: 400, Message: "Organizational Users cannot perform this action."}
+	}
 
 	var application models.Application
 	if err := initializers.DB.Where("opening_id=? AND user_id=?", parsedOpeningID, parsedUserID).First(&application).Error; err == nil {
