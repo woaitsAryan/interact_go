@@ -34,7 +34,7 @@ func IncrementImpression(key string) error {
 		helpers.LogServerError("Error converting impression count to int", err, "")
 		return fmt.Errorf("error converting impression count to int")
 	}
-	if err := SetImpression(key, impressionCount+10); err != nil {
+	if err := SetImpression(key, impressionCount+1); err != nil {
 		return err
 	}
 	return nil

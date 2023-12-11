@@ -19,6 +19,7 @@ type Opening struct {
 	User                 User                  `gorm:"" json:"user"`
 	CreatedAt            time.Time             `gorm:"default:current_timestamp" json:"createdAt"`
 	NoOfApplications     int                   `json:"noOfApplications"`
+	Impressions          int                   `gorm:"default:1" json:"impressions"`
 	Application          []Application         `gorm:"foreignKey:OpeningID;constraint:OnDelete:CASCADE" json:"applications"`
 	Notifications        []Notification        `gorm:"foreignKey:OpeningID;constraint:OnDelete:CASCADE" json:"-"`
 	LastViews            []LastViewedOpenings  `gorm:"foreignKey:OpeningID;constraint:OnDelete:CASCADE" json:"-"`
