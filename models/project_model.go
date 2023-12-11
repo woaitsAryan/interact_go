@@ -29,6 +29,7 @@ type Project struct {
 	TRatio              int                   `json:"-"`
 	Views               int                   `json:"views"`
 	NumberOfMembers     int                   `gorm:"default:1" json:"noMembers"`
+	Impressions         int                   `gorm:"default:1" json:"impressions"`
 	Links               pq.StringArray        `gorm:"type:text[]" json:"links"`
 	PrivateLinks        pq.StringArray        `gorm:"type:text[]" json:"-"`
 	Comments            []Comment             `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"comments"`

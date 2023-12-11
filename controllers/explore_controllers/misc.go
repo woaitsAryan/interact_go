@@ -7,6 +7,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/Pratham-Mishra04/interact/routines"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -50,6 +51,9 @@ func GetProjectOpenings(c *fiber.Ctx) error {
 		Find(&openings).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
+
+	go routines.IncrementOpeningImpression(openings)
+
 	return c.Status(200).JSON(fiber.Map{
 		"status":   "success",
 		"openings": openings,
@@ -69,6 +73,8 @@ func GetOrgEvents(c *fiber.Ctx) error {
 		Find(&events).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
+
+	go routines.IncrementEventImpression(events)
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",

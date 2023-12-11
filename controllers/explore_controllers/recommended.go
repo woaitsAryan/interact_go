@@ -5,6 +5,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/utils"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
@@ -31,6 +32,8 @@ func GetRecommendedPosts(c *fiber.Ctx) error {
 		Find(&posts).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
+
+	go routines.IncrementPostImpression(posts)
 
 	return c.Status(200).JSON(fiber.Map{
 		"status": "success",
@@ -66,6 +69,8 @@ func GetRecommendedOpenings(c *fiber.Ctx) error {
 			filteredOpenings = append(filteredOpenings, opening)
 		}
 	}
+	
+	go routines.IncrementOpeningImpression(filteredOpenings)
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":   "success",
@@ -95,6 +100,8 @@ func GetRecommendedProjects(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
+	go routines.IncrementProjectImpression(projects)
+
 	return c.Status(200).JSON(fiber.Map{
 		"status":   "success",
 		"projects": projects,
@@ -121,6 +128,9 @@ func GetRecommendedUsers(c *fiber.Ctx) error {
 		Find(&users).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
+
+	go routines.IncrementUserImpression(users)
+
 	return c.Status(200).JSON(fiber.Map{
 		"status": "success",
 		"users":  users,
@@ -148,6 +158,8 @@ func GetRecommendedEvents(c *fiber.Ctx) error { //TODO ML Implementation
 		Find(&events).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
+
+	go routines.IncrementEventImpression(events)
 
 	return c.Status(200).JSON(fiber.Map{
 		"status": "success",
