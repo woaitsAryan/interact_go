@@ -342,16 +342,24 @@ func AddProject(c *fiber.Ctx) error {
 				}
 
 				newProject := models.Project{
-					UserID:      parsedID,
-					Title:       reqBody.Title,
-					Slug:        newSlug,
-					Tagline:     reqBody.Tagline,
-					CoverPic:    picName,
-					Description: reqBody.Description,
-					Tags:        reqBody.Tags,
-					Category:    reqBody.Category,
-					IsPrivate:   reqBody.IsPrivate,
-					Links:       reqBody.Links,
+					UserID:          parsedID,
+					Title:           reqBody.Title,
+					Slug:            newSlug,
+					Tagline:         reqBody.Tagline,
+					CoverPic:        picName,
+					Description:     reqBody.Description,
+					Tags:            reqBody.Tags,
+					Category:        reqBody.Category,
+					IsPrivate:       reqBody.IsPrivate,
+					Links:           reqBody.Links,
+					NumberOfMembers: 1,
+				}
+
+				orgMemberID := c.GetRespHeader("orgMemberID")
+				orgID := c.Params("orgID")
+
+				if orgMemberID != "" && orgID != "" {
+					newProject.NumberOfMembers = 0
 				}
 
 				result := initializers.DB.Create(&newProject)
@@ -359,8 +367,6 @@ func AddProject(c *fiber.Ctx) error {
 					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 				}
 
-				orgMemberID := c.GetRespHeader("orgMemberID")
-				orgID := c.Params("orgID")
 				if orgMemberID != "" && orgID != "" {
 					parsedOrgMemberID, _ := uuid.Parse(orgMemberID)
 					parsedOrgID, _ := uuid.Parse(orgID)
