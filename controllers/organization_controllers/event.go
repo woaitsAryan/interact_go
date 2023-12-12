@@ -91,7 +91,7 @@ func AddEvent(c *fiber.Ctx) error {
 	// 	parsedOrgMemberID, _ := uuid.Parse(orgMemberID)
 	// 	go routines.MarkOrganizationHistory(event.ID, parsedOrgMemberID, -1, nil, nil, nil, nil, nil)
 	// }
-	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 0, nil, nil, &event.ID, nil, nil)
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 0, nil, nil, &event.ID, nil, nil, "")
 	go routines.IncrementOrgEvent(parsedOrgID)
 
 	return c.Status(201).JSON(fiber.Map{
@@ -176,7 +176,7 @@ func UpdateEvent(c *fiber.Ctx) error {
 		go routines.DeleteFromBucket(helpers.EventClient, oldEventPic)
 	}
 
-	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 2, nil, nil, &event.ID, nil, nil)
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 2, nil, nil, &event.ID, nil, nil, "")
 
 	//TODO setup event cache
 	// cache.RemoveProject(project.Slug)
@@ -215,7 +215,7 @@ func DeleteEvent(c *fiber.Ctx) error {
 	}
 
 	go routines.DeleteFromBucket(helpers.EventClient, eventPic)
-	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 1, nil, nil, &event.ID, nil, nil)
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 1, nil, nil, nil, nil, nil, event.Title)
 	go routines.DecrementOrgEvent(parsedOrgID)
 	//TODO setup event cache
 	// cache.RemoveProject(project.Slug)

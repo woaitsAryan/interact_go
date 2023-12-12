@@ -68,7 +68,8 @@ func MarkProjectHistory(
 	openingID *uuid.UUID,
 	applicationID *uuid.UUID,
 	invitationID *uuid.UUID,
-	taskID *uuid.UUID) {
+	taskID *uuid.UUID,
+	deletedText string) {
 
 	history := models.ProjectHistory{
 		ProjectID:   projectID,
@@ -91,6 +92,9 @@ func MarkProjectHistory(
 	if taskID != nil {
 		history.TaskID = taskID
 	}
+	if deletedText != "" {
+		history.DeletedText = deletedText
+	}
 
 	if err := initializers.DB.Create(&history).Error; err != nil {
 		helpers.LogDatabaseError("Error while creating Project History-MarkProjectHistory", err, "go_routine")
@@ -105,7 +109,8 @@ func MarkOrganizationHistory(
 	projectID *uuid.UUID,
 	eventID *uuid.UUID,
 	taskID *uuid.UUID,
-	invitationID *uuid.UUID) {
+	invitationID *uuid.UUID,
+	deletedText string) {
 	
 	organizationHistory := models.OrganizationHistory{
 		HistoryType: historyType,
@@ -127,6 +132,9 @@ func MarkOrganizationHistory(
 	}
 	if invitationID != nil {
 		organizationHistory.InvitationID = invitationID
+	}
+	if(deletedText != "") {
+		organizationHistory.DeletedText = deletedText
 	}
 	if err := initializers.DB.Create(&organizationHistory).Error; err != nil {
 		helpers.LogDatabaseError("Error while creating Organization History-MarkOrganizationHistory", err, "go_routine")

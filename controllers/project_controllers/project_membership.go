@@ -102,7 +102,7 @@ func AddMember(c *fiber.Ctx) error {
 
 			projectMemberID := c.GetRespHeader("projectMemberID")
 			parsedID, _ := uuid.Parse(projectMemberID)
-			go routines.MarkProjectHistory(project.ID, parsedID, 0, &invitation.UserID, nil, nil, &invitation.ID, nil)
+			go routines.MarkProjectHistory(project.ID, parsedID, 0, &invitation.UserID, nil, nil, &invitation.ID, nil, "")
 
 			invitation.User = user
 
@@ -153,7 +153,7 @@ func RemoveMember(c *fiber.Ctx) error { //TODO add manager cannot remove manager
 
 	projectMemberID := c.GetRespHeader("projectMemberID")
 	parsedID, _ := uuid.Parse(projectMemberID)
-	go routines.MarkProjectHistory(parsedProjectID, parsedID, 11, &parsedUserID, nil, nil, nil, nil)
+	go routines.MarkProjectHistory(parsedProjectID, parsedID, 11, &parsedUserID, nil, nil, nil, nil, membership.Title)
 
 	cache.RemoveProject(projectSlug)
 	cache.RemoveProject("-workspace--" + projectSlug)
@@ -187,7 +187,7 @@ func LeaveProject(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 500, Message: "Internal Server Error while deleting membership."}
 	}
 
-	go routines.MarkProjectHistory(parsedProjectID, parsedUserID, 10, nil, nil, nil, nil, nil)
+	go routines.MarkProjectHistory(parsedProjectID, parsedUserID, 10, nil, nil, nil, nil, nil, membership.Title)
 
 	cache.RemoveProject(projectSlug)
 	cache.RemoveProject("-workspace--" + projectSlug)
