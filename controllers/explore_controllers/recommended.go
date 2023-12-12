@@ -69,7 +69,7 @@ func GetRecommendedOpenings(c *fiber.Ctx) error {
 			filteredOpenings = append(filteredOpenings, opening)
 		}
 	}
-	
+
 	go routines.IncrementOpeningImpression(filteredOpenings)
 
 	return c.Status(200).JSON(fiber.Map{
@@ -187,6 +187,9 @@ func GetRecommendedOrganizationalUsers(c *fiber.Ctx) error {
 		Find(&users).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
+
+	go routines.IncrementUserImpression(users)
+
 	return c.Status(200).JSON(fiber.Map{
 		"status": "success",
 		"users":  users,
