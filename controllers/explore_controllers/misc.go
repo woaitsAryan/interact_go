@@ -97,6 +97,9 @@ func GetMostLikedProjects(c *fiber.Ctx) error {
 		Find(&projects).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
+
+	go routines.IncrementProjectImpression(projects)
+
 	return c.Status(200).JSON(fiber.Map{
 		"status":   "success",
 		"projects": projects,
