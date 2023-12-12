@@ -70,7 +70,7 @@ func AcceptInvitation(c *fiber.Ctx) error {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 		}
 
-		go routines.MarkProjectHistory(*invitation.ProjectID, parsedLoggedInUserID, 1, nil, nil, nil, nil, nil)
+		go routines.MarkProjectHistory(*invitation.ProjectID, parsedLoggedInUserID, 1, nil, nil, nil, nil, nil, "")
 		cache.RemoveProject(invitation.Project.Slug)
 		cache.RemoveProject("-workspace--" + invitation.Project.Slug)
 	} else if invitation.OrganizationID != nil {
@@ -188,7 +188,7 @@ func WithdrawInvitation(c *fiber.Ctx) error {
 		if err != nil {
 			return &fiber.Error{Code: 400, Message: "Invalid User ID."}
 		}
-		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 4, nil, nil, nil, nil, &invitation.ID) 
+		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 4, nil, nil, nil, nil, nil, invitation.Title) 
 	}
 
 

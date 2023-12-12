@@ -192,7 +192,7 @@ func AddPost(c *fiber.Ctx) error {
 		if err != nil {
 			return &fiber.Error{Code: 400, Message: "Invalid User ID."}
 		}
-		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 6, &newPost.ID, nil, nil, nil, nil)
+		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 6, &newPost.ID, nil, nil, nil, nil, "")
 	}
 
 	return c.Status(201).JSON(fiber.Map{
@@ -266,7 +266,7 @@ func UpdatePost(c *fiber.Ctx) error {
 		if err != nil {
 			return &fiber.Error{Code: 400, Message: "Invalid User ID."}
 		}
-		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 8, &post.ID, nil, nil, nil, nil)
+		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 8, &post.ID, nil, nil, nil, nil, "")
 	}
 
 	cache.RemovePost(postID)
@@ -329,7 +329,7 @@ func DeletePost(c *fiber.Ctx) error {
 		if err != nil {
 			return &fiber.Error{Code: 400, Message: "Invalid User ID."}
 		}
-		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 7, &post.ID, nil, nil, nil, nil)
+		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 7, nil, nil, nil, nil, nil, post.Content)
 	}
 
 	return c.Status(204).JSON(fiber.Map{

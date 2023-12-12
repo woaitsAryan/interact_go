@@ -110,7 +110,7 @@ func AddOpening(c *fiber.Ctx) error {
 
 	projectMemberID := c.GetRespHeader("projectMemberID")
 	parsedID, _ := uuid.Parse(projectMemberID)
-	go routines.MarkProjectHistory(project.ID, parsedID, 3, nil, &newOpening.ID, nil, nil, nil)
+	go routines.MarkProjectHistory(project.ID, parsedID, 3, nil, &newOpening.ID, nil, nil, nil, "")
 
 	cache.RemoveProject(project.Slug)
 	cache.RemoveProject("-workspace--" + project.Slug)
@@ -184,7 +184,7 @@ func EditOpening(c *fiber.Ctx) error {
 
 	projectMemberID := c.GetRespHeader("projectMemberID")
 	parsedID, _ := uuid.Parse(projectMemberID)
-	go routines.MarkProjectHistory(opening.ProjectID, parsedID, 4, nil, &opening.ID, nil, nil, nil)
+	go routines.MarkProjectHistory(opening.ProjectID, parsedID, 4, nil, &opening.ID, nil, nil, nil, "")
 
 	cache.RemoveProject(opening.Project.Slug)
 	cache.RemoveProject("-workspace--" + opening.Project.Slug)
@@ -228,7 +228,7 @@ func DeleteOpening(c *fiber.Ctx) error {
 
 	projectMemberID := c.GetRespHeader("projectMemberID")
 	parsedID, _ := uuid.Parse(projectMemberID)
-	go routines.MarkProjectHistory(projectID, parsedID, 5, nil, nil, nil, nil, nil)
+	go routines.MarkProjectHistory(projectID, parsedID, 5, nil, nil, nil, nil, nil, opening.Title)
 
 	cache.RemoveProject(projectSlug)
 	cache.RemoveProject("-workspace--" + projectSlug)

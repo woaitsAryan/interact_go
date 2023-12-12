@@ -80,5 +80,6 @@ type OrganizationHistory struct {
 	Task           Task       `json:"task"`
 	InvitationID   *uuid.UUID `gorm:"type:uuid" json:"invitationID"`
 	Invitation     Invitation `json:"invitation"`
+	DeletedText    string     `gorm:"type:text" json:"deletedText"`
 	CreatedAt      time.Time  `gorm:"default:current_timestamp" json:"createdAt"`
 }
