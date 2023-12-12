@@ -21,7 +21,7 @@ type Post struct {
 	RePostID            *uuid.UUID            `gorm:"type:uuid" json:"rePostID"`
 	RePost              *Post                 `gorm:"foreignKey:RePostID" json:"rePost"`
 	Tags                pq.StringArray        `gorm:"type:text[]" json:"tags"`
-	Impressions         int                   `gorm:"default:1" json:"impressions"`
+	Impressions         int                   `gorm:"default:0" json:"noImpressions"`
 	Edited              bool                  `gorm:"default:false" json:"edited"`
 	Comments            []Comment             `gorm:"foreignKey:PostID;constraint:OnDelete:CASCADE" json:"comments"`
 	UsersTagged         []UserPostTag         `gorm:"foreignKey:PostID;constraint:OnDelete:CASCADE" json:"usersTagged"`

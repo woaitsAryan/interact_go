@@ -71,7 +71,7 @@ func GetTrendingPosts(c *fiber.Ctx) error {
 	}
 
 	go routines.IncrementPostImpression(posts)
-	
+
 	return c.Status(200).JSON(fiber.Map{
 		"status": "success",
 		"posts":  posts,

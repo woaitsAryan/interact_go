@@ -23,7 +23,7 @@ type Event struct {
 	EndTime             time.Time             `gorm:"not null" json:"endTime"`
 	Location            string                `gorm:"not null" json:"location"`
 	Category            string                `gorm:"type:text;not null" json:"category"`
-	Impressions         int                   `gorm:"default:1" json:"impressions"`
+	Impressions         int                   `gorm:"default:0" json:"noImpressions"`
 	OrganizationID      uuid.UUID             `gorm:"type:uuid;not null" json:"organizationID"`
 	Organization        Organization          `gorm:"" json:"organization"`
 	CreatedAt           time.Time             `gorm:"default:current_timestamp" json:"createdAt"`
