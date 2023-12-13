@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"fmt"
+
 	"github.com/Pratham-Mishra04/interact/cache"
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
@@ -78,7 +80,12 @@ func GetMyPosts(c *fiber.Ctx) error {
 	paginatedDB := API.Paginator(c)(initializers.DB)
 
 	var posts []models.Post
-	if err := paginatedDB.Preload("RePost").Preload("User").Where("user_id = ?", loggedInUserID).Find(&posts).Error; err != nil {
+	if err := paginatedDB.Preload("User").
+		Preload("RePost").
+		Preload("RePost.User").
+		Preload("TaggedUsers").
+		Preload("RePost.TaggedUsers").
+		Where("user_id = ?", loggedInUserID).Find(&posts).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
@@ -153,30 +160,29 @@ func AddPost(c *fiber.Ctx) error {
 		newPost.RePostID = &parsedRePostID
 	}
 
+	if reqBody.TaggedUsernames != nil {
+		var taggedUsers []models.User
+
+		for _, username := range reqBody.TaggedUsernames {
+			var user models.User
+			if err := initializers.DB.First(&user, "username=?", username).Error; err == nil {
+				taggedUsers = append(taggedUsers, user)
+			}
+		}
+
+		newPost.TaggedUsers = taggedUsers
+	}
+
 	result := initializers.DB.Create(&newPost)
 	if result.Error != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
 
-	if reqBody.TaggedUserIDS != nil {
-		for _, userID := range reqBody.TaggedUserIDS {
-			parsedUserID, err := uuid.Parse(userID)
-			if err != nil {
-				return &fiber.Error{Code: 400, Message: "Invalid User ID in tagged users"}
-			}
-			userTag := models.UserPostTag{
-				UserID: parsedUserID,
-				PostID: newPost.ID,
-			}
-			result := initializers.DB.Create(&userTag)
-			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
-			}
-		}
-	}
-
-	var post models.Post
-	if err := initializers.DB.Preload("User").Preload("RePost").Preload("RePost.User").First(&post, "id = ?", newPost.ID).Error; err != nil {
+	if err := initializers.DB.Preload("User").
+		Preload("RePost").
+		Preload("RePost.User").
+		Preload("TaggedUsers").
+		First(&newPost).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
@@ -198,7 +204,7 @@ func AddPost(c *fiber.Ctx) error {
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Post Added",
-		"post":    post,
+		"post":    newPost,
 	})
 }
 
@@ -212,7 +218,7 @@ func UpdatePost(c *fiber.Ctx) error {
 	}
 
 	var post models.Post
-	if err := initializers.DB.Preload("User").First(&post, "id = ? and user_id=?", parsedPostID, loggedInUserID).Error; err != nil {
+	if err := initializers.DB.Preload("User").Preload("TaggedUsers").First(&post, "id = ? and user_id=?", parsedPostID, loggedInUserID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Post of this ID found."}
 		}
@@ -227,31 +233,48 @@ func UpdatePost(c *fiber.Ctx) error {
 	if reqBody.Content != "" {
 		post.Content = reqBody.Content
 	}
-	if len(reqBody.Tags) != 0 {
-		post.Tags = reqBody.Tags
+	if reqBody.Tags != nil {
+		post.Tags = *reqBody.Tags
 	}
 
 	post.Edited = true
+
+	var newTaggedUsers []models.User
+	var usersToRemove []models.User
+
+	if reqBody.TaggedUsernames != nil { //TODO not working
+		// Create a map to store existing tagged users for quick comparison
+		existingTaggedUsers := make(map[uuid.UUID]models.User)
+		for _, user := range post.TaggedUsers {
+			existingTaggedUsers[user.ID] = user
+		}
+
+		for _, username := range reqBody.TaggedUsernames {
+			var user models.User
+			if err := initializers.DB.First(&user, "username=?", username).Error; err == nil {
+				newTaggedUsers = append(newTaggedUsers, user)
+			}
+		}
+
+		// Compare and find users to remove
+		for _, existingUser := range post.TaggedUsers {
+			if _, exists := existingTaggedUsers[existingUser.ID]; !exists {
+				usersToRemove = append(usersToRemove, existingUser)
+			}
+		}
+
+		fmt.Println(usersToRemove)
+
+		// Update the TaggedUsers with new users
+		post.TaggedUsers = newTaggedUsers
+	}
 
 	if err := initializers.DB.Save(&post).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	if reqBody.TaggedUserIDS != nil {
-		for _, userID := range reqBody.TaggedUserIDS {
-			parsedUserID, err := uuid.Parse(userID)
-			if err != nil {
-				return &fiber.Error{Code: 400, Message: "Invalid User ID in tagged users"}
-			}
-			userTag := models.UserPostTag{
-				UserID: parsedUserID,
-				PostID: post.ID,
-			}
-			result := initializers.DB.Create(&userTag)
-			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
-			}
-		}
+	for _, userToRemove := range usersToRemove {
+		initializers.DB.Model(&post).Association("TaggedUsers").Delete(userToRemove)
 	}
 
 	orgMemberID := c.GetRespHeader("orgMemberID")

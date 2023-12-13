@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"fmt"
-
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
@@ -145,7 +143,6 @@ func RemoveTaskUser(taskType string) func(c *fiber.Ctx) error {
 			}
 
 			task.Users = append(task.Users[:userIndex], task.Users[userIndex+1:]...)
-			fmt.Println(task.Users)
 			result := initializers.DB.Save(&task)
 			if result.Error != nil {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}

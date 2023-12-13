@@ -29,7 +29,6 @@ func AutoMigrate() {
 		&models.GroupChatMembership{},
 
 		&models.Post{},
-		&models.UserPostTag{},
 
 		&models.Project{},
 		&models.ProjectView{},

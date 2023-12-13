@@ -91,6 +91,6 @@ type ProjectHistory struct {
 	Invitation    Invitation  `json:"invitation"`
 	TaskID        *uuid.UUID  `gorm:"type:uuid" json:"taskID"`
 	Task          Task        `json:"task"`
-	DeletedText   string      `gorm:"type:text" json:"deletedMessage"`
+	DeletedText   string      `gorm:"type:text" json:"deletedText"`
 	CreatedAt     time.Time   `gorm:"default:current_timestamp;index:idx_created_at,sort:desc" json:"createdAt"`
 }

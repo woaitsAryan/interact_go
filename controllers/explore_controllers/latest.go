@@ -20,6 +20,8 @@ func GetLatestPosts(c *fiber.Ctx) error {
 		Preload("User").
 		Preload("RePost").
 		Preload("RePost.User").
+		Preload("RePost.TaggedUsers").
+		Preload("TaggedUsers").
 		Joins("JOIN users ON posts.user_id = users.id AND users.active = ?", true).
 		Select("*, posts.id, posts.created_at").
 		Order("posts.created_at DESC").

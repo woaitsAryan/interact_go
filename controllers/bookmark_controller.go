@@ -52,6 +52,9 @@ func GetPopulatedBookMarks(bookmarkType string) func(c *fiber.Ctx) error {
 			if err := initializers.DB.
 				Preload("PostItems.Post").
 				Preload("PostItems.Post.User").
+				Preload("PostItems.Post.RePost").
+				Preload("PostItems.Post.RePost.User").
+				Preload("PostItems.Post.TaggedUsers").
 				Where("user_id = ?", loggedInUserID).
 				Find(&postBookmarks).Error; err != nil {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
