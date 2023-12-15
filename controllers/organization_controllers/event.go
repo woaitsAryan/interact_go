@@ -27,6 +27,8 @@ func GetEvent(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
+	go routines.UpdateEventViews(event.ID)
+
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "",
@@ -86,11 +88,6 @@ func AddEvent(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
 
-	// orgMemberID := c.GetRespHeader("orgMemberID")
-	// if orgMemberID != "" {
-	// 	parsedOrgMemberID, _ := uuid.Parse(orgMemberID)
-	// 	go routines.MarkOrganizationHistory(event.ID, parsedOrgMemberID, -1, nil, nil, nil, nil, nil)
-	// }
 	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 0, nil, nil, &event.ID, nil, nil, "")
 	go routines.IncrementOrgEvent(parsedOrgID)
 

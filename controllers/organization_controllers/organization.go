@@ -20,7 +20,7 @@ func GetOrganization(c *fiber.Ctx) error {
 	orgID := c.Params("orgID") //TODO when the param id is not in uuid format and there is no check for parsedID, db throw error that invalid input format for id but response is Internal Server Error
 
 	var organization models.Organization
-	if err := initializers.DB.Preload("User").First(&organization, "id=?", orgID).Error; err != nil {
+	if err := initializers.DB.Preload("User").Preload("User.Profile").First(&organization, "id=?", orgID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Organization of this ID Found."}
 		}

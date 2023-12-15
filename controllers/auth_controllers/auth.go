@@ -175,6 +175,15 @@ func OAuthSignUp(c *fiber.Ctx) error {
 		}
 	}
 
+	newProfile := models.Profile{
+		UserID: user.ID,
+	}
+
+	result = initializers.DB.Create(&newProfile)
+	if result.Error != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+	}
+
 	go routines.SendWelcomeNotification(user.ID)
 
 	return CreateSendToken(c, user, 201, "Account Created")
