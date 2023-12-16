@@ -89,7 +89,10 @@ func GetTrendingOpenings(c *fiber.Ctx) error {
 
 	searchStr := c.Query("search", "")
 	if searchStr == "" {
-		if err := paginatedDB.Preload("Project").
+
+		filteredDB := API.Filter(c, 4)(paginatedDB)
+
+		if err := filteredDB.Preload("Project").
 			Joins("JOIN projects ON openings.project_id = projects.id").
 			Where("openings.active=true").
 			Select("openings.*, (projects.total_no_views * 0.5 + openings.no_of_applications * 0.3) / (1 + EXTRACT(EPOCH FROM age(NOW(), openings.created_at)) / 3600 / 24 / 15) AS t_ratio").
@@ -100,7 +103,9 @@ func GetTrendingOpenings(c *fiber.Ctx) error {
 	} else {
 		searchedDB := API.Search(c, 3)(paginatedDB)
 
-		if err := searchedDB.Preload("Project").
+		filteredDB := API.Filter(c, 4)(searchedDB)
+
+		if err := filteredDB.Preload("Project").
 			Where("openings.active=true").
 			Select("openings.*, (projects.total_no_views * 0.5 + openings.no_of_applications * 0.3) / (1 + EXTRACT(EPOCH FROM age(NOW(), openings.created_at)) / 3600 / 24 / 15) AS t_ratio").
 			Order("t_ratio DESC").
@@ -131,18 +136,20 @@ func GetTrendingProjects(c *fiber.Ctx) error {
 
 	searchedDB := API.Search(c, 1)(paginatedDB)
 
+	filteredDB := API.Filter(c, 1)(searchedDB)
+
 	if loggedInUserID != "" {
-		if err := searchedDB.
+		if err := filteredDB.
 			Preload("User").
 			Preload("Memberships").
-			Select("*, (total_no_views + 3 * no_likes + 2 * no_comments + 5 * no_shares) AS weighted_average").
+			Select("*, (projects.total_no_views + 3 * no_likes + 2 * no_comments + 5 * no_shares) AS weighted_average").
 			Order("weighted_average DESC").
 			Where("user_id <> ? AND is_private = ?", loggedInUserID, false).
 			Find(&projects).Error; err != nil {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 		}
 	} else {
-		if err := searchedDB.
+		if err := filteredDB.
 			Preload("User").
 			Preload("Memberships").
 			Select("*, (total_no_views + 3 * no_likes + 2 * no_comments + 5 * no_shares) AS weighted_average").
@@ -164,16 +171,17 @@ func GetTrendingProjects(c *fiber.Ctx) error {
 func GetTrendingUsers(c *fiber.Ctx) error {
 	paginatedDB := API.Paginator(c)(initializers.DB)
 	searchedDB := API.Search(c, 0)(paginatedDB)
+	filteredDB := API.Filter(c, 2)(searchedDB)
 
 	var users []models.User
-	if err := searchedDB.
+	if err := filteredDB.
 		Preload("Profile").
 		Where("active=?", true).
 		Where("organization_status=?", false).
 		Where("verified=?", true).
-		Where("username != email").
+		Where("username != users.email").
 		Omit("phone_no").
-		Omit("email").
+		Omit("users.email").
 		Select("*, (0.6 * no_followers - 0.4 * no_following + 0.3 * total_no_views) / (1 + EXTRACT(EPOCH FROM age(NOW(), created_at)) / 3600 / 24 / 21) AS weighted_average"). //! 21 days
 		Order("weighted_average DESC, created_at ASC").
 		Find(&users).Error; err != nil {
@@ -194,7 +202,9 @@ func GetTrendingEvents(c *fiber.Ctx) error {
 
 	searchedDB := API.Search(c, 1)(paginatedDB)
 
-	if err := searchedDB.
+	filteredDB := API.Filter(c, 3)(searchedDB)
+
+	if err := filteredDB.
 		Preload("Organization").
 		Preload("Organization.User").
 		Select("*, (no_views + 3 * no_likes + 2 * no_comments + 5 * no_shares) AS weighted_average").
