@@ -167,6 +167,7 @@ func GetTrendingUsers(c *fiber.Ctx) error {
 
 	var users []models.User
 	if err := searchedDB.
+		Preload("Profile").
 		Where("active=?", true).
 		Where("organization_status=?", false).
 		Where("verified=?", true).
@@ -216,6 +217,7 @@ func GetTrendingOrganizationalUsers(c *fiber.Ctx) error {
 
 	var users []models.User
 	if err := searchedDB.
+		Preload("Profile").
 		Where("active=?", true).
 		Where("organization_status=?", true).
 		Where("verified=?", true).

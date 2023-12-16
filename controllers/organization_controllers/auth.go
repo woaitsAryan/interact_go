@@ -96,6 +96,15 @@ func SignUp(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
 
+	newProfile := models.Profile{
+		UserID: newOrg.ID,
+	}
+
+	result = initializers.DB.Create(&newProfile)
+	if result.Error != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+	}
+
 	go routines.SendWelcomeNotification(newOrg.ID)
 	go routines.MarkOrganizationHistory(organization.ID, newOrg.ID, -1, nil, nil, nil, nil, nil, "")
 
@@ -158,6 +167,15 @@ func OAuthLogIn(c *fiber.Ctx) error {
 
 	if err := initializers.DB.Save(&user).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	newProfile := models.Profile{
+		UserID: user.ID,
+	}
+
+	result := initializers.DB.Create(&newProfile)
+	if result.Error != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
 
 	var organization models.Organization

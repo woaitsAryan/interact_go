@@ -55,5 +55,17 @@ func UpdateProjectViews(project *models.Project) { //TODO Creator and Member Che
 	if result.Error != nil {
 		helpers.LogDatabaseError("Error while updating Project-UpdateProjectViews", result.Error, "go_routine")
 	}
+}
 
+func UpdateEventViews(eventID uuid.UUID) {
+	var event models.Event
+	if err := initializers.DB.First(&event, "id = ?", eventID).Error; err != nil {
+		helpers.LogDatabaseError("Error while fetching Event-UpdateEventViews", err, "go_routine")
+	}
+
+	event.NoViews++
+	result := initializers.DB.Save(event)
+	if result.Error != nil {
+		helpers.LogDatabaseError("Error while updating Event-UpdateEventViews", result.Error, "go_routine")
+	}
 }
