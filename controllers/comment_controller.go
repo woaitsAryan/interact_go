@@ -56,6 +56,28 @@ func GetProjectComments(c *fiber.Ctx) error {
 	})
 }
 
+func GetEventComments(c *fiber.Ctx) error {
+	eventID := c.Params("eventID")
+
+	parsedEventID, err := uuid.Parse(eventID)
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid ID"}
+	}
+
+	paginatedDB := API.Paginator(c)(initializers.DB)
+
+	var comments []models.Comment
+	if err := paginatedDB.Preload("User").Where("event_id=?", parsedEventID).Order("created_at DESC").Find(&comments).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":   "success",
+		"message":  "",
+		"comments": comments,
+	})
+}
+
 func AddComment(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedUserID, _ := uuid.Parse(loggedInUserID)
