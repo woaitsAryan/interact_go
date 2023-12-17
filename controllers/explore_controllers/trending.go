@@ -19,7 +19,7 @@ func GetTrendingSearches(c *fiber.Ctx) error {
 		Query  string
 		Counts int
 	}
-	searchedDB := API.Search(c, 4)(initializers.DB)
+	searchedDB := API.Search(c, 5)(initializers.DB)
 	searchedDB.Table("search_queries").
 		Select("LOWER(query) as query, COUNT(*) as counts"). // Ensure lowercase comparison
 		// Where("timestamp > ?", timeWindow).
@@ -200,7 +200,7 @@ func GetTrendingEvents(c *fiber.Ctx) error {
 	paginatedDB := API.Paginator(c)(initializers.DB)
 	var events []models.Event
 
-	searchedDB := API.Search(c, 1)(paginatedDB)
+	searchedDB := API.Search(c, 4)(paginatedDB)
 
 	filteredDB := API.Filter(c, 3)(searchedDB)
 

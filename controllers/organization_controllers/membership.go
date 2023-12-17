@@ -12,6 +12,22 @@ import (
 	"gorm.io/gorm"
 )
 
+func GetExploreMemberships(c *fiber.Ctx) error {
+	orgID := c.Params("orgID")
+
+	paginatedDB := API.Paginator(c)(initializers.DB)
+
+	var memberships []models.OrganizationMembership
+	if err := paginatedDB.Where("organization_id = ?", orgID).Preload("User").Find(&memberships).Error; err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid Organization ID"}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":      "success",
+		"memberships": memberships,
+	})
+}
+
 func GetNonMembers(c *fiber.Ctx) error {
 	orgID := c.Params("orgID")
 
@@ -173,7 +189,7 @@ func RemoveMember(c *fiber.Ctx) error {
 	}
 
 	go routines.DecrementOrgMember(membership.OrganizationID)
-	go routines.MarkOrganizationHistory(membership.OrganizationID, parsedOrgMemberID, 5, nil, nil, nil, nil, nil, membership.Title )
+	go routines.MarkOrganizationHistory(membership.OrganizationID, parsedOrgMemberID, 5, nil, nil, nil, nil, nil, membership.Title)
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",
