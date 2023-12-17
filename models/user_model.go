@@ -30,6 +30,8 @@ type User struct { //TODO Add numProjects field to display on user explore card
 	NoFollowers               int                  `gorm:"default:0" json:"noFollowers"`
 	TotalNoViews              int                  `gorm:"default:0" json:"totalNoViews"`
 	Impressions               int                  `gorm:"default:0" json:"noImpressions"`
+	NoOfProjects              int                  `gorm:"default:0" json:"noOfProjects"`
+	NoOfCollaborativeProjects int                  `gorm:"default:0" json:"noOfCollaborativeProjects"`
 	PasswordChangedAt         time.Time            `gorm:"default:current_timestamp" json:"-"`
 	DeactivatedAt             time.Time            `gorm:"" json:"-"`
 	Admin                     bool                 `gorm:"default:false" json:"-"`
