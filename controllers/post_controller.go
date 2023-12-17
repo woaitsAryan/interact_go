@@ -336,6 +336,11 @@ func DeletePost(c *fiber.Ctx) error {
 		}
 	}
 
+	// Delete all users from the task_assigned_users table
+	if err := initializers.DB.Model(&post).Association("TaggedUsers").Clear(); err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
 	if err := initializers.DB.Delete(&post).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
