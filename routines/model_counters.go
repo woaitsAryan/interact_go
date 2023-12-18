@@ -192,3 +192,19 @@ func setUserCollaborativeProject(userID uuid.UUID) {
 		}
 	}
 }
+
+func IncrementReposts(postID uuid.UUID) {
+	var post models.Post
+	if err := initializers.DB.First(&post, "id = ?", postID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			helpers.LogDatabaseError("No Post of this ID found-IncrementReposts.", err, "go_routine")
+		} else {
+			helpers.LogDatabaseError("Error while fetching Post-IncrementReposts", err, "go_routine")
+		}
+	} else {
+		post.NoOfReposts++
+		if err := initializers.DB.Save(&post).Error; err != nil {
+			helpers.LogDatabaseError("Error while updating Post-IncrementReposts", err, "go_routine")
+		}
+	}
+}

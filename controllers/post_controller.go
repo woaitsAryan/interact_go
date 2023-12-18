@@ -200,6 +200,9 @@ func AddPost(c *fiber.Ctx) error {
 		}
 		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 6, &newPost.ID, nil, nil, nil, nil, "")
 	}
+	if reqBody.RePostID != "" {
+		go routines.IncrementReposts(*newPost.RePostID)
+	}
 
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",

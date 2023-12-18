@@ -20,6 +20,7 @@ type Post struct {
 	NoComments          int                   `gorm:"default:0" json:"noComments"`
 	RePostID            *uuid.UUID            `gorm:"type:uuid" json:"rePostID"`
 	RePost              *Post                 `gorm:"foreignKey:RePostID" json:"rePost"`
+	NoOfReposts         int                   `gorm:"default:0" json:"noOfReposts"`
 	Tags                pq.StringArray        `gorm:"type:text[]" json:"tags"`
 	Impressions         int                   `gorm:"default:0" json:"noImpressions"`
 	Edited              bool                  `gorm:"default:false" json:"edited"`
