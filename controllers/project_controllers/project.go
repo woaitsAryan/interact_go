@@ -377,6 +377,8 @@ func AddProject(c *fiber.Ctx) error {
 					go routines.MarkProjectHistory(newProject.ID, parsedID, -1, nil, nil, nil, nil, nil, "")
 				}
 
+				go routines.IncrementUserProject(parsedID)
+
 				return c.Status(201).JSON(fiber.Map{
 					"status":  "success",
 					"message": "Project Added",
@@ -473,6 +475,10 @@ func UpdateProject(c *fiber.Ctx) error {
 func DeleteProject(c *fiber.Ctx) error {
 	projectID := c.Params("projectID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	parsedUserID, err := uuid.Parse(loggedInUserID)
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid User ID."}
+	}
 
 	parsedProjectID, err := uuid.Parse(projectID)
 	if err != nil {
@@ -522,6 +528,7 @@ func DeleteProject(c *fiber.Ctx) error {
 	}
 
 	go routines.DeleteFromBucket(helpers.ProjectClient, coverPic)
+	go routines.DecrementUserProject(parsedUserID)
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",
