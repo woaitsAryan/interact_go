@@ -135,7 +135,7 @@ func VerifyCode(c *fiber.Ctx) error {
 	})
 }
 
-func SendDeleteVerficationCode(c *fiber.Ctx) error {
+func SendDeleteVerificationCode(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
@@ -155,7 +155,7 @@ func SendDeleteVerficationCode(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	err = cache.SetOtpToCache(user.ID.String(), []byte(hash));
+	err = cache.SetOtpToCache(user.ID.String(), []byte(hash))
 	if err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}

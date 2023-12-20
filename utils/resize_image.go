@@ -29,7 +29,7 @@ func ResizeSavedImage(picPath string, d1 int, d2 int) (string, error) {
 	extension := path.Ext(picPath)
 	fileNameWithoutExt := picPath[:len(picPath)-len(extension)]
 
-	resizedPicPath := fileNameWithoutExt + "-resized.jpg" //TODO add time in the name
+	resizedPicPath := fileNameWithoutExt + "-resized.jpg"
 
 	out, err := os.Create(resizedPicPath)
 	if err != nil {

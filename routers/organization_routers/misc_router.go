@@ -17,6 +17,6 @@ func MiscRouter(app *fiber.App) {
 	miscRouter.Patch("/profile", middlewares.OrgRoleAuthorization(models.Senior), controllers.EditProfile)
 	miscRouter.Get("/history", middlewares.OrgRoleAuthorization(models.Member), organization_controllers.GetOrganizationHistory)
 
-	miscRouter.Get("/get_delete_code", middlewares.OrgRoleAuthorization(models.Manager), auth_controllers.SendDeleteVerficationCode)
-	miscRouter.Delete("/delete", middlewares.OrgRoleAuthorization(models.Manager), organization_controllers.DeleteOrganization)
+	miscRouter.Get("/delete", auth_controllers.SendDeleteVerificationCode)
+	miscRouter.Delete("/delete", organization_controllers.DeleteOrganization)
 }

@@ -138,7 +138,7 @@ func GetRecommendedUsers(c *fiber.Ctx) error {
 	})
 }
 
-func GetRecommendedEvents(c *fiber.Ctx) error { //TODO ML Implementation
+func GetRecommendedEvents(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	recommendations, err := utils.MLReq(loggedInUserID, config.EVENT_RECOMMENDATION)

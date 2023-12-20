@@ -159,7 +159,7 @@ func EditOpening(c *fiber.Ctx) error {
 	if reqBody.Tags != nil {
 		opening.Tags = reqBody.Tags
 	}
-	if reqBody.Active != nil { //TODO have different manager route for this
+	if reqBody.Active != nil {
 		opening.Active = *reqBody.Active
 		if !opening.Active {
 			var pendingApplications []models.Application

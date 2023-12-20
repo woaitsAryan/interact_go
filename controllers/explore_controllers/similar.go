@@ -14,7 +14,7 @@ import (
 	"github.com/lib/pq"
 )
 
-func GetSimilarUsers(c *fiber.Ctx) error { //TODO ML Implementation
+func GetSimilarUsers(c *fiber.Ctx) error {
 	username := c.Params("username")
 
 	var user models.User

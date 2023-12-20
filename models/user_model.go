@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type User struct { //TODO Add numProjects field to display on user explore card
+type User struct {
 	ID                        uuid.UUID            `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	Name                      string               `gorm:"type:text;not null" json:"name"`
 	Username                  string               `gorm:"type:text;unique;not null" json:"username"`
@@ -30,8 +30,8 @@ type User struct { //TODO Add numProjects field to display on user explore card
 	NoFollowers               int                  `gorm:"default:0" json:"noFollowers"`
 	TotalNoViews              int                  `gorm:"default:0" json:"totalNoViews"`
 	Impressions               int                  `gorm:"default:0" json:"noImpressions"`
-	NoOfProjects              int                  `gorm:"default:0" json:"noOfProjects"`
-	NoOfCollaborativeProjects int                  `gorm:"default:0" json:"noOfCollaborativeProjects"`
+	NoOfProjects              int                  `gorm:"default:0" json:"noProjects"`
+	NoOfCollaborativeProjects int                  `gorm:"default:0" json:"noCollaborativeProjects"`
 	PasswordChangedAt         time.Time            `gorm:"default:current_timestamp" json:"-"`
 	DeactivatedAt             time.Time            `gorm:"" json:"-"`
 	Admin                     bool                 `gorm:"default:false" json:"-"`

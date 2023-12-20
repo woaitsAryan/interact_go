@@ -224,8 +224,6 @@ func UpdateMe(c *fiber.Ctx) error {
 // func DeactivateMe(c *fiber.Ctx) error {
 // 	userID := c.GetRespHeader("loggedInUserID")
 
-// 	//TODO send email for verification
-
 // 	var user models.User
 // 	if err := initializers.DB.First(&user, "id = ?", userID).Error; err != nil {
 // 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -394,7 +392,7 @@ func UpdateResume(c *fiber.Ctx) error {
 	})
 }
 
-func Deactive(c *fiber.Ctx) error {
+func Deactivate(c *fiber.Ctx) error {
 	userID := c.GetRespHeader("loggedInUserID")
 
 	var reqBody struct {
@@ -429,7 +427,7 @@ func Deactive(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	return c.Status(202).JSON(fiber.Map{
+	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Account Deactived",
 	})

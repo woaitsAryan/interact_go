@@ -509,7 +509,7 @@ func ResetChat(c *fiber.Ctx) error {
 	})
 }
 
-func DeleteChat(c *fiber.Ctx) error { //TODO have a history for project and organizations
+func DeleteChat(c *fiber.Ctx) error {
 	chatID := c.Params("chatID")
 
 	parsedChatID, err := uuid.Parse(chatID)
