@@ -142,7 +142,7 @@ func RemoveMember(c *fiber.Ctx) error { //TODO add manager cannot remove manager
 		return &fiber.Error{Code: 403, Message: "You do not have the permission to perform this action."}
 	}
 
-	err = processLeaveProject(&membership)
+	err = ProcessLeaveProject(&membership)
 	if err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
@@ -178,7 +178,7 @@ func LeaveProject(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	err := processLeaveProject(&membership)
+	err := ProcessLeaveProject(&membership)
 	if err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
@@ -266,7 +266,7 @@ func ChangeMemberRole(c *fiber.Ctx) error {
 	})
 }
 
-func processLeaveProject(membership *models.Membership) error {
+func ProcessLeaveProject(membership *models.Membership) error {
 	tx := initializers.DB.Begin()
 	if tx.Error != nil {
 		return tx.Error

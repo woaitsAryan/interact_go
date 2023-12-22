@@ -2,6 +2,7 @@ package organization_controllers
 
 import (
 	"github.com/Pratham-Mishra04/interact/config"
+	"github.com/Pratham-Mishra04/interact/controllers/project_controllers"
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
@@ -202,7 +203,7 @@ func LeaveOrganization(c *fiber.Ctx) error {
 	orgMemberID := c.GetRespHeader("orgMemberID")
 
 	var membership models.OrganizationMembership
-	if err := initializers.DB.First(&membership, "user_id=? AND organization_id = ?", orgMemberID, orgID).Error; err != nil {
+	if err := initializers.DB.Preload("Organization").First(&membership, "user_id=? AND organization_id = ?", orgMemberID, orgID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Membership of this ID found."}
 		}
@@ -213,6 +214,9 @@ func LeaveOrganization(c *fiber.Ctx) error {
 	if err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
+
+	go routines.DecrementOrgMember(membership.OrganizationID)
+	//TODO go routines.MarkOrganizationHistory(membership.OrganizationID, parsedOrgMemberID, 5, nil, nil, nil, nil, nil, membership.Title)
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",
@@ -284,18 +288,29 @@ func processLeaveOrganization(membership *models.OrganizationMembership) error {
 		}
 	}()
 
-	// Step 1: Retrieve the user's group chat memberships in the specified project
-	var memberships []models.GroupChatMembership
-	if err := tx.Where("user_id = ? AND group_chat_id IN (SELECT id FROM group_chats WHERE organization_id = ?)", membership.UserID, membership.OrganizationID).Find(&memberships).Error; err != nil {
+	// Step 1: Retrieve the user's group chat memberships in the specified org
+	var chatMemberships []models.GroupChatMembership
+	if err := tx.Where("user_id = ? AND group_chat_id IN (SELECT id FROM group_chats WHERE organization_id = ?)", membership.UserID, membership.OrganizationID).Find(&chatMemberships).Error; err != nil {
 		return err
 	}
 
 	// Step 2: Delete the group chat memberships
-	if err := tx.Delete(&memberships).Error; err != nil {
+	if err := tx.Delete(&chatMemberships).Error; err != nil {
 		return err
 	}
 
-	// Step 3: Find all tasks assigned to the user in the given project
+	// Step 3: Retrieve the user's project memberships in the specified org
+	var projectMemberships []models.Membership
+	if err := tx.Where("user_id = ? AND project_id IN (SELECT id FROM projects WHERE user_id = ?)", membership.UserID, membership.Organization.UserID).Find(&projectMemberships).Error; err != nil {
+		return err
+	}
+
+	// Step 4: Delete project memberships
+	for _, membership := range projectMemberships {
+		project_controllers.ProcessLeaveProject(&membership)
+	}
+
+	// Step 5: Find all tasks assigned to the user in the given org
 	var tasks []models.Task
 	if err := tx.
 		Joins("JOIN task_assigned_users ON tasks.id = task_assigned_users.task_id").
@@ -304,14 +319,14 @@ func processLeaveOrganization(membership *models.OrganizationMembership) error {
 		return err
 	}
 
-	// Step 4: Remove the user from the assigned users of each task
+	// Step 6: Remove the user from the assigned users of each task
 	for _, task := range tasks {
 		if err := tx.Model(&task).Association("Users").Delete(&models.User{ID: membership.UserID}); err != nil {
 			return err
 		}
 	}
 
-	// Step 5: Find all subtasks assigned to the user in the given project
+	// Step 7: Find all subtasks assigned to the user in the given org
 	var subtasks []models.SubTask
 	if err := tx.
 		Joins("JOIN tasks ON sub_tasks.task_id = tasks.id").
@@ -321,7 +336,7 @@ func processLeaveOrganization(membership *models.OrganizationMembership) error {
 		return err
 	}
 
-	// Step 6: Remove the user from the assigned users of each subtask
+	// Step 8: Remove the user from the assigned users of each subtask
 	for _, subtask := range subtasks {
 		if err := tx.Model(&subtask).Association("Users").Delete(&models.User{ID: membership.UserID}); err != nil {
 			return err

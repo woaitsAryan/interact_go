@@ -60,7 +60,9 @@ func GetUserPosts(c *fiber.Ctx) error {
 	var posts []models.Post
 	if err := paginatedDB.
 		Preload("RePost").
+		Preload("RePost.User").
 		Preload("User").
+		Preload("TaggedUsers").
 		Where("user_id = ?", userID).
 		Order("created_at DESC").
 		Find(&posts).Error; err != nil {

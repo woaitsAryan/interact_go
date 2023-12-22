@@ -35,6 +35,8 @@ func AddReport(c *fiber.Ctx) error {
 		initializers.DB.Where("reporter_id=? AND event_id=?", parsedLoggedInUserID, reqBody.EventID).First(&existingReport)
 	} else if reqBody.OpeningID != "" {
 		initializers.DB.Where("reporter_id=? AND opening_id=?", parsedLoggedInUserID, reqBody.OpeningID).First(&existingReport)
+	} else if reqBody.GroupChatID != "" {
+		initializers.DB.Where("reporter_id=? AND group_chat_id=?", parsedLoggedInUserID, reqBody.GroupChatID).First(&existingReport)
 	}
 
 	if existingReport.ID != uuid.Nil {
@@ -80,6 +82,12 @@ func AddReport(c *fiber.Ctx) error {
 			return &fiber.Error{Code: 400, Message: "Invalid Opening ID"}
 		}
 		report.OpeningID = &parsedOpeningID
+	} else if reqBody.GroupChatID != "" {
+		parsedGroupChatID, err := uuid.Parse(reqBody.GroupChatID)
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid Group Chat ID"}
+		}
+		report.GroupChatID = &parsedGroupChatID
 	}
 
 	result := initializers.DB.Create(&report)
