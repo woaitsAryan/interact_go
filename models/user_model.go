@@ -36,6 +36,7 @@ type User struct {
 	DeactivatedAt             time.Time            `gorm:"" json:"-"`
 	Admin                     bool                 `gorm:"default:false" json:"-"`
 	Verified                  bool                 `gorm:"default:false" json:"isVerified"`
+	OnboardingCompleted       bool                 `gorm:"default:false" json:"isOnboardingComplete"`
 	OrganizationStatus        bool                 `gorm:"default:false" json:"isOrganization"`
 	LastLoggedIn              time.Time            `gorm:"default:current_timestamp" json:"-"`
 	Active                    bool                 `gorm:"default:true" json:"-"`

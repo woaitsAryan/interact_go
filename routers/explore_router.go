@@ -5,6 +5,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/controllers/explore_controllers"
 	"github.com/Pratham-Mishra04/interact/controllers/organization_controllers"
 	"github.com/Pratham-Mishra04/interact/controllers/project_controllers"
+	"github.com/Pratham-Mishra04/interact/controllers/user_controllers"
 	"github.com/Pratham-Mishra04/interact/middlewares"
 	"github.com/gofiber/fiber/v2"
 )
@@ -50,6 +51,6 @@ func ExploreRouter(app *fiber.App) {
 	exploreRoutes.Get("/users/projects/:userID", project_controllers.GetUserProjects)
 	exploreRoutes.Get("/users/projects/contributing/:userID", project_controllers.GetUserContributingProjects)
 
-	exploreRoutes.Get("/users/:username", controllers.GetUser)
+	exploreRoutes.Get("/users/:username", user_controllers.GetUser)
 	exploreRoutes.Get("/projects/:slug", project_controllers.GetProject)
 }

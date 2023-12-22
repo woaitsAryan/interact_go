@@ -1,10 +1,9 @@
-package controllers
+package user_controllers
 
 import (
 	"errors"
 	"time"
 
-	"github.com/Pratham-Mishra04/interact/cache"
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/controllers/auth_controllers"
 	"github.com/Pratham-Mishra04/interact/helpers"
@@ -14,120 +13,9 @@ import (
 	"github.com/Pratham-Mishra04/interact/schemas"
 	"github.com/Pratham-Mishra04/interact/utils"
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
-
-func GetViews(c *fiber.Ctx) error {
-	userID := c.GetRespHeader("loggedInUserID")
-	parsedUserID, _ := uuid.Parse(userID)
-
-	viewsArr, count, err := utils.GetProfileViews(parsedUserID)
-	if err != nil {
-		return err
-	}
-
-	return c.Status(200).JSON(fiber.Map{
-		"status":   "success",
-		"message":  "",
-		"viewsArr": viewsArr,
-		"count":    count,
-	})
-}
-
-func GetMe(c *fiber.Ctx) error {
-	userID := c.GetRespHeader("loggedInUserID")
-
-	var user models.User
-	initializers.DB.
-		Preload("Profile").
-		Preload("Profile.Achievements").
-		First(&user, "id = ?", userID)
-
-	return c.Status(200).JSON(fiber.Map{
-		"status":  "success",
-		"message": "",
-		"user":    user,
-	})
-}
-
-func GetUser(c *fiber.Ctx) error {
-	username := c.Params("username")
-	loggedInUserID := c.GetRespHeader("loggedInUserID")
-
-	var user models.User
-	initializers.DB.Preload("Profile").First(&user, "username = ?", username)
-
-	if user.ID == uuid.Nil {
-		return &fiber.Error{Code: 400, Message: "No user of this username found."}
-	}
-
-	if user.ID.String() != loggedInUserID {
-		routines.UpdateProfileViews(&user)
-	}
-
-	return c.Status(200).JSON(fiber.Map{
-		"status":  "success",
-		"message": "User Found",
-		"user":    user,
-	})
-}
-
-func GetMyLikes(c *fiber.Ctx) error {
-	loggedInUserID := c.GetRespHeader("loggedInUserID")
-
-	var likes []models.Like
-	if err := initializers.DB.
-		Find(&likes, "user_id = ?", loggedInUserID).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-	}
-
-	var likeIDs []string
-	for _, like := range likes {
-		if like.PostID != nil {
-			likeIDs = append(likeIDs, like.PostID.String())
-		} else if like.ProjectID != nil {
-			likeIDs = append(likeIDs, like.ProjectID.String())
-		} else if like.CommentID != nil {
-			likeIDs = append(likeIDs, like.CommentID.String())
-		}
-	}
-
-	return c.Status(200).JSON(fiber.Map{
-		"status":  "success",
-		"message": "User Found",
-		"likes":   likeIDs,
-	})
-}
-
-func GetMyOrgMemberships(c *fiber.Ctx) error {
-	loggedInUserID := c.GetRespHeader("loggedInUserID")
-
-	populate := c.Query("populate", "false")
-
-	var memberships []models.OrganizationMembership
-
-	if populate == "true" {
-		if err := initializers.DB.
-			Preload("Organization").
-			Preload("Organization.User").
-			Find(&memberships, "user_id = ?", loggedInUserID).Error; err != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-		}
-	} else {
-		if err := initializers.DB.
-			Find(&memberships, "user_id = ?", loggedInUserID).Error; err != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-		}
-	}
-
-	return c.Status(200).JSON(fiber.Map{
-		"status":      "success",
-		"message":     "User Found",
-		"memberships": memberships,
-	})
-}
 
 func UpdateMe(c *fiber.Ctx) error {
 	userID := c.GetRespHeader("loggedInUserID")
@@ -214,35 +102,21 @@ func UpdateMe(c *fiber.Ctx) error {
 		go routines.DeleteFromBucket(helpers.UserCoverClient, oldCoverPic)
 	}
 
+	if c.Query("action", "") == "onboarding" && !user.OnboardingCompleted {
+		go func() {
+			user.OnboardingCompleted = true
+			if err := initializers.DB.Save(&user).Error; err != nil {
+				helpers.LogDatabaseError("Error while updating User-UpdateMe", err, "go_routine")
+			}
+		}()
+	}
+
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "User updated successfully",
 		"user":    user,
 	})
 }
-
-// func DeactivateMe(c *fiber.Ctx) error {
-// 	userID := c.GetRespHeader("loggedInUserID")
-
-// 	var user models.User
-// 	if err := initializers.DB.First(&user, "id = ?", userID).Error; err != nil {
-// 		if errors.Is(err, gorm.ErrRecordNotFound) {
-// 			return &fiber.Error{Code: 400, Message: "No user of this ID found."}
-// 		}
-// 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-// 	}
-
-// 	user.Active = false
-
-// 	if err := initializers.DB.Save(&user).Error; err != nil {
-// 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-// 	}
-
-// 	return c.Status(204).JSON(fiber.Map{
-// 		"status":  "success",
-// 		"message": "User deactivated successfully",
-// 	})
-// }
 
 func UpdatePassword(c *fiber.Ctx) error {
 	var reqBody struct {
@@ -389,46 +263,5 @@ func UpdateResume(c *fiber.Ctx) error {
 		"status":  "success",
 		"message": "User updated successfully",
 		"resume":  resumePath,
-	})
-}
-
-func Deactivate(c *fiber.Ctx) error {
-	userID := c.GetRespHeader("loggedInUserID")
-
-	var reqBody struct {
-		VerificationCode string `json:"otp"`
-	}
-
-	if err := c.BodyParser(&reqBody); err != nil {
-		return &fiber.Error{Code: 400, Message: "Validation Failed"}
-	}
-
-	var user models.User
-	if err := initializers.DB.First(&user, "id = ?", userID).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return &fiber.Error{Code: 400, Message: "No user of this ID found."}
-		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-	}
-
-	data, err := cache.GetOtpFromCache(user.ID.String())
-	if err != nil {
-		return helpers.AppError{Code: 500, Message: config.SERVER_ERROR, Err: err}
-	}
-
-	if err := bcrypt.CompareHashAndPassword([]byte(data), []byte(reqBody.VerificationCode)); err != nil {
-		return &fiber.Error{Code: 400, Message: "Incorrect OTP"}
-	}
-
-	user.Active = false
-	user.DeactivatedAt = time.Now()
-
-	if err := initializers.DB.Save(&user).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-	}
-
-	return c.Status(204).JSON(fiber.Map{
-		"status":  "success",
-		"message": "Account Deactived",
 	})
 }

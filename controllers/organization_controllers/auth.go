@@ -169,15 +169,6 @@ func OAuthLogIn(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	newProfile := models.Profile{
-		UserID: user.ID,
-	}
-
-	result := initializers.DB.Create(&newProfile)
-	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
-	}
-
 	var organization models.Organization
 	if err := initializers.DB.First(&organization, "user_id=?", user.ID).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}

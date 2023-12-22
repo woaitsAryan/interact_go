@@ -155,6 +155,7 @@ func AddMember(c *fiber.Ctx) error {
 }
 
 func RemoveMember(c *fiber.Ctx) error {
+	//TODO remove members from chats and all the required stuff on remove/leave org.
 	membershipID := c.Params("membershipID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
@@ -182,10 +183,9 @@ func RemoveMember(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 403, Message: "You do not have the permission to perform this action."}
 	}
 
-	result := initializers.DB.Delete(&membership)
-
-	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+	err = processLeaveOrganization(&membership)
+	if err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	go routines.DecrementOrgMember(membership.OrganizationID)
@@ -209,9 +209,9 @@ func LeaveOrganization(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	result := initializers.DB.Delete(&membership)
-	if result.Error != nil {
-		return &fiber.Error{Code: 500, Message: "Internal Server Error while deleting membership."}
+	err := processLeaveOrganization(&membership)
+	if err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
 	return c.Status(204).JSON(fiber.Map{
@@ -269,4 +269,73 @@ func ChangeMemberRole(c *fiber.Ctx) error {
 		"status":  "success",
 		"message": "User membership updated.",
 	})
+}
+
+func processLeaveOrganization(membership *models.OrganizationMembership) error {
+	tx := initializers.DB.Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	defer func() {
+		if tx.Error != nil {
+			tx.Rollback() // Rollback the transaction on panic
+			go helpers.LogDatabaseError("Transaction rolled back due to error", tx.Error, "completeLeaveProject")
+		}
+	}()
+
+	// Step 1: Retrieve the user's group chat memberships in the specified project
+	var memberships []models.GroupChatMembership
+	if err := tx.Where("user_id = ? AND group_chat_id IN (SELECT id FROM group_chats WHERE organization_id = ?)", membership.UserID, membership.OrganizationID).Find(&memberships).Error; err != nil {
+		return err
+	}
+
+	// Step 2: Delete the group chat memberships
+	if err := tx.Delete(&memberships).Error; err != nil {
+		return err
+	}
+
+	// Step 3: Find all tasks assigned to the user in the given project
+	var tasks []models.Task
+	if err := tx.
+		Joins("JOIN task_assigned_users ON tasks.id = task_assigned_users.task_id").
+		Where("tasks.organization_id = ? AND task_assigned_users.user_id = ?", membership.OrganizationID, membership.UserID).
+		Find(&tasks).Error; err != nil {
+		return err
+	}
+
+	// Step 4: Remove the user from the assigned users of each task
+	for _, task := range tasks {
+		if err := tx.Model(&task).Association("Users").Delete(&models.User{ID: membership.UserID}); err != nil {
+			return err
+		}
+	}
+
+	// Step 5: Find all subtasks assigned to the user in the given project
+	var subtasks []models.SubTask
+	if err := tx.
+		Joins("JOIN tasks ON sub_tasks.task_id = tasks.id").
+		Joins("JOIN task_assigned_users ON tasks.id = task_assigned_users.task_id").
+		Where("tasks.organization_id = ? AND task_assigned_users.user_id = ?", membership.OrganizationID, membership.UserID).
+		Find(&subtasks).Error; err != nil {
+		return err
+	}
+
+	// Step 6: Remove the user from the assigned users of each subtask
+	for _, subtask := range subtasks {
+		if err := tx.Model(&subtask).Association("Users").Delete(&models.User{ID: membership.UserID}); err != nil {
+			return err
+		}
+	}
+
+	result := tx.Delete(&membership)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return err
+	}
+
+	return nil
 }
