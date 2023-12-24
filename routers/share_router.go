@@ -12,4 +12,5 @@ func ShareRouter(app *fiber.App) {
 	shareRoutes.Post("/project", messaging_controllers.ShareItem("project"))
 	shareRoutes.Post("/opening", messaging_controllers.ShareItem("opening"))
 	shareRoutes.Post("/profile", messaging_controllers.ShareItem("profile"))
+	shareRoutes.Post("/event", messaging_controllers.ShareItem("event"))
 }

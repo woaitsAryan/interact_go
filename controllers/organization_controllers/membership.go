@@ -63,9 +63,13 @@ func GetMemberships(c *fiber.Ctx) error {
 
 	var organization models.Organization
 	if err := initializers.DB.Where("id = ?", orgID).
-		Preload("Memberships").
+		Preload("Memberships", func(db *gorm.DB) *gorm.DB {
+			return db.Order("created_at DESC")
+		}).
 		Preload("Memberships.User").
-		Preload("Invitations").
+		Preload("Invitations", func(db *gorm.DB) *gorm.DB {
+			return db.Order("created_at DESC")
+		}).
 		Preload("Invitations.User").
 		First(&organization).Error; err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Organization ID"}
@@ -330,8 +334,8 @@ func processLeaveOrganization(membership *models.OrganizationMembership) error {
 	var subtasks []models.SubTask
 	if err := tx.
 		Joins("JOIN tasks ON sub_tasks.task_id = tasks.id").
-		Joins("JOIN task_assigned_users ON tasks.id = task_assigned_users.task_id").
-		Where("tasks.organization_id = ? AND task_assigned_users.user_id = ?", membership.OrganizationID, membership.UserID).
+		Joins("JOIN sub_task_assigned_users ON tasks.id = sub_task_assigned_users.task_id").
+		Where("tasks.organization_id = ? AND sub_task_assigned_users.user_id = ?", membership.OrganizationID, membership.UserID).
 		Find(&subtasks).Error; err != nil {
 		return err
 	}

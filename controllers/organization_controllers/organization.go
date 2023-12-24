@@ -81,6 +81,7 @@ func GetOrganizationChats(c *fiber.Ctx) error {
 		Preload("User").
 		Preload("Memberships").
 		Preload("Memberships.User").
+		Order("created_at DESC").
 		Find(&chats, "organization_id = ? ", orgID).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}

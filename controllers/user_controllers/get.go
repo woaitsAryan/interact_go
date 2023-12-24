@@ -83,6 +83,8 @@ func GetMyLikes(c *fiber.Ctx) error {
 			likeIDs = append(likeIDs, like.ProjectID.String())
 		} else if like.CommentID != nil {
 			likeIDs = append(likeIDs, like.CommentID.String())
+		} else if like.EventID != nil {
+			likeIDs = append(likeIDs, like.EventID.String())
 		}
 	}
 

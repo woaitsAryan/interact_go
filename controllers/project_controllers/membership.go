@@ -310,8 +310,8 @@ func ProcessLeaveProject(membership *models.Membership) error {
 	var subtasks []models.SubTask
 	if err := tx.
 		Joins("JOIN tasks ON sub_tasks.task_id = tasks.id").
-		Joins("JOIN task_assigned_users ON tasks.id = task_assigned_users.task_id").
-		Where("tasks.project_id = ? AND task_assigned_users.user_id = ?", membership.ProjectID, membership.UserID).
+		Joins("JOIN sub_task_assigned_users ON tasks.id = sub_task_assigned_users.task_id").
+		Where("tasks.project_id = ? AND sub_task_assigned_users.user_id = ?", membership.ProjectID, membership.UserID).
 		Find(&subtasks).Error; err != nil {
 		return err
 	}

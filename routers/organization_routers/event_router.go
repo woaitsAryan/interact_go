@@ -10,7 +10,7 @@ import (
 
 func EventRouter(app *fiber.App) {
 	app.Get("/org/:orgID/events", middlewares.Protect, organization_controllers.GetOrgEvents)
-	app.Patch("events/like/:eventID", middlewares.Protect, controllers.LikeEvent)
+	app.Get("/events/like/:eventID", middlewares.Protect, controllers.LikeEvent)
 
 	eventRoutes := app.Group("/org/:orgID/events", middlewares.Protect, middlewares.OrgRoleAuthorization(models.Senior))
 	eventRoutes.Post("/", organization_controllers.AddEvent)

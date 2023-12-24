@@ -195,7 +195,7 @@ func DeleteComment(c *fiber.Ctx) error {
 	var comment models.Comment
 	if err := initializers.DB.Preload("Post").
 		Preload("Project").
-		Preload("Organization").
+		Preload("Event").
 		First(&comment, "id = ?", parsedCommentID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
