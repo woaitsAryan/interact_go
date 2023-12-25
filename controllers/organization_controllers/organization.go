@@ -102,6 +102,7 @@ func GetOrgEvents(c *fiber.Ctx) error {
 	var events []models.Event //TODO add last edited n all fields
 	if err := paginatedDB.
 		Preload("Organization").
+		Preload("Coordinators").
 		Where("organization_id = ?", orgID).
 		Order("created_at DESC").
 		Find(&events).Error; err != nil {

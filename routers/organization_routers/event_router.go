@@ -14,6 +14,10 @@ func EventRouter(app *fiber.App) {
 
 	eventRoutes := app.Group("/org/:orgID/events", middlewares.Protect, middlewares.OrgRoleAuthorization(models.Senior))
 	eventRoutes.Post("/", organization_controllers.AddEvent)
+
+	eventRoutes.Post("/coordinators/:eventID", organization_controllers.AddEventCoordinators)
+	eventRoutes.Delete("/coordinators/:eventID", organization_controllers.RemoveEventCoordinators)
+
 	eventRoutes.Patch("/:eventID", organization_controllers.UpdateEvent)
 	eventRoutes.Delete("/:eventID", organization_controllers.DeleteEvent)
 }

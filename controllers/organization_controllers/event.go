@@ -22,6 +22,7 @@ func GetEvent(c *fiber.Ctx) error {
 	if err := initializers.DB.
 		Preload("Organization").
 		Preload("Organization.User").
+		Preload("Coordinators").
 		Where("id = ?", eventID).
 		First(&event).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
@@ -183,6 +184,88 @@ func UpdateEvent(c *fiber.Ctx) error {
 		"status":  "success",
 		"message": "Event updated successfully",
 		"event":   event,
+	})
+}
+
+func AddEventCoordinators(c *fiber.Ctx) error {
+	eventID := c.Params("eventID")
+
+	var reqBody struct {
+		UserIDs []string `json:"userIDs"`
+	}
+	if err := c.BodyParser(&reqBody); err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
+	}
+
+	var event models.Event
+	if err := initializers.DB.First(&event, "id = ?", eventID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return &fiber.Error{Code: 400, Message: "No Event of this ID found."}
+		}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	var users []models.User
+
+	for _, userID := range reqBody.UserIDs {
+		var membership models.OrganizationMembership
+		if err := initializers.DB.Preload("User").First(&membership, "user_id = ? AND organization_id=?", userID, event.OrganizationID).Error; err != nil {
+			continue
+		}
+
+		users = append(users, membership.User)
+	}
+
+	tx := initializers.DB.Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	defer func() {
+		if tx.Error != nil {
+			tx.Rollback()
+			go helpers.LogDatabaseError("Transaction rolled back due to error", tx.Error, "AddEventCoordinators")
+		}
+	}()
+
+	if err := tx.Model(&event).Association("Coordinators").Clear(); err != nil {
+		return err
+	}
+
+	event.Coordinators = users
+
+	if err := tx.Save(&event).Error; err != nil {
+		return err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Coordinators added",
+	})
+}
+
+func RemoveEventCoordinators(c *fiber.Ctx) error {
+	eventID := c.Params("eventID")
+
+	var event models.Event
+	if err := initializers.DB.First(&event, "id = ?", eventID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return &fiber.Error{Code: 400, Message: "No Event of this ID found."}
+		}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	if err := initializers.DB.Model(&event).Association("Coordinators").Clear(); err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return c.Status(204).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Coordinators removed",
 	})
 }
 

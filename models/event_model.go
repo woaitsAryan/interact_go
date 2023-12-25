@@ -28,6 +28,7 @@ type Event struct {
 	OrganizationID      uuid.UUID             `gorm:"type:uuid;not null" json:"organizationID"`
 	Organization        Organization          `gorm:"" json:"organization"`
 	CreatedAt           time.Time             `gorm:"default:current_timestamp" json:"createdAt"`
+	Coordinators        []User                `gorm:"many2many:event_coordinators" json:"coordinators"`
 	Comments            []Comment             `gorm:"foreignKey:EventID;constraint:OnDelete:CASCADE" json:"comments"`
 	Likes               []Like                `gorm:"foreignKey:EventID;constraint:OnDelete:CASCADE" json:"-"`
 	Reports             []Report              `gorm:"foreignKey:EventID;constraint:OnDelete:CASCADE" json:"-"`

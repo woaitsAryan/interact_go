@@ -20,8 +20,10 @@
     },
     "peacock.color": "#ffffff",
     "cSpell.words": [
+        "gofiber",
         "gorm",
         "hasher",
-        "SENDGRID"
+        "SENDGRID",
+        "Warnw"
     ]
 }
