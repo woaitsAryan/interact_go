@@ -341,18 +341,35 @@ func AddProject(c *fiber.Ctx) error {
 					return err
 				}
 
+				if picName == "" {
+					acceptedDefaults := map[string]struct{}{
+						"default_1.jpg": {},
+						"default_2.jpg": {},
+						"default_3.jpg": {},
+						"default_4.jpg": {},
+						"default_5.jpg": {},
+						"default_6.jpg": {},
+						"default_7.jpg": {},
+						"default_8.jpg": {},
+						"default_9.jpg": {},
+					}
+
+					if _, accepted := acceptedDefaults[reqBody.CoverPic]; accepted {
+						picName = reqBody.CoverPic
+					}
+				}
+
 				newProject := models.Project{
-					UserID:          parsedID,
-					Title:           reqBody.Title,
-					Slug:            newSlug,
-					Tagline:         reqBody.Tagline,
-					CoverPic:        picName,
-					Description:     reqBody.Description,
-					Tags:            reqBody.Tags,
-					Category:        reqBody.Category,
-					IsPrivate:       reqBody.IsPrivate,
-					Links:           reqBody.Links,
-					NumberOfMembers: 1,
+					UserID:      parsedID,
+					Title:       reqBody.Title,
+					Slug:        newSlug,
+					Tagline:     reqBody.Tagline,
+					CoverPic:    picName,
+					Description: reqBody.Description,
+					Tags:        reqBody.Tags,
+					Category:    reqBody.Category,
+					IsPrivate:   reqBody.IsPrivate,
+					Links:       reqBody.Links,
 				}
 
 				orgMemberID := c.GetRespHeader("orgMemberID")
@@ -378,6 +395,7 @@ func AddProject(c *fiber.Ctx) error {
 				}
 
 				go routines.IncrementUserProject(parsedID)
+				go routines.GetImageBlurHash(c, "coverPic", &newProject)
 
 				return c.Status(201).JSON(fiber.Map{
 					"status":  "success",
@@ -457,10 +475,12 @@ func UpdateProject(c *fiber.Ctx) error {
 		parsedOrgMemberID, _ := uuid.Parse(orgMemberID)
 		parsedOrgID, _ := uuid.Parse(orgID)
 		go routines.MarkProjectHistory(project.ID, parsedOrgMemberID, 2, nil, nil, nil, nil, nil, "")
-		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 11, nil, &project.ID, nil, nil, nil,"")
+		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 11, nil, &project.ID, nil, nil, nil, "")
 	} else {
 		go routines.MarkProjectHistory(project.ID, parsedID, 2, nil, nil, nil, nil, nil, "")
 	}
+
+	go routines.GetImageBlurHash(c, "coverPic", &project)
 
 	cache.RemoveProject(project.Slug)
 	cache.RemoveProject("-workspace--" + project.Slug)

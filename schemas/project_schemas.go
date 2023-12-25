@@ -8,6 +8,7 @@ type ProjectCreateSchema struct {
 	Description string         `json:"description" validate:"required,max=1000"`
 	Tags        pq.StringArray `json:"tags"`
 	Category    string         `json:"category" validate:"required"`
+	CoverPic    string         `json:"coverPic"`
 	IsPrivate   bool           `json:"isPrivate" validate:"boolean"`
 	Links       pq.StringArray `json:"links" validate:"dive,url"`
 }

@@ -8,4 +8,5 @@ const (
 	POST_RECOMMENDATION    = "/posts/recommend"
 	EVENT_RECOMMENDATION   = "/events/recommend"
 	EVENT_SIMILAR          = "/events/similar"
+	IMAGE_BLUR_HASH        = "/image_blur_hash"
 )
