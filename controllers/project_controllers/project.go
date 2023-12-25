@@ -341,21 +341,12 @@ func AddProject(c *fiber.Ctx) error {
 					return err
 				}
 
-				if picName == "" {
-					acceptedDefaults := map[string]struct{}{
-						"default_1.jpg": {},
-						"default_2.jpg": {},
-						"default_3.jpg": {},
-						"default_4.jpg": {},
-						"default_5.jpg": {},
-						"default_6.jpg": {},
-						"default_7.jpg": {},
-						"default_8.jpg": {},
-						"default_9.jpg": {},
-					}
+				hash := ""
 
-					if _, accepted := acceptedDefaults[reqBody.CoverPic]; accepted {
+				if picName == "" {
+					if defaultHash, found := config.AcceptedDefaultProjectHashes[reqBody.CoverPic]; found {
 						picName = reqBody.CoverPic
+						hash = defaultHash
 					}
 				}
 
@@ -365,6 +356,7 @@ func AddProject(c *fiber.Ctx) error {
 					Slug:        newSlug,
 					Tagline:     reqBody.Tagline,
 					CoverPic:    picName,
+					BlurHash:    hash,
 					Description: reqBody.Description,
 					Tags:        reqBody.Tags,
 					Category:    reqBody.Category,
@@ -395,7 +387,10 @@ func AddProject(c *fiber.Ctx) error {
 				}
 
 				go routines.IncrementUserProject(parsedID)
-				go routines.GetImageBlurHash(c, "coverPic", &newProject)
+
+				if picName != "" {
+					go routines.GetImageBlurHash(c, "coverPic", &newProject)
+				}
 
 				return c.Status(201).JSON(fiber.Map{
 					"status":  "success",
