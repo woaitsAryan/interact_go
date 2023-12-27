@@ -31,12 +31,19 @@ func GetBookMarks(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
+	var eventBookmarks []models.EventBookmark
+	err = initializers.DB.Preload("EventItems").Find(&eventBookmarks, "user_id=?", parsedUserID).Error
+	if err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
 	return c.Status(200).JSON(fiber.Map{
 		"status":           "success",
 		"message":          "",
 		"postBookmarks":    postBookmarks,
 		"projectBookmarks": projectBookmarks,
 		"openingBookmarks": openingBookmarks,
+		"eventBookmarks":   eventBookmarks,
 	})
 }
 
@@ -92,6 +99,16 @@ func GetPopulatedBookMarks(bookmarkType string) func(c *fiber.Ctx) error {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 			}
 			bookmarks = openingBookmarks
+		case "event":
+			var eventBookmarks []models.EventBookmark
+			if err := initializers.DB.
+				Preload("EventItems.Event").
+				Preload("EventItems.Event.Organization").
+				Where("user_id = ?", loggedInUserID).
+				Find(&eventBookmarks).Error; err != nil {
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			}
+			bookmarks = eventBookmarks
 		default:
 			return c.Status(400).JSON(fiber.Map{
 				"status":  "error",
@@ -152,6 +169,16 @@ func AddBookMark(bookmarkType string) func(c *fiber.Ctx) error {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 			}
 			bookmark = openingBookmark
+		case "event":
+			eventBookmark := models.EventBookmark{
+				UserID: parsedLoggedInUserID,
+				Title:  ReqBody.Title,
+			}
+			result := initializers.DB.Create(&eventBookmark)
+			if result.Error != nil {
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			}
+			bookmark = eventBookmark
 		default:
 			return c.Status(400).JSON(fiber.Map{
 				"status":  "error",
@@ -216,6 +243,18 @@ func UpdateBookMark(bookmarkType string) func(c *fiber.Ctx) error {
 			if result.Error != nil {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 			}
+		case "event":
+			var bookmark models.EventBookmark
+			if err := initializers.DB.First(&bookmark, "id=? AND user_id=?", bookmarkID, loggedInUserID).Error; err != nil {
+				return &fiber.Error{Code: 400, Message: "No Bookmark of this ID found."}
+			}
+
+			bookmark.Title = ReqBody.Title
+
+			result := initializers.DB.Save(&bookmark)
+			if result.Error != nil {
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			}
 		default:
 			return c.Status(400).JSON(fiber.Map{
 				"status":  "error",
@@ -258,6 +297,16 @@ func DeleteBookMark(bookmarkType string) func(c *fiber.Ctx) error {
 			}
 		case "opening":
 			var bookmark models.OpeningBookmark
+			if err := initializers.DB.First(&bookmark, "id=? AND user_id=?", bookmarkID, loggedInUserID).Error; err != nil {
+				return &fiber.Error{Code: 400, Message: "No Bookmark of this ID found."}
+			}
+
+			result := initializers.DB.Delete(&bookmark)
+			if result.Error != nil {
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			}
+		case "event":
+			var bookmark models.EventBookmark
 			if err := initializers.DB.First(&bookmark, "id=? AND user_id=?", bookmarkID, loggedInUserID).Error; err != nil {
 				return &fiber.Error{Code: 400, Message: "No Bookmark of this ID found."}
 			}

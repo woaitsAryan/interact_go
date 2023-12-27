@@ -49,3 +49,18 @@ type OpeningBookmarkItem struct {
 	OpeningID         uuid.UUID `gorm:"type:uuid;not null" json:"openingID"`
 	Opening           Opening   `json:"opening"`
 }
+
+type EventBookmark struct {
+	ID         uuid.UUID           `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	UserID     uuid.UUID           `gorm:"type:uuid;not null" json:"userID"`
+	Title      string              `json:"title"`
+	CreatedAt  time.Time           `gorm:"default:current_timestamp" json:"createdAt"`
+	EventItems []EventBookmarkItem `gorm:"foreignKey:EventBookmarkID;constraint:OnDelete:CASCADE" json:"eventItems"`
+}
+
+type EventBookmarkItem struct {
+	ID              uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	EventBookmarkID uuid.UUID `gorm:"type:uuid;not null" json:"eventBookmarkID"`
+	EventID         uuid.UUID `gorm:"type:uuid;not null" json:"eventID"`
+	Event           Event     `json:"event"`
+}

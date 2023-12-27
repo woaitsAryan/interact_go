@@ -21,6 +21,8 @@ func AutoMigrate() {
 		&models.ProjectBookmarkItem{},
 		&models.OpeningBookmark{},
 		&models.OpeningBookmarkItem{},
+		&models.EventBookmark{},
+		&models.EventBookmarkItem{},
 
 		&models.Message{},
 		&models.GroupChatMessage{},

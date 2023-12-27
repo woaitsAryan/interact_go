@@ -6,31 +6,20 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func BookmarkRouter(app *fiber.App) {
+func setupBookmarkRoutes(app *fiber.App, bookmarkType string) {
 	bookmarkRoutes := app.Group("/bookmarks", middlewares.Protect)
-	bookmarkRoutes.Get("/", controllers.GetBookMarks)
 
-	bookmarkRoutes.Get("/post", controllers.GetPopulatedBookMarks("post"))
-	bookmarkRoutes.Get("/project", controllers.GetPopulatedBookMarks("project"))
-	bookmarkRoutes.Get("/opening", controllers.GetPopulatedBookMarks("opening"))
+	bookmarkRoutes.Get("/"+bookmarkType, controllers.GetPopulatedBookMarks(bookmarkType))
+	bookmarkRoutes.Post("/"+bookmarkType, controllers.AddBookMark(bookmarkType))
+	bookmarkRoutes.Patch("/"+bookmarkType+"/:bookmarkID", controllers.UpdateBookMark(bookmarkType))
+	bookmarkRoutes.Delete("/"+bookmarkType+"/:bookmarkID", controllers.DeleteBookMark(bookmarkType))
+	bookmarkRoutes.Post("/"+bookmarkType+"/item/:bookmarkID", controllers.AddBookMarkItem(bookmarkType))
+	bookmarkRoutes.Delete("/"+bookmarkType+"/item/:bookmarkItemID", controllers.DeleteBookMarkItem(bookmarkType))
+}
 
-	bookmarkRoutes.Post("/post", controllers.AddBookMark("post"))
-	bookmarkRoutes.Post("/project", controllers.AddBookMark("project"))
-	bookmarkRoutes.Post("/opening", controllers.AddBookMark("opening"))
-
-	bookmarkRoutes.Patch("/post/:bookmarkID", controllers.UpdateBookMark("post"))
-	bookmarkRoutes.Patch("/project/:bookmarkID", controllers.UpdateBookMark("project"))
-	bookmarkRoutes.Patch("/opening/:bookmarkID", controllers.UpdateBookMark("opening"))
-
-	bookmarkRoutes.Delete("/post/:bookmarkID", controllers.DeleteBookMark("post"))
-	bookmarkRoutes.Delete("/project/:bookmarkID", controllers.DeleteBookMark("project"))
-	bookmarkRoutes.Delete("/opening/:bookmarkID", controllers.DeleteBookMark("opening"))
-
-	bookmarkRoutes.Post("/post/item/:bookmarkID", controllers.AddBookMarkItem("post"))
-	bookmarkRoutes.Post("/project/item/:bookmarkID", controllers.AddBookMarkItem("project"))
-	bookmarkRoutes.Post("/opening/item/:bookmarkID", controllers.AddBookMarkItem("opening"))
-
-	bookmarkRoutes.Delete("/post/item/:bookmarkItemID", controllers.DeleteBookMarkItem("post"))
-	bookmarkRoutes.Delete("/project/item/:bookmarkItemID", controllers.DeleteBookMarkItem("project"))
-	bookmarkRoutes.Delete("/opening/item/:bookmarkItemID", controllers.DeleteBookMarkItem("opening"))
+func BookmarkRouter(app *fiber.App) {
+	setupBookmarkRoutes(app, "post")
+	setupBookmarkRoutes(app, "project")
+	setupBookmarkRoutes(app, "opening")
+	setupBookmarkRoutes(app, "event")
 }

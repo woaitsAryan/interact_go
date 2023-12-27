@@ -68,6 +68,19 @@ func AddBookMarkItem(bookmarkType string) func(c *fiber.Ctx) error {
 			}
 
 			bookmarkItem = openingBookmarkItem
+
+		case "event":
+			eventBookmarkItem := models.EventBookmarkItem{
+				EventBookmarkID: parsedBookmarkID,
+				EventID:         parsedItemID,
+			}
+
+			result := initializers.DB.Create(&eventBookmarkItem)
+			if result.Error != nil {
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			}
+
+			bookmarkItem = eventBookmarkItem
 		default:
 			return c.Status(400).JSON(fiber.Map{
 				"status":  "error",
@@ -112,6 +125,17 @@ func DeleteBookMarkItem(bookmarkType string) func(c *fiber.Ctx) error {
 			}
 		case "opening":
 			var bookmarkItem models.OpeningBookmarkItem
+			err := initializers.DB.First(&bookmarkItem, "id=?", bookmarkItemID).Error
+			if err != nil {
+				return &fiber.Error{Code: 400, Message: "No Bookmark Item of this ID found."}
+			}
+
+			result := initializers.DB.Delete(&bookmarkItem)
+			if result.Error != nil {
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			}
+		case "event":
+			var bookmarkItem models.EventBookmarkItem
 			err := initializers.DB.First(&bookmarkItem, "id=?", bookmarkItemID).Error
 			if err != nil {
 				return &fiber.Error{Code: 400, Message: "No Bookmark Item of this ID found."}
