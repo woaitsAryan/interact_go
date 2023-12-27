@@ -286,8 +286,10 @@ func ProcessLeaveProject(membership *models.Membership) error {
 	}
 
 	// Step 2: Delete the group chat memberships
-	if err := tx.Delete(&memberships).Error; err != nil {
-		return err
+	for _, membership := range memberships {
+		if err := tx.Delete(&membership).Error; err != nil {
+			return err
+		}
 	}
 
 	// Step 3: Find all tasks assigned to the user in the given project

@@ -299,8 +299,10 @@ func processLeaveOrganization(membership *models.OrganizationMembership) error {
 	}
 
 	// Step 2: Delete the group chat memberships
-	if err := tx.Delete(&chatMemberships).Error; err != nil {
-		return err
+	for _, chatMembership := range chatMemberships {
+		if err := tx.Delete(&chatMembership).Error; err != nil {
+			return err
+		}
 	}
 
 	// Step 3: Retrieve the user's project memberships in the specified org
@@ -334,7 +336,7 @@ func processLeaveOrganization(membership *models.OrganizationMembership) error {
 	var subtasks []models.SubTask
 	if err := tx.
 		Joins("JOIN tasks ON sub_tasks.task_id = tasks.id").
-		Joins("JOIN sub_task_assigned_users ON tasks.id = sub_task_assigned_users.task_id").
+		Joins("JOIN sub_task_assigned_users ON tasks.id = sub_task_assigned_users.sub_task_id").
 		Where("tasks.organization_id = ? AND sub_task_assigned_users.user_id = ?", membership.OrganizationID, membership.UserID).
 		Find(&subtasks).Error; err != nil {
 		return err
