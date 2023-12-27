@@ -341,7 +341,7 @@ func AddProject(c *fiber.Ctx) error {
 					return err
 				}
 
-				hash := ""
+				hash := "no-hash"
 
 				if picName == "" {
 					if defaultHash, found := config.AcceptedDefaultProjectHashes[reqBody.CoverPic]; found {
@@ -388,9 +388,7 @@ func AddProject(c *fiber.Ctx) error {
 
 				go routines.IncrementUserProject(parsedID)
 
-				if picName != "" {
-					go routines.GetImageBlurHash(c, "coverPic", &newProject)
-				}
+				go routines.GetImageBlurHash(c, "coverPic", &newProject)
 
 				return c.Status(201).JSON(fiber.Map{
 					"status":  "success",

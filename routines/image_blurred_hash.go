@@ -7,11 +7,11 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"reflect"
 
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
-	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -21,7 +21,7 @@ type Response struct {
 	DataURL string `json:"data_url"`
 }
 
-func GetImageBlurHash(c *fiber.Ctx, fieldName string, project *models.Project) {
+func GetImageBlurHash(c *fiber.Ctx, fieldName string, model interface{}) {
 	form, err := c.MultipartForm()
 	if err != nil {
 		return
@@ -64,17 +64,15 @@ func GetImageBlurHash(c *fiber.Ctx, fieldName string, project *models.Project) {
 
 	URL := initializers.CONFIG.ML_URL + config.IMAGE_BLUR_HASH
 
-	// Create a POST request to the target URL
+	// Create a POST request to the ml URL
 	request, err := http.NewRequest("POST", URL, &buffer)
 	if err != nil {
 		helpers.LogDatabaseError("Error Getting Image Hash", err, "go_routine")
 		return
 	}
 
-	// Set the Content-Type header for the request
 	request.Header.Set("Content-Type", writer.FormDataContentType())
 
-	// Make the request
 	client := http.DefaultClient
 	response, err := client.Do(request)
 	if err != nil {
@@ -83,20 +81,25 @@ func GetImageBlurHash(c *fiber.Ctx, fieldName string, project *models.Project) {
 	}
 	defer response.Body.Close()
 
-	// Decode the response body
 	var pythonResponse Response
 	if err := json.NewDecoder(response.Body).Decode(&pythonResponse); err != nil {
 		helpers.LogDatabaseError("Error Getting Image Hash", err, "go_routine")
 		return
 	}
 
-	// Check if the status is 'success' and return the data URL
 	if pythonResponse.Status == "success" {
-		project.BlurHash = pythonResponse.DataURL
+		modelValue := reflect.ValueOf(model).Elem()
+		blurHashField := modelValue.FieldByName("BlurHash")
 
-		result := initializers.DB.Save(&project)
-		if result.Error != nil {
-			helpers.LogDatabaseError("Error while updating Project-GetImageBlurHash", result.Error, "go_routine")
+		if blurHashField.IsValid() && blurHashField.CanSet() {
+			blurHashField.SetString(pythonResponse.DataURL)
+
+			result := initializers.DB.Save(model)
+			if result.Error != nil {
+				helpers.LogDatabaseError(fmt.Sprintf("Error while updating model - GetImageBlurHash: %v", result.Error), nil, "go_routine")
+			}
+		} else {
+			helpers.LogDatabaseError("Invalid or unexported field", nil, "go_routine")
 		}
 	} else {
 		helpers.LogDatabaseError(fmt.Sprintf("Error Getting Image Hash - Error from Python Server %s", pythonResponse.Message), nil, "go_routine")

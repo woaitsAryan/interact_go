@@ -8,11 +8,12 @@ import (
 )
 
 type Event struct {
-	//TODO add event coordinators and event bookmarks
+	//TODO add event bookmarks
 	ID                  uuid.UUID             `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	Title               string                `gorm:"type:text;not null" json:"title"`
 	Tagline             string                `gorm:"type:text" json:"tagline"`
 	CoverPic            string                `gorm:"type:text; default:default.jpg" json:"coverPic"`
+	BlurHash            string                `gorm:"type:text; default:no-hash" json:"blurHash"`
 	Description         string                `gorm:"type:text;not null" json:"description"`
 	Links               pq.StringArray        `gorm:"type:text[]" json:"links"`
 	Tags                pq.StringArray        `gorm:"type:text[]" json:"tags"`

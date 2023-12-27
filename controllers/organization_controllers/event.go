@@ -92,6 +92,8 @@ func AddEvent(c *fiber.Ctx) error {
 	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 0, nil, nil, &event.ID, nil, nil, "")
 	go routines.IncrementOrgEvent(parsedOrgID)
 
+	go routines.GetImageBlurHash(c, "coverPic", &event)
+
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Event Added",
@@ -176,6 +178,8 @@ func UpdateEvent(c *fiber.Ctx) error {
 
 	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 2, nil, nil, &event.ID, nil, nil, "")
 
+	go routines.GetImageBlurHash(c, "coverPic", &event)
+
 	//TODO setup event cache
 	// cache.RemoveProject(project.Slug)
 	// cache.RemoveProject("-workspace--" + project.Slug)
@@ -188,6 +192,7 @@ func UpdateEvent(c *fiber.Ctx) error {
 }
 
 func AddEventCoordinators(c *fiber.Ctx) error {
+	//TODO org history here
 	eventID := c.Params("eventID")
 
 	var reqBody struct {

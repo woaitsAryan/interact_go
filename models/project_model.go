@@ -13,9 +13,8 @@ type Project struct {
 	Slug                string                `gorm:"type:text;not null" json:"slug"`
 	Tagline             string                `gorm:"type:text;not null" json:"tagline"`
 	CoverPic            string                `gorm:"type:text; default:default.jpg" json:"coverPic"`
-	BlurHash            string                `gorm:"type:text: default:no-hash" json:"blurHash"`
+	BlurHash            string                `gorm:"type:text; default:no-hash" json:"blurHash"`
 	Description         string                `gorm:"type:text;not null" json:"description"`
-	Page                string                `gorm:"type:text" json:"page"`
 	UserID              uuid.UUID             `gorm:"type:uuid;not null" json:"userID"`
 	User                User                  `gorm:"" json:"user"`
 	CreatedAt           time.Time             `gorm:"default:current_timestamp" json:"createdAt"`
