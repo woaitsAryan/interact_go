@@ -22,6 +22,10 @@ type Response struct {
 }
 
 func GetImageBlurHash(c *fiber.Ctx, fieldName string, model interface{}) {
+	if c == nil {
+		return
+	}
+
 	form, err := c.MultipartForm()
 	if err != nil {
 		return

@@ -9,7 +9,7 @@ import (
 )
 
 func ProjectMembershipRouter(app *fiber.App) {
-	membershipRoutes := app.Group("/org/:orgID/project/membership", middlewares.OrgProtect, middlewares.OrgRoleAuthorization(models.Manager))
+	membershipRoutes := app.Group("/org/:orgID/project/membership", middlewares.Protect, middlewares.OrgRoleAuthorization(models.Manager))
 	membershipRoutes.Post("/initial/:projectID", organization_controllers.AddProjectMembers)
 	membershipRoutes.Post("/:projectID", project_controllers.AddMember)
 	membershipRoutes.Patch("/:membershipID", project_controllers.ChangeMemberRole)
