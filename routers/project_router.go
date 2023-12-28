@@ -22,4 +22,6 @@ func ProjectRouter(app *fiber.App) {
 	projectRoutes.Get("/history/:projectID", middlewares.ProjectRoleAuthorization(models.ProjectMember), project_controllers.GetProjectHistory)
 	projectRoutes.Get("/tasks/:slug", middlewares.ProjectRoleAuthorization(models.ProjectMember), project_controllers.GetWorkSpaceProjectTasks)
 	projectRoutes.Get("/tasks/populated/:slug", middlewares.ProjectRoleAuthorization(models.ProjectMember), project_controllers.GetWorkSpacePopulatedProjectTasks)
+
+	projectRoutes.Get("/delete/:projectID", project_controllers.SendDeleteVerificationCode)
 }

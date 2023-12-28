@@ -16,7 +16,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func generateOTP(max int) string {
+func GenerateOTP(max int) string {
 	var table = [...]byte{'1', '2', '3', '4', '5', '6', '7', '8', '9', '0'}
 	b := make([]byte, max)
 	n, err := io.ReadAtLeast(rand.Reader, b, max)
@@ -33,7 +33,7 @@ func SendVerificationCode(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
-	code := generateOTP(6)
+	code := GenerateOTP(6)
 	hash, err := bcrypt.GenerateFromPassword([]byte(code), 10)
 	if err != nil {
 		go helpers.LogServerError("Error while hashing an OTP.", err, c.Path())
@@ -139,7 +139,7 @@ func SendDeleteVerificationCode(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
-	code := generateOTP(6)
+	code := GenerateOTP(6)
 	hash, err := bcrypt.GenerateFromPassword([]byte(code), 10)
 	if err != nil {
 		go helpers.LogServerError("Error while hashing an OTP.", err, c.Path())

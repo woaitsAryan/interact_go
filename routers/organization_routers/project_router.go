@@ -18,4 +18,5 @@ func ProjectRouter(app *fiber.App) {
 	projectRoutes.Get("/:slug", middlewares.OrgRoleAuthorization(models.Member), project_controllers.GetWorkSpaceProject)
 	projectRoutes.Patch("/:slug", middlewares.OrgRoleAuthorization(models.Senior), project_controllers.UpdateProject)
 	projectRoutes.Delete("/:projectID", middlewares.OrgRoleAuthorization(models.Manager), project_controllers.DeleteProject)
+	projectRoutes.Get("/delete/:projectID", middlewares.OrgRoleAuthorization(models.Manager), project_controllers.SendDeleteVerificationCode)
 }
