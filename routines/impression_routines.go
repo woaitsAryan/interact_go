@@ -33,6 +33,7 @@ func IncrementImpressions(items interface{}, getModelID func(interface{}) string
 			return
 		} else if impressionCount >= 9 {
 			itemIDs = append(itemIDs, key)
+			checkForNotification(item, modelType, impressionCount)
 			cache.ResetImpression(key)
 		} else {
 			cache.IncrementImpression(key)
@@ -121,4 +122,18 @@ func IncrementUserImpression(users []models.User) {
 
 func incrementDBUserImpressions(userID string, ch chan<- uint) {
 	incrementDBImpressions(&models.User{}, userID, ch)
+}
+
+func checkForNotification(item interface{}, modelType interface{}, cacheImpressionCount int){
+	switch modelType.(type) {
+	case *models.Post:
+		post := item.(models.Post)
+		sendImpressionNotification(post.UserID, post.UserID, &post.ID, nil, nil, 14, post.Impressions + cacheImpressionCount + 1)
+	case *models.Project:
+		project := item.(models.Project)
+		sendImpressionNotification(project.UserID, project.UserID, nil, &project.ID, nil, 15, project.Impressions + cacheImpressionCount + 1)
+	case *models.Event:
+		event := item.(models.Event)
+		sendImpressionNotification(event.Organization.UserID, event.Organization.UserID, nil, nil, &event.ID, 16, event.Impressions + cacheImpressionCount + 1)
+	}
 }
