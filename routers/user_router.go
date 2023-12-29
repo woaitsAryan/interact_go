@@ -30,8 +30,8 @@ func UserRouter(app *fiber.App) {
 	userRoutes.Patch("/update_phone_number", user_controllers.UpdatePhoneNo)
 	userRoutes.Patch("/update_resume", user_controllers.UpdateResume)
 
-	userRoutes.Get("/deactivate", auth_controllers.SendDeleteVerificationCode)
-	userRoutes.Delete("/deactivate", user_controllers.Deactivate)
+	userRoutes.Get("/deactivate", user_controllers.SendDeactivateVerificationCode)
+	userRoutes.Post("/deactivate", user_controllers.Deactivate)
 
 	userRoutes.Patch("/me", user_controllers.UpdateMe)
 	userRoutes.Patch("/me/profile", user_controllers.EditProfile)

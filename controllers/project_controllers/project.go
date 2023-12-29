@@ -489,8 +489,8 @@ func UpdateProject(c *fiber.Ctx) error {
 
 func DeleteProject(c *fiber.Ctx) error {
 	actualLoggedInUserID := c.GetRespHeader("loggedInUserID")
-	parsedProjectUserID, _ := uuid.Parse(actualLoggedInUserID);
-	if(c.Params("orgID") != ""){
+	parsedProjectUserID, _ := uuid.Parse(actualLoggedInUserID)
+	if c.Params("orgID") != "" {
 		actualLoggedInUserID = c.GetRespHeader("orgMemberID")
 	}
 	parsedLoggedInUserID, _ := uuid.Parse(actualLoggedInUserID)
@@ -505,7 +505,7 @@ func DeleteProject(c *fiber.Ctx) error {
 	}
 
 	if err := c.BodyParser(&reqBody); err != nil {
-		return &fiber.Error{Code: 400, Message: "Validation Failed"}
+		return &fiber.Error{Code: 400, Message: "OTP not provided."}
 	}
 
 	var project models.Project
@@ -521,30 +521,46 @@ func DeleteProject(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	data, err := cache.GetOtpFromCache(user.ID.String()  + "-" + project.ID.String())
+	data, err := cache.GetOtpFromCache(user.ID.String() + "-" + project.ID.String())
 	if err != nil {
-		return helpers.AppError{Code: 500, Message: config.SERVER_ERROR, Err: err}
+		return &fiber.Error{Code: 400, Message: "OTP Expired"}
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(data), []byte(reqBody.VerificationCode)); err != nil {
 		return &fiber.Error{Code: 400, Message: "Incorrect OTP"}
 	}
 
+	coverPic := project.CoverPic
+
+	tx := initializers.DB.Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	defer func() {
+		if tx.Error != nil {
+			tx.Rollback()
+			go helpers.LogDatabaseError("Transaction rolled back due to error", tx.Error, "DeleteProject")
+		}
+	}()
+
 	var messages []models.Message
-	if err := initializers.DB.Find(&messages, "project_id=?", parsedProjectID).Error; err != nil {
+	if err := tx.Find(&messages, "project_id=?", parsedProjectID).Error; err != nil {
 		if err != gorm.ErrRecordNotFound {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 		}
 	}
 	for _, message := range messages {
-		if err := initializers.DB.Delete(&message).Error; err != nil {
+		if err := tx.Delete(&message).Error; err != nil {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 		}
 	}
 
-	coverPic := project.CoverPic
+	if err := tx.Delete(&project).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
 
-	if err := initializers.DB.Delete(&project).Error; err != nil {
+	if err := tx.Commit().Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
@@ -575,8 +591,8 @@ func DeleteProject(c *fiber.Ctx) error {
 
 func SendDeleteVerificationCode(c *fiber.Ctx) error {
 	actualLoggedInUserID := c.GetRespHeader("loggedInUserID")
-	parsedProjectUserID, _ := uuid.Parse(actualLoggedInUserID);
-	if(c.Params("orgID") != ""){
+	parsedProjectUserID, _ := uuid.Parse(actualLoggedInUserID)
+	if c.Params("orgID") != "" {
 		actualLoggedInUserID = c.GetRespHeader("orgMemberID")
 	}
 	parsedLoggedInUserID, _ := uuid.Parse(actualLoggedInUserID)
@@ -610,7 +626,7 @@ func SendDeleteVerificationCode(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	err = cache.SetOtpToCache(user.ID.String() + "-" + project.ID.String(), []byte(hash))
+	err = cache.SetOtpToCache(user.ID.String()+"-"+project.ID.String(), []byte(hash))
 	if err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}

@@ -11,6 +11,7 @@ import (
 	// "github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
+//* SendGrid Mailer
 // func SendMail(subject string, body string, recipientName string, recipientEmail string, htmlStr string) error {
 // 	from := mail.NewEmail(config.SENDER_NAME, config.SENDER_EMAIL)
 // 	to := mail.NewEmail(recipientName, recipientEmail)
