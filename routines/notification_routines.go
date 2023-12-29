@@ -71,3 +71,37 @@ func MarkReadNotifications(UnreadNotifications []uuid.UUID) {
 		}
 	}
 }
+
+func sendImpressionNotification(userID uuid.UUID,
+	 							senderID uuid.UUID,
+								postID *uuid.UUID,
+								projectID *uuid.UUID,
+								eventID *uuid.UUID,
+								notifType int,
+								impressionCount int) {
+	if(!(impressionCount == 10 || impressionCount == 50 || impressionCount == 200 || impressionCount == 500 || 
+		impressionCount == 1000 || impressionCount % 1000 == 0 )){
+		return;
+	}
+
+
+	notification := models.Notification{
+		NotificationType: notifType,
+		UserID:           userID,
+		SenderID:         senderID,
+		ImpressionCount:  impressionCount,
+	}
+	if postID != nil {
+		notification.PostID = postID
+	}
+	if projectID != nil {
+		notification.ProjectID = projectID
+	}
+	if eventID != nil {
+		notification.EventID = eventID
+	}
+	result := initializers.DB.Create(&notification)
+	if result.Error != nil {
+		helpers.LogDatabaseError("Error whiling creating notification-SendImpressionNotification", result.Error, "go_routine")
+	}
+}
