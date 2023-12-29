@@ -7,18 +7,34 @@ import (
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/go-gomail/gomail"
-	"github.com/sendgrid/sendgrid-go"
-	"github.com/sendgrid/sendgrid-go/helpers/mail"
+	// "github.com/sendgrid/sendgrid-go"
+	// "github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
+// func SendMail(subject string, body string, recipientName string, recipientEmail string, htmlStr string) error {
+// 	from := mail.NewEmail(config.SENDER_NAME, config.SENDER_EMAIL)
+// 	to := mail.NewEmail(recipientName, recipientEmail)
+// 	htmlContent := body + htmlStr //TODO Email Template
+// 	message := mail.NewSingleEmail(from, subject, to, body, htmlContent)
+// 	client := sendgrid.NewSendClient(initializers.CONFIG.SENDGRID_KEY)
+// 	_, err := client.Send(message)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
+
 func SendMail(subject string, body string, recipientName string, recipientEmail string, htmlStr string) error {
-	from := mail.NewEmail(config.SENDER_NAME, config.SENDER_EMAIL)
-	to := mail.NewEmail(recipientName, recipientEmail)
 	htmlContent := body + htmlStr //TODO Email Template
-	message := mail.NewSingleEmail(from, subject, to, body, htmlContent)
-	client := sendgrid.NewSendClient(initializers.CONFIG.SENDGRID_KEY)
-	_, err := client.Send(message)
-	if err != nil {
+	m := gomail.NewMessage()
+	m.SetHeader("From", config.GMAIL_SENDER)
+	m.SetHeader("To", recipientEmail)
+	m.SetHeader("Subject", subject)
+	m.SetBody("text/html", htmlContent)
+
+	d := gomail.NewDialer("smtp.gmail.com", 587, config.GMAIL_SENDER, initializers.CONFIG.GMAIL_KEY)
+
+	if err := d.DialAndSend(m); err != nil {
 		return err
 	}
 	return nil

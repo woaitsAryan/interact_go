@@ -6,6 +6,7 @@ import (
 
 	"github.com/Pratham-Mishra04/interact/cache"
 	"github.com/Pratham-Mishra04/interact/config"
+	"github.com/Pratham-Mishra04/interact/controllers/auth_controllers"
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
@@ -16,6 +17,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/gosimple/slug"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -486,24 +488,46 @@ func UpdateProject(c *fiber.Ctx) error {
 }
 
 func DeleteProject(c *fiber.Ctx) error {
-	projectID := c.Params("projectID")
-	loggedInUserID := c.GetRespHeader("loggedInUserID")
-	parsedUserID, err := uuid.Parse(loggedInUserID)
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid User ID."}
+	actualLoggedInUserID := c.GetRespHeader("loggedInUserID")
+	parsedProjectUserID, _ := uuid.Parse(actualLoggedInUserID);
+	if(c.Params("orgID") != ""){
+		actualLoggedInUserID = c.GetRespHeader("orgMemberID")
 	}
+	parsedLoggedInUserID, _ := uuid.Parse(actualLoggedInUserID)
 
-	parsedProjectID, err := uuid.Parse(projectID)
+	parsedProjectID, err := uuid.Parse(c.Params("projectID"))
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
 	}
 
+	var reqBody struct {
+		VerificationCode string `json:"otp"`
+	}
+
+	if err := c.BodyParser(&reqBody); err != nil {
+		return &fiber.Error{Code: 400, Message: "Validation Failed"}
+	}
+
 	var project models.Project
-	if err := initializers.DB.First(&project, "id = ? AND user_id=?", parsedProjectID, loggedInUserID).Error; err != nil {
+	if err := initializers.DB.First(&project, "id = ? AND user_id=?", parsedProjectID, parsedProjectUserID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
 		}
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	var user models.User
+	if err := initializers.DB.Where("id=?", parsedLoggedInUserID).First(&user).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	data, err := cache.GetOtpFromCache(user.ID.String()  + "-" + project.ID.String())
+	if err != nil {
+		return helpers.AppError{Code: 500, Message: config.SERVER_ERROR, Err: err}
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(data), []byte(reqBody.VerificationCode)); err != nil {
+		return &fiber.Error{Code: 400, Message: "Incorrect OTP"}
 	}
 
 	var messages []models.Message
@@ -541,10 +565,58 @@ func DeleteProject(c *fiber.Ctx) error {
 	}
 
 	go routines.DeleteFromBucket(helpers.ProjectClient, coverPic)
-	go routines.DecrementUserProject(parsedUserID)
+	go routines.DecrementUserProject(parsedLoggedInUserID)
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Project deleted successfully",
+	})
+}
+
+func SendDeleteVerificationCode(c *fiber.Ctx) error {
+	actualLoggedInUserID := c.GetRespHeader("loggedInUserID")
+	parsedProjectUserID, _ := uuid.Parse(actualLoggedInUserID);
+	if(c.Params("orgID") != ""){
+		actualLoggedInUserID = c.GetRespHeader("orgMemberID")
+	}
+	parsedLoggedInUserID, _ := uuid.Parse(actualLoggedInUserID)
+
+	parsedProjectID, err := uuid.Parse(c.Params("projectID"))
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid ID"}
+	}
+
+	var user models.User
+	if err := initializers.DB.Where("id=?", parsedLoggedInUserID).First(&user).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	var project models.Project
+	if err := initializers.DB.First(&project, "id = ? AND user_id=?", parsedProjectID, parsedProjectUserID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
+		}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	code := auth_controllers.GenerateOTP(6)
+	hash, err := bcrypt.GenerateFromPassword([]byte(code), 10)
+	if err != nil {
+		go helpers.LogServerError("Error while hashing an OTP.", err, c.Path())
+		return helpers.AppError{Code: 500, Message: config.SERVER_ERROR, Err: err}
+	}
+	err = helpers.SendMail(config.VERIFICATION_DELETE_PROJECT_SUBJECT, config.VERIFICATION_EMAIL_BODY+code, user.Name, user.Email, "<div><strong>This is Valid for next 10 minutes only!</strong></div>")
+	if err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	err = cache.SetOtpToCache(user.ID.String() + "-" + project.ID.String(), []byte(hash))
+	if err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "OTP sent to registered mail",
 	})
 }

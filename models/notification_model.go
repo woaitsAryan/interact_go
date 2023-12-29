@@ -23,6 +23,9 @@ notification type:
 *11 - User assigned you a task in project
 *12 - User liked your event
 *13 - User commented on your event
+*14 - Your post got x impressions
+*15 - Your project got x impressions
+*16 - Your event got x impressions
 */
 
 type Notification struct {
@@ -42,6 +45,7 @@ type Notification struct {
 	Opening          Opening     `json:"opening"`
 	ApplicationID    *uuid.UUID  `gorm:"type:uuid" json:"applicationID"`
 	Application      Application `json:"application"`
+	ImpressionCount  int         `gorm:"default:0" json:"impressionCount"`
 	Read             bool        `gorm:"default:false" json:"isRead"`
 	CreatedAt        time.Time   `gorm:"default:current_timestamp" json:"createdAt"`
 }
