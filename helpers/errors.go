@@ -1,8 +1,6 @@
 package helpers
 
 import (
-	"fmt"
-
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/gofiber/fiber/v2"
 )
@@ -14,11 +12,10 @@ type AppError struct {
 }
 
 func (err AppError) Error() string {
-	return fmt.Sprintf("Code: %d, Message: %s, Error: %v", err.Code, err.Message, err.Err)
+	return err.Message
 }
 
 func ErrorHandler(c *fiber.Ctx, err error) error {
-
 	Code := 500
 	Message := config.SERVER_ERROR
 	Error := err

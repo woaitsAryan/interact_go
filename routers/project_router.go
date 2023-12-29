@@ -16,7 +16,6 @@ func ProjectRouter(app *fiber.App) {
 	projectRoutes.Get("/:slug", middlewares.ProjectRoleAuthorization(models.ProjectMember), project_controllers.GetWorkSpaceProject)
 	projectRoutes.Get("/chats/:projectID", middlewares.ProjectRoleAuthorization(models.ProjectEditor), project_controllers.GetWorkSpaceProjectChats)
 	projectRoutes.Patch("/:slug", middlewares.ProjectRoleAuthorization(models.ProjectEditor), project_controllers.UpdateProject)
-	projectRoutes.Delete("/:projectID", project_controllers.DeleteProject)
 	projectRoutes.Get("/like/:projectID", controllers.LikeProject)
 
 	projectRoutes.Get("/history/:projectID", middlewares.ProjectRoleAuthorization(models.ProjectMember), project_controllers.GetProjectHistory)
@@ -24,4 +23,5 @@ func ProjectRouter(app *fiber.App) {
 	projectRoutes.Get("/tasks/populated/:slug", middlewares.ProjectRoleAuthorization(models.ProjectMember), project_controllers.GetWorkSpacePopulatedProjectTasks)
 
 	projectRoutes.Get("/delete/:projectID", project_controllers.SendDeleteVerificationCode)
+	projectRoutes.Delete("/:projectID", project_controllers.DeleteProject)
 }

@@ -1,7 +1,6 @@
 package organization_routers
 
 import (
-	"github.com/Pratham-Mishra04/interact/controllers/auth_controllers"
 	"github.com/Pratham-Mishra04/interact/controllers/organization_controllers"
 	"github.com/Pratham-Mishra04/interact/controllers/user_controllers"
 	"github.com/Pratham-Mishra04/interact/middlewares"
@@ -17,6 +16,6 @@ func MiscRouter(app *fiber.App) {
 	miscRouter.Patch("/profile", middlewares.OrgRoleAuthorization(models.Senior), user_controllers.EditProfile)
 	miscRouter.Get("/history", middlewares.OrgRoleAuthorization(models.Member), organization_controllers.GetOrganizationHistory)
 
-	miscRouter.Get("/delete", auth_controllers.SendDeleteVerificationCode)
-	miscRouter.Delete("/delete", organization_controllers.DeleteOrganization)
+	miscRouter.Get("/delete", user_controllers.SendDeactivateVerificationCode)
+	miscRouter.Post("/delete", organization_controllers.DeleteOrganization)
 }
