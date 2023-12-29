@@ -226,25 +226,53 @@ func GetTrendingOrganizationalUsers(c *fiber.Ctx) error {
 	paginatedDB := API.Paginator(c)(initializers.DB)
 	searchedDB := API.Search(c, 0)(paginatedDB)
 
+	type UserWithOrganization struct {
+		models.User
+		Organization models.Organization `json:"organization"`
+	}
+
 	var users []models.User
 	if err := searchedDB.
 		Preload("Profile").
-		Where("active=?", true).
-		Where("organization_status=?", true).
-		Where("verified=?", true).
-		Where("username != email").
-		Omit("phone_no").
-		Omit("email").
-		Select("*, (0.6 * no_followers - 0.4 * no_following + 0.3 * total_no_views) / (1 + EXTRACT(EPOCH FROM age(NOW(), created_at)) / 3600 / 24 / 21) AS weighted_average"). //! 21 days
-		Order("weighted_average DESC, created_at ASC").
+		Joins("LEFT JOIN organizations ON users.id = organizations.user_id").
+		Where("users.active=?", true).
+		Where("users.organization_status=?", true).
+		Where("users.verified=?", true).
+		Where("users.username != users.email").
+		Omit("users.phone_no").
+		Omit("users.email").
+		Select(`
+        users.*,
+        organizations.number_of_members,
+        (0.6 * users.no_followers + 0.3 * users.total_no_views + 0.2 * organizations.number_of_members) / (1 + EXTRACT(EPOCH FROM age(NOW(), users.created_at)) / 3600 / 24 / 21) AS weighted_average
+    `).
+		Order("weighted_average DESC, users.created_at ASC").
 		Find(&users).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	var usersWithOrganization []UserWithOrganization
+
+	for _, user := range users {
+		var organization models.Organization
+		if err := initializers.DB.
+			Where("user_id = ?", user.ID).
+			First(&organization).Error; err != nil {
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		}
+
+		userWithOrganization := UserWithOrganization{
+			user,
+			organization,
+		}
+
+		usersWithOrganization = append(usersWithOrganization, userWithOrganization)
 	}
 
 	go routines.IncrementUserImpression(users)
 
 	return c.Status(200).JSON(fiber.Map{
 		"status": "success",
-		"users":  users,
+		"users":  usersWithOrganization,
 	})
 }
