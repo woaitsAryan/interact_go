@@ -192,8 +192,9 @@ func UpdateEvent(c *fiber.Ctx) error {
 }
 
 func AddEventCoordinators(c *fiber.Ctx) error {
-	//TODO org history here
 	eventID := c.Params("eventID")
+	parsedOrgID, _ := uuid.Parse(c.Params("orgID"))
+	parsedUserID, _ := uuid.Parse(c.GetRespHeader("orgMemberID"))
 
 	var reqBody struct {
 		UserIDs []string `json:"userIDs"`
@@ -247,6 +248,8 @@ func AddEventCoordinators(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 16, nil, nil, &event.ID, nil, nil, "")
+
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Coordinators added",
@@ -255,6 +258,8 @@ func AddEventCoordinators(c *fiber.Ctx) error {
 
 func RemoveEventCoordinators(c *fiber.Ctx) error {
 	eventID := c.Params("eventID")
+	parsedOrgID, _ := uuid.Parse(c.Params("orgID"))
+	parsedUserID, _ := uuid.Parse(c.GetRespHeader("orgMemberID"))
 
 	var event models.Event
 	if err := initializers.DB.First(&event, "id = ?", eventID).Error; err != nil {
@@ -267,6 +272,8 @@ func RemoveEventCoordinators(c *fiber.Ctx) error {
 	if err := initializers.DB.Model(&event).Association("Coordinators").Clear(); err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
+
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 17, nil, nil, &event.ID, nil, nil, "")
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",

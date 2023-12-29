@@ -221,7 +221,7 @@ func LeaveOrganization(c *fiber.Ctx) error {
 	}
 
 	go routines.DecrementOrgMember(membership.OrganizationID)
-	go routines.MarkOrganizationHistory(membership.OrganizationID, parsedOrgMemberID, 5, nil, nil, nil, nil, nil, membership.Title)
+	go routines.MarkOrganizationHistory(membership.OrganizationID, parsedOrgMemberID, 15, nil, nil, nil, nil, nil, membership.Title)
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",

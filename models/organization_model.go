@@ -63,6 +63,9 @@ history type:
 *12 - User added a task
 *13 - User deleted a task
 *14 - User edited Org Details
+*15 - Member left Org
+*16 - Event coordinators added
+*17 - Event coordinators removed
 */
 
 type OrganizationHistory struct {
