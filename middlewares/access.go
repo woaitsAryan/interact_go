@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"github.com/Pratham-Mishra04/interact/cache"
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
@@ -35,17 +36,23 @@ func checkProjectAccess(UserRole models.ProjectRole, AuthorizedRole models.Proje
 
 func OrgRoleAuthorization(Role models.OrganizationRole) func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
-		//TODO all the middleware db fetchers should be cached
 		loggedInUserID := c.GetRespHeader("loggedInUserID")
 		orgID := c.Params("orgID")
 
 		var organization models.Organization
 		if orgID != "" {
-			if err := initializers.DB.Preload("Memberships").First(&organization, "id=?", orgID).Error; err != nil {
-				if err == gorm.ErrRecordNotFound {
-					return &fiber.Error{Code: 401, Message: "No Organization of this ID Found."}
+			orgInCache, err := cache.GetOrganization("-access--" + orgID)
+			if err == nil {
+				organization = *orgInCache
+			} else {
+				if err := initializers.DB.Preload("Memberships").First(&organization, "id=?", orgID).Error; err != nil {
+					if err == gorm.ErrRecordNotFound {
+						return &fiber.Error{Code: 401, Message: "No Organization of this ID Found."}
+					}
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 				}
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+
+				go cache.SetOrganization("-access--"+organization.ID.String(), &organization)
 			}
 		} else {
 			return &fiber.Error{Code: 401, Message: "Invalid Organization ID."}
@@ -90,49 +97,57 @@ func ProjectRoleAuthorization(Role models.ProjectRole) func(*fiber.Ctx) error {
 		taskID := c.Params("taskID")
 
 		var project models.Project
-		if slug != "" {
-			if err := initializers.DB.Preload("Memberships").First(&project, "slug = ?", slug).Error; err != nil {
-				return &fiber.Error{Code: 400, Message: "Invalid Project."}
-			}
-		} else if projectID != "" {
-			if err := initializers.DB.Preload("Memberships").First(&project, "id = ?", projectID).Error; err != nil {
-				return &fiber.Error{Code: 400, Message: "Invalid Project."}
-			}
-		} else if openingID != "" {
-			var opening models.Opening
-			if err := initializers.DB.Preload("Project").Preload("Project.Memberships").First(&opening, "id = ?", openingID).Error; err != nil {
-				return &fiber.Error{Code: 400, Message: "Invalid Project."}
-			}
-			project = opening.Project
-		} else if applicationID != "" {
-			var application models.Application
-			if err := initializers.DB.Preload("Project").Preload("Project.Memberships").First(&application, "id = ?", applicationID).Error; err != nil {
-				return &fiber.Error{Code: 400, Message: "Invalid Project."}
-			}
-			project = application.Project
-		} else if chatID != "" {
-			var chat models.GroupChat
-			if err := initializers.DB.Preload("Project").Preload("Project.Memberships").First(&chat, "id = ?", chatID).Error; err != nil {
-				return &fiber.Error{Code: 400, Message: "Invalid Project."}
-			}
-			project = chat.Project
-		} else if membershipID != "" {
-			var membership models.Membership
-			if err := initializers.DB.Preload("Project").Preload("Project.Memberships").First(&membership, "id = ?", membershipID).Error; err != nil {
-				return &fiber.Error{Code: 400, Message: "Invalid Project."}
-			}
-			project = membership.Project
-		} else if taskID != "" {
-			var task models.Task
-			if err := initializers.DB.Preload("Project").Preload("Project.Memberships").First(&task, "id = ?", taskID).Error; err != nil {
-				var subTask models.SubTask
-				if err := initializers.DB.Preload("Task").Preload("Task.Project").Preload("Task.Project.Memberships").First(&subTask, "id = ?", taskID).Error; err != nil {
+
+		projectInCache, err := cache.GetProject("-access--" + projectID)
+		if err == nil {
+			project = *projectInCache
+		} else {
+			if slug != "" {
+				if err := initializers.DB.Preload("Memberships").First(&project, "slug = ?", slug).Error; err != nil {
 					return &fiber.Error{Code: 400, Message: "Invalid Project."}
 				}
-				project = subTask.Task.Project
-			} else {
-				project = task.Project
+			} else if projectID != "" {
+				if err := initializers.DB.Preload("Memberships").First(&project, "id = ?", projectID).Error; err != nil {
+					return &fiber.Error{Code: 400, Message: "Invalid Project."}
+				}
+			} else if openingID != "" {
+				var opening models.Opening
+				if err := initializers.DB.Preload("Project").Preload("Project.Memberships").First(&opening, "id = ?", openingID).Error; err != nil {
+					return &fiber.Error{Code: 400, Message: "Invalid Project."}
+				}
+				project = opening.Project
+			} else if applicationID != "" {
+				var application models.Application
+				if err := initializers.DB.Preload("Project").Preload("Project.Memberships").First(&application, "id = ?", applicationID).Error; err != nil {
+					return &fiber.Error{Code: 400, Message: "Invalid Project."}
+				}
+				project = application.Project
+			} else if chatID != "" {
+				var chat models.GroupChat
+				if err := initializers.DB.Preload("Project").Preload("Project.Memberships").First(&chat, "id = ?", chatID).Error; err != nil {
+					return &fiber.Error{Code: 400, Message: "Invalid Project."}
+				}
+				project = chat.Project
+			} else if membershipID != "" {
+				var membership models.Membership
+				if err := initializers.DB.Preload("Project").Preload("Project.Memberships").First(&membership, "id = ?", membershipID).Error; err != nil {
+					return &fiber.Error{Code: 400, Message: "Invalid Project."}
+				}
+				project = membership.Project
+			} else if taskID != "" {
+				var task models.Task
+				if err := initializers.DB.Preload("Project").Preload("Project.Memberships").First(&task, "id = ?", taskID).Error; err != nil {
+					var subTask models.SubTask
+					if err := initializers.DB.Preload("Task").Preload("Task.Project").Preload("Task.Project.Memberships").First(&subTask, "id = ?", taskID).Error; err != nil {
+						return &fiber.Error{Code: 400, Message: "Invalid Project."}
+					}
+					project = subTask.Task.Project
+				} else {
+					project = task.Project
+				}
 			}
+
+			go cache.SetProject("-access--"+project.ID.String(), &project)
 		}
 
 		if project.UserID.String() == loggedInUserID {
@@ -189,8 +204,8 @@ func GroupChatAdminAuthorization() func(*fiber.Ctx) error {
 				}
 			}
 		} else if chatMembership.GroupChat.OrganizationID != nil {
-			organisationMemberships := chatMembership.GroupChat.Organization.Memberships
-			for _, membership := range organisationMemberships {
+			organizationMemberships := chatMembership.GroupChat.Organization.Memberships
+			for _, membership := range organizationMemberships {
 				if membership.UserID.String() == loggedInUserID &&
 					(membership.Role == models.Manager) {
 					accessGranted = true

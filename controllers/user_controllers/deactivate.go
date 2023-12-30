@@ -51,6 +51,8 @@ func Deactivate(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
+	cache.RemoveUser(user.ID.String())
+
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Account Deactivated",
