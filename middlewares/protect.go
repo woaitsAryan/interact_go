@@ -5,14 +5,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Pratham-Mishra04/interact/cache"
 	"github.com/Pratham-Mishra04/interact/config"
+	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
+	"gorm.io/gorm"
 )
 
-func verifyToken(tokenString string, user *models.User, checkRedirect bool) error {
+func verifyToken(tokenString string, user *models.User, checkRedirect bool) (*models.User, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -21,59 +24,59 @@ func verifyToken(tokenString string, user *models.User, checkRedirect bool) erro
 	})
 
 	if err != nil {
-		return &fiber.Error{Code: 403, Message: config.TOKEN_EXPIRED_ERROR}
+		return nil, &fiber.Error{Code: 403, Message: config.TOKEN_EXPIRED_ERROR}
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		if float64(time.Now().Unix()) > claims["exp"].(float64) {
-			return &fiber.Error{Code: 403, Message: "Your token has expired."}
+			return nil, &fiber.Error{Code: 403, Message: "Your token has expired."}
 		}
 		if checkRedirect {
 			rdt, ok := claims["rdt"].(bool)
 			if !ok {
 				if initializers.CONFIG.ENV == initializers.DevelopmentEnv {
-					return &fiber.Error{Code: 403, Message: "Not a redirect Token."}
+					return nil, &fiber.Error{Code: 403, Message: "Not a redirect Token."}
 				} else {
-					return &fiber.Error{Code: 403, Message: "Connection Timeout, Login again"}
+					return nil, &fiber.Error{Code: 403, Message: "Connection Timeout, Login again"}
 				}
 			}
 
 			if !rdt {
 				if initializers.CONFIG.ENV == initializers.DevelopmentEnv {
-					return &fiber.Error{Code: 403, Message: "Not a redirect Token."}
+					return nil, &fiber.Error{Code: 403, Message: "Not a redirect Token."}
 				} else {
-					return &fiber.Error{Code: 403, Message: "Connection Timeout, Login again"}
+					return nil, &fiber.Error{Code: 403, Message: "Connection Timeout, Login again"}
 				}
 			}
 		}
 
-		// userID, ok := claims["sub"].(string)
-		// if !ok {
-		// 	return &fiber.Error{Code: 401, Message: "Invalid user ID in token claims."}
-		// }
+		userID, ok := claims["sub"].(string)
+		if !ok {
+			return nil, &fiber.Error{Code: 401, Message: "Invalid user ID in token claims."}
+		}
 
-		// userInCache, err := cache.GetUser(userID)
-		// if err == nil {
-		// 	user = userInCache
-		// } else {
-		// 	if err := initializers.DB.First(user, "id = ?", userID).Error; err != nil {
-		// 		if err == gorm.ErrRecordNotFound {
-		// 			return &fiber.Error{Code: 401, Message: "User of this token no longer exists"}
-		// 		}
-		// 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
-		// 	}
+		userInCache, err := cache.GetUser(userID)
+		if err == nil {
+			user = userInCache
+		} else {
+			if err := initializers.DB.First(&user, "id = ?", userID).Error; err != nil {
+				if err == gorm.ErrRecordNotFound {
+					return nil, &fiber.Error{Code: 401, Message: "User of this token no longer exists"}
+				}
+				return nil, helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			}
 
-		// 	go cache.SetUser(user.ID.String(), user)
-		// }
+			go cache.SetUser(user.ID.String(), user)
+		}
 
 		// TODO
 		// if user.PasswordChangedAt.After(time.Unix(int64(claims["crt"].(float64)), 0)) {
 		// 	return &fiber.Error{Code: 401, Message: "Password was recently changed, log in again."}
 		// }
 
-		return nil
+		return user, nil
 	} else {
-		return &fiber.Error{Code: 403, Message: "Invalid Token"}
+		return nil, &fiber.Error{Code: 403, Message: "Invalid Token"}
 	}
 }
 
@@ -87,8 +90,8 @@ func Protect(c *fiber.Ctx) error {
 
 	tokenString := tokenArr[1]
 
-	var user models.User
-	err := verifyToken(tokenString, &user, false)
+	var user *models.User
+	user, err := verifyToken(tokenString, user, false)
 	if err != nil {
 		return err
 	}
@@ -112,8 +115,8 @@ func OrgProtect(c *fiber.Ctx) error {
 
 	tokenString := tokenArr[1]
 
-	var user models.User
-	err := verifyToken(tokenString, &user, false)
+	var user *models.User
+	user, err := verifyToken(tokenString, user, false)
 	if err != nil {
 		return err
 	}
@@ -137,8 +140,8 @@ func PartialProtect(c *fiber.Ctx) error {
 
 	tokenString := tokenArr[1]
 
-	var user models.User
-	err := verifyToken(tokenString, &user, false)
+	var user *models.User
+	user, err := verifyToken(tokenString, user, false)
 	if err != nil {
 		return err
 	}
@@ -158,8 +161,8 @@ func ProtectRedirect(c *fiber.Ctx) error {
 
 	tokenString := tokenArr[1]
 
-	var user models.User
-	err := verifyToken(tokenString, &user, true)
+	var user *models.User
+	user, err := verifyToken(tokenString, user, true)
 	if err != nil {
 		return err
 	}

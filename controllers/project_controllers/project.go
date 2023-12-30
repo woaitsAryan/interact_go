@@ -337,7 +337,6 @@ func AddProject(c *fiber.Ctx) error {
 					return &fiber.Error{Code: 401, Message: config.VERIFICATION_ERROR}
 				}
 
-				// picName, err := utils.SaveFile(c, "coverPic", "project/coverPics", true, 2560, 2560)
 				picName, err := utils.UploadImage(c, "coverPic", helpers.ProjectClient, 2560, 2560)
 				if err != nil {
 					return err
@@ -389,7 +388,6 @@ func AddProject(c *fiber.Ctx) error {
 				}
 
 				go routines.IncrementUserProject(parsedID)
-
 				go routines.GetImageBlurHash(c, "coverPic", &newProject)
 
 				return c.Status(201).JSON(fiber.Map{
