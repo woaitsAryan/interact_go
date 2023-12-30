@@ -124,16 +124,16 @@ func incrementDBUserImpressions(userID string, ch chan<- uint) {
 	incrementDBImpressions(&models.User{}, userID, ch)
 }
 
-func checkForNotification(item interface{}, modelType interface{}, cacheImpressionCount int){
+func checkForNotification(item interface{}, modelType interface{}, cacheImpressionCount int) {
 	switch modelType.(type) {
 	case *models.Post:
 		post := item.(models.Post)
-		sendImpressionNotification(post.UserID, post.UserID, &post.ID, nil, nil, 14, post.Impressions + cacheImpressionCount + 1)
+		sendImpressionNotification(post.UserID, post.UserID, &post.ID, nil, nil, post.Impressions+cacheImpressionCount+1)
 	case *models.Project:
 		project := item.(models.Project)
-		sendImpressionNotification(project.UserID, project.UserID, nil, &project.ID, nil, 15, project.Impressions + cacheImpressionCount + 1)
+		sendImpressionNotification(project.UserID, project.UserID, nil, &project.ID, nil, project.Impressions+cacheImpressionCount+1)
 	case *models.Event:
 		event := item.(models.Event)
-		sendImpressionNotification(event.Organization.UserID, event.Organization.UserID, nil, nil, &event.ID, 16, event.Impressions + cacheImpressionCount + 1)
+		sendImpressionNotification(event.Organization.UserID, event.Organization.UserID, nil, nil, &event.ID, event.Impressions+cacheImpressionCount+1)
 	}
 }

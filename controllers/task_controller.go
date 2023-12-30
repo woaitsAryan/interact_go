@@ -7,6 +7,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/schemas"
+	utils "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -21,10 +22,14 @@ func GetTask(taskType string) func(c *fiber.Ctx) error {
 			return &fiber.Error{Code: 400, Message: "Invalid ID"}
 		}
 
+		searchedDB := utils.Search(c, 6)(initializers.DB)
+		paginatedDB := utils.Paginator(c)(searchedDB)
+
 		switch taskType {
 		case "task":
 			var task models.Task
-			if err := initializers.DB.
+			filteredDB := utils.Filter(c, 5)(paginatedDB)
+			if err := filteredDB.
 				Preload("User").
 				Preload("SubTask").
 				First(&task, "id = ?", parsedTaskID).Error; err != nil {
@@ -41,7 +46,8 @@ func GetTask(taskType string) func(c *fiber.Ctx) error {
 			})
 		case "subtask":
 			var task models.SubTask
-			if err := initializers.DB.
+			filteredDB := utils.Filter(c, 6)(paginatedDB)
+			if err := filteredDB.
 				Preload("User").
 				First(&task, "id = ?", parsedTaskID).Error; err != nil {
 				if err == gorm.ErrRecordNotFound {
@@ -109,6 +115,7 @@ func AddTask(taskType string) func(c *fiber.Ctx) error {
 				Tags:        reqBody.Tags,
 				Deadline:    reqBody.Dateline,
 				Users:       users,
+				Priority:    reqBody.Priority,
 			}
 
 			result := initializers.DB.Create(&task)
@@ -164,6 +171,7 @@ func AddTask(taskType string) func(c *fiber.Ctx) error {
 				Tags:           reqBody.Tags,
 				Deadline:       reqBody.Dateline,
 				Users:          users,
+				Priority:       reqBody.Priority,
 			}
 
 			result := initializers.DB.Create(&task)
@@ -171,15 +179,12 @@ func AddTask(taskType string) func(c *fiber.Ctx) error {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 			}
 
-			// projectMemberID := c.GetRespHeader("projectMemberID")
-			// parsedID, _ := uuid.Parse(projectMemberID)
-			// go routines.MarkProjectHistory(project.ID, parsedID, 9, nil, nil, nil, nil, &task.ID)
-
+			//TODO
 			// for _, user := range users {
 			// 	go routines.SendTaskNotification(user.ID, parsedID, project.ID)
 			// }
 
-			go routines.MarkOrganizationHistory(parsedOrgID,parsedOrgMemberID, 12, nil, nil, nil, &task.ID, nil, "")
+			go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 12, nil, nil, nil, &task.ID, nil, "")
 
 			return c.Status(201).JSON(fiber.Map{
 				"status":  "success",
@@ -214,6 +219,7 @@ func AddTask(taskType string) func(c *fiber.Ctx) error {
 				Tags:        reqBody.Tags,
 				Deadline:    reqBody.Dateline,
 				Users:       users,
+				Priority:    reqBody.Priority,
 			}
 
 			result := initializers.DB.Create(&subTask)
@@ -267,6 +273,9 @@ func EditTask(taskType string) func(c *fiber.Ctx) error {
 			if reqBody.Tags != nil {
 				task.Tags = reqBody.Tags
 			}
+			if reqBody.Priority != "" {
+				task.Priority = reqBody.Priority
+			}
 
 			result := initializers.DB.Save(&task)
 			if result.Error != nil {
@@ -290,6 +299,9 @@ func EditTask(taskType string) func(c *fiber.Ctx) error {
 			}
 			if reqBody.Tags != nil {
 				task.Tags = reqBody.Tags
+			}
+			if reqBody.Priority != "" {
+				task.Priority = reqBody.Priority
 			}
 
 			result := initializers.DB.Save(&task)
@@ -405,17 +417,17 @@ func DeleteTask(taskType string) func(c *fiber.Ctx) error {
 			}
 			orgMemberID := c.GetRespHeader("orgMemberID")
 			orgID := c.Params("orgID")
-			if orgMemberID != "" && orgID != ""{
+			if orgMemberID != "" && orgID != "" {
 				parsedOrgID, err := uuid.Parse(orgID)
 				if err != nil {
 					return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
 				}
-		
+
 				parsedOrgMemberID, err := uuid.Parse(orgMemberID)
 				if err != nil {
 					return &fiber.Error{Code: 400, Message: "Invalid User ID."}
 				}
-				go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID,13, nil, nil, nil, nil, nil, task.Title)
+				go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 13, nil, nil, nil, nil, nil, task.Title)
 			}
 
 		case "subtask":

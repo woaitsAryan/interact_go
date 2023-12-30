@@ -61,6 +61,38 @@ func AddTaskUser(taskType string) func(c *fiber.Ctx) error {
 			if result.Error != nil {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 			}
+		case "org_task":
+			var task models.Task
+			if err := initializers.DB.First(&task, "id = ?", taskID).Error; err != nil {
+				if err == gorm.ErrRecordNotFound {
+					return &fiber.Error{Code: 400, Message: "No Task of this ID found."}
+				}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			}
+
+			var organization models.Organization
+			if err := initializers.DB.Preload("Memberships").Preload("Memberships.User").First(&organization, "id = ?", task.OrganizationID).Error; err != nil {
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			}
+
+			check := false
+			for _, membership := range organization.Memberships {
+				if membership.UserID == user.ID {
+					check = true
+					break
+				}
+			}
+
+			if check {
+				task.Users = append(task.Users, user)
+			} else {
+				return &fiber.Error{Code: 400, Message: "User not a member of this Project."}
+			}
+
+			result := initializers.DB.Save(&task)
+			if result.Error != nil {
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			}
 		case "subtask":
 			var subTask models.SubTask
 			if err := initializers.DB.First(&subTask, "id = ?", taskID).Error; err != nil {

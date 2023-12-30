@@ -18,6 +18,6 @@ func TaskRouter(app *fiber.App) {
 	taskRoutes.Patch("/:taskID", controllers.EditTask("task"))
 	taskRoutes.Delete("/:taskID", controllers.DeleteTask("task"))
 
-	taskRoutes.Patch("/users/:taskID", controllers.AddTaskUser("task"))
+	taskRoutes.Patch("/users/:taskID", controllers.AddTaskUser("org_task"))
 	taskRoutes.Delete("/users/:taskID/:userID", controllers.RemoveTaskUser("task"))
 }

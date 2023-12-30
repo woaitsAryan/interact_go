@@ -48,6 +48,28 @@ func Filter(c *fiber.Ctx, index int) func(db *gorm.DB) *gorm.DB {
 			}
 
 			return db
+
+		//* For Tasks
+		case 5:
+			taskFields := []string{"tags", "priority", "is_completed", "deadline"}
+			//TODO assigned to a user filter
+			for _, taskField := range taskFields {
+				value := c.Query(taskField, "")
+				db = genericFilter(db, taskField, value, "tasks")
+			}
+
+			return db
+
+			//* For Sub Tasks
+		case 6:
+			taskFields := []string{"tags", "priority", "is_completed", "deadline"}
+			//TODO assigned to a user filter
+			for _, taskField := range taskFields {
+				value := c.Query(taskField, "")
+				db = genericFilter(db, taskField, value, "sub_tasks")
+			}
+
+			return db
 		default:
 			return db
 		}
@@ -104,6 +126,14 @@ func genericFilter(db *gorm.DB, field, value string, modelType string) *gorm.DB 
 			} else {
 				db = db.Joins("JOIN profiles ON users.id = profiles.user_id").Where("profiles."+field+" ILIKE ?", "%"+value+"%")
 			}
+		} else if isBooleanField(field) {
+			if field == "true" {
+				db = db.Where(modelType+"."+field+" = ?", true)
+			} else {
+				db = db.Where(modelType+"."+field+" = ?", false)
+			}
+		} else if isTimeField(field) {
+			db = db.Where(modelType+"."+field+" <= ?", field)
 		} else {
 			db = db.Where(modelType+"."+field+" ILIKE ?", "%"+value+"%")
 		}
@@ -114,6 +144,24 @@ func genericFilter(db *gorm.DB, field, value string, modelType string) *gorm.DB 
 func isArrayField(field string) bool {
 	switch field {
 	case "tags":
+		return true
+	default:
+		return false
+	}
+}
+
+func isBooleanField(field string) bool {
+	switch field {
+	case "is_completed":
+		return true
+	default:
+		return false
+	}
+}
+
+func isTimeField(field string) bool {
+	switch field {
+	case "created_at", "deadline":
 		return true
 	default:
 		return false

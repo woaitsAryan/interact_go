@@ -54,6 +54,9 @@ func Search(c *fiber.Ctx, index int) func(db *gorm.DB) *gorm.DB {
 		case 5: //* search_queries
 			db = db.Where("LOWER(query) LIKE ?", "%"+searchStr+"%")
 			return db
+		case 6: //* tasks and sub_tasks
+			db = db.Where("LOWER(title) LIKE ?", "%"+searchStr+"%")
+			return db
 		default:
 			return db
 		}
