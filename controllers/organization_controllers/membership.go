@@ -160,7 +160,6 @@ func AddMember(c *fiber.Ctx) error {
 }
 
 func RemoveMember(c *fiber.Ctx) error {
-	//TODO remove members from chats and all the required stuff on remove/leave org.
 	membershipID := c.Params("membershipID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
@@ -206,7 +205,7 @@ func LeaveOrganization(c *fiber.Ctx) error {
 	orgID := c.Params("orgID")
 	orgMemberID := c.GetRespHeader("orgMemberID")
 	parsedOrgMemberID, _ := uuid.Parse(orgMemberID)
-	
+
 	var membership models.OrganizationMembership
 	if err := initializers.DB.Preload("Organization").First(&membership, "user_id=? AND organization_id = ?", orgMemberID, orgID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -231,7 +230,7 @@ func LeaveOrganization(c *fiber.Ctx) error {
 
 func ChangeMemberRole(c *fiber.Ctx) error {
 	membershipID := c.Params("membershipID")
- 
+
 	orgChangedUserID := c.GetRespHeader("loggedInUserID")
 	loggedInUserID := c.GetRespHeader("orgMemberID")
 

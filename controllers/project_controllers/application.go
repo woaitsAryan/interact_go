@@ -151,7 +151,7 @@ func AddApplication(c *fiber.Ctx) error {
 	}
 
 	go routines.IncrementOpeningApplicationsAndSendNotification(parsedOpeningID, newApplication.ID, parsedUserID)
-	cache.RemoveProject("-workspace--" + opening.Project.Slug)
+	go cache.RemoveProject("-workspace--" + opening.Project.Slug)
 
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",
@@ -182,7 +182,7 @@ func DeleteApplication(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	cache.RemoveProject("-workspace--" + application.Project.Slug)
+	go cache.RemoveProject("-workspace--" + application.Project.Slug)
 
 	parsedOpeningID := application.OpeningID
 	go routines.DecrementOpeningApplications(parsedOpeningID)

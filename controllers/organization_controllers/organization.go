@@ -129,6 +129,7 @@ func GetOrganizationHistory(c *fiber.Ctx) error {
 		Preload("Project").
 		Preload("Task").
 		Preload("Invitation").
+		Preload("Invitation.User").
 		Where("organization_id=?", orgID).
 		Order("created_at DESC").
 		Find(&history).Error; err != nil {

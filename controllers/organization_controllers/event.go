@@ -3,6 +3,7 @@ package organization_controllers
 import (
 	"time"
 
+	"github.com/Pratham-Mishra04/interact/cache"
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
@@ -18,6 +19,16 @@ import (
 func GetEvent(c *fiber.Ctx) error {
 	eventID := c.Params("eventID")
 
+	eventInCache, err := cache.GetEvent(eventID)
+	if err == nil {
+		go routines.UpdateEventViews(eventInCache.ID)
+		return c.Status(200).JSON(fiber.Map{
+			"status":  "success",
+			"message": "",
+			"event":   eventInCache,
+		})
+	}
+
 	var event models.Event
 	if err := initializers.DB.
 		Preload("Organization").
@@ -29,6 +40,7 @@ func GetEvent(c *fiber.Ctx) error {
 	}
 
 	go routines.UpdateEventViews(event.ID)
+	go cache.SetEvent(event.ID.String(), &event)
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
@@ -91,7 +103,6 @@ func AddEvent(c *fiber.Ctx) error {
 
 	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 0, nil, nil, &event.ID, nil, nil, "")
 	go routines.IncrementOrgEvent(parsedOrgID)
-
 	go routines.GetImageBlurHash(c, "coverPic", &event)
 
 	return c.Status(201).JSON(fiber.Map{
@@ -124,7 +135,6 @@ func UpdateEvent(c *fiber.Ctx) error {
 	var reqBody schemas.EventUpdateSchema
 	c.BodyParser(&reqBody)
 
-	// picName, err := utils.SaveFile(c, "coverPic", "project/coverPics", true, 2560, 2560)
 	picName, err := utils.UploadImage(c, "coverPic", helpers.EventClient, 1920, 1080)
 	if err != nil {
 		return err
@@ -177,12 +187,8 @@ func UpdateEvent(c *fiber.Ctx) error {
 	}
 
 	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 2, nil, nil, &event.ID, nil, nil, "")
-
 	go routines.GetImageBlurHash(c, "coverPic", &event)
-
-	//TODO setup event cache
-	// cache.RemoveProject(project.Slug)
-	// cache.RemoveProject("-workspace--" + project.Slug)
+	go cache.RemoveEvent(event.ID.String())
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
@@ -249,6 +255,7 @@ func AddEventCoordinators(c *fiber.Ctx) error {
 	}
 
 	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 16, nil, nil, &event.ID, nil, nil, "")
+	go cache.RemoveEvent(event.ID.String())
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
@@ -274,6 +281,7 @@ func RemoveEventCoordinators(c *fiber.Ctx) error {
 	}
 
 	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 17, nil, nil, &event.ID, nil, nil, "")
+	go cache.RemoveEvent(event.ID.String())
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",
@@ -309,9 +317,7 @@ func DeleteEvent(c *fiber.Ctx) error {
 	go routines.DeleteFromBucket(helpers.EventClient, eventPic)
 	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 1, nil, nil, nil, nil, nil, event.Title)
 	go routines.DecrementOrgEvent(parsedOrgID)
-	//TODO setup event cache
-	// cache.RemoveProject(project.Slug)
-	// cache.RemoveProject("-workspace--" + project.Slug)
+	go cache.RemoveEvent(event.ID.String())
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",

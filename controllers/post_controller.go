@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"fmt"
-
 	"github.com/Pratham-Mishra04/interact/cache"
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
@@ -43,7 +41,7 @@ func GetPost(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
 
-	cache.SetPost(postID, &post)
+	go cache.SetPost(postID, &post)
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
@@ -268,8 +266,6 @@ func UpdatePost(c *fiber.Ctx) error {
 			}
 		}
 
-		fmt.Println(usersToRemove)
-
 		// Update the TaggedUsers with new users
 		post.TaggedUsers = newTaggedUsers
 	}
@@ -297,7 +293,7 @@ func UpdatePost(c *fiber.Ctx) error {
 		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 8, &post.ID, nil, nil, nil, nil, "")
 	}
 
-	cache.RemovePost(postID)
+	go cache.RemovePost(postID)
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",

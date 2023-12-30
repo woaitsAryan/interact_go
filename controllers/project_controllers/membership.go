@@ -106,7 +106,7 @@ func AddMember(c *fiber.Ctx) error {
 
 			invitation.User = user
 
-			cache.RemoveProject("-workspace--" + project.Slug)
+			go cache.RemoveProject("-workspace--" + project.Slug)
 
 			return c.Status(201).JSON(fiber.Map{
 				"status":     "success",
@@ -155,8 +155,8 @@ func RemoveMember(c *fiber.Ctx) error { //TODO add manager cannot remove manager
 	parsedID, _ := uuid.Parse(projectMemberID)
 	go routines.MarkProjectHistory(parsedProjectID, parsedID, 11, &parsedUserID, nil, nil, nil, nil, membership.Title)
 
-	cache.RemoveProject(projectSlug)
-	cache.RemoveProject("-workspace--" + projectSlug)
+	go cache.RemoveProject(projectSlug)
+	go cache.RemoveProject("-workspace--" + projectSlug)
 
 	go routines.DecrementProjectMember(parsedProjectID)
 
@@ -189,8 +189,8 @@ func LeaveProject(c *fiber.Ctx) error {
 
 	go routines.MarkProjectHistory(parsedProjectID, parsedUserID, 10, nil, nil, nil, nil, nil, membership.Title)
 
-	cache.RemoveProject(projectSlug)
-	cache.RemoveProject("-workspace--" + projectSlug)
+	go cache.RemoveProject(projectSlug)
+	go cache.RemoveProject("-workspace--" + projectSlug)
 
 	go routines.DecrementProjectMember(parsedProjectID)
 
@@ -257,8 +257,8 @@ func ChangeMemberRole(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
 
-	cache.RemoveProject(membership.Project.Slug)
-	cache.RemoveProject("-workspace--" + membership.Project.Slug)
+	go cache.RemoveProject(membership.Project.Slug)
+	go cache.RemoveProject("-workspace--" + membership.Project.Slug)
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",

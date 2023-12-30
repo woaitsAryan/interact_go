@@ -34,9 +34,9 @@ func IncrementImpressions(items interface{}, getModelID func(interface{}) string
 		} else if impressionCount >= 9 {
 			itemIDs = append(itemIDs, key)
 			checkForNotification(item, modelType, impressionCount)
-			cache.ResetImpression(key)
+			go cache.ResetImpression(key)
 		} else {
-			cache.IncrementImpression(key)
+			go cache.IncrementImpression(key)
 		}
 	}
 

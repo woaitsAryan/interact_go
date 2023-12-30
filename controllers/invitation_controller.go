@@ -71,8 +71,8 @@ func AcceptInvitation(c *fiber.Ctx) error {
 		}
 
 		go routines.MarkProjectHistory(*invitation.ProjectID, parsedLoggedInUserID, 1, nil, nil, nil, nil, nil, "")
-		cache.RemoveProject(invitation.Project.Slug)
-		cache.RemoveProject("-workspace--" + invitation.Project.Slug)
+		go cache.RemoveProject(invitation.Project.Slug)
+		go cache.RemoveProject("-workspace--" + invitation.Project.Slug)
 	} else if invitation.OrganizationID != nil {
 		membership := models.OrganizationMembership{
 			UserID:         invitation.UserID,
@@ -102,10 +102,10 @@ func AcceptInvitation(c *fiber.Ctx) error {
 	if result.Error != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
-	if(invitation.OrganizationID != nil){
+	if invitation.OrganizationID != nil {
 		go routines.IncrementOrgMember(*invitation.OrganizationID)
 	}
-	if(invitation.ProjectID != nil){
+	if invitation.ProjectID != nil {
 		go routines.IncrementProjectMember(*invitation.ProjectID)
 	}
 
@@ -159,7 +159,7 @@ func WithdrawInvitation(c *fiber.Ctx) error {
 		if invitation.Project.UserID.String() != loggedInUserID {
 			return &fiber.Error{Code: 403, Message: "You don't have the permission to perform this action."}
 		}
-		cache.RemoveProject("-workspace--" + invitation.Project.Slug)
+		go cache.RemoveProject("-workspace--" + invitation.Project.Slug)
 	} else if invitation.OrganizationID != nil {
 		if invitation.Organization.UserID.String() != loggedInUserID {
 			return &fiber.Error{Code: 403, Message: "You don't have the permission to perform this action."}
@@ -178,7 +178,7 @@ func WithdrawInvitation(c *fiber.Ctx) error {
 
 	orgMemberID := c.GetRespHeader("orgMemberID")
 	orgID := c.Params("orgID")
-	if orgMemberID != "" && orgID != ""{
+	if orgMemberID != "" && orgID != "" {
 		parsedOrgID, err := uuid.Parse(orgID)
 		if err != nil {
 			return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
@@ -188,9 +188,8 @@ func WithdrawInvitation(c *fiber.Ctx) error {
 		if err != nil {
 			return &fiber.Error{Code: 400, Message: "Invalid User ID."}
 		}
-		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 4, nil, nil, nil, nil, nil, invitation.Title) 
+		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 4, nil, nil, nil, nil, nil, invitation.Title)
 	}
-
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",

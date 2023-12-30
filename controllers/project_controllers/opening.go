@@ -112,8 +112,8 @@ func AddOpening(c *fiber.Ctx) error {
 	parsedID, _ := uuid.Parse(projectMemberID)
 	go routines.MarkProjectHistory(project.ID, parsedID, 3, nil, &newOpening.ID, nil, nil, nil, "")
 
-	cache.RemoveProject(project.Slug)
-	cache.RemoveProject("-workspace--" + project.Slug)
+	go cache.RemoveProject(project.Slug)
+	go cache.RemoveProject("-workspace--" + project.Slug)
 
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",
@@ -186,8 +186,8 @@ func EditOpening(c *fiber.Ctx) error {
 	parsedID, _ := uuid.Parse(projectMemberID)
 	go routines.MarkProjectHistory(opening.ProjectID, parsedID, 4, nil, &opening.ID, nil, nil, nil, "")
 
-	cache.RemoveProject(opening.Project.Slug)
-	cache.RemoveProject("-workspace--" + opening.Project.Slug)
+	go cache.RemoveProject(opening.Project.Slug)
+	go cache.RemoveProject("-workspace--" + opening.Project.Slug)
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
@@ -230,8 +230,8 @@ func DeleteOpening(c *fiber.Ctx) error {
 	parsedID, _ := uuid.Parse(projectMemberID)
 	go routines.MarkProjectHistory(projectID, parsedID, 5, nil, nil, nil, nil, nil, opening.Title)
 
-	cache.RemoveProject(projectSlug)
-	cache.RemoveProject("-workspace--" + projectSlug)
+	go cache.RemoveProject(projectSlug)
+	go cache.RemoveProject("-workspace--" + projectSlug)
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",

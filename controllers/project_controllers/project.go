@@ -65,7 +65,7 @@ func GetProject(c *fiber.Ctx) error {
 	project.Views = count
 	project.Memberships = memberships
 
-	cache.SetProject(project.Slug, &project)
+	go cache.SetProject(project.Slug, &project)
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
@@ -118,7 +118,7 @@ func GetWorkSpaceProject(c *fiber.Ctx) error {
 	project.Invitations = invitations //TODO remove if not required
 	// project.Chats = chats //TODO only include chats you are part of
 
-	cache.SetProject("-workspace--"+project.Slug, &project)
+	go cache.SetProject("-workspace--"+project.Slug, &project)
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":       "success",
@@ -477,8 +477,8 @@ func UpdateProject(c *fiber.Ctx) error {
 
 	go routines.GetImageBlurHash(c, "coverPic", &project)
 
-	cache.RemoveProject(project.Slug)
-	cache.RemoveProject("-workspace--" + project.Slug)
+	go cache.RemoveProject(project.Slug)
+	go cache.RemoveProject("-workspace--" + project.Slug)
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",

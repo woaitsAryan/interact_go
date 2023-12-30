@@ -15,7 +15,7 @@ import (
 // func SendMail(subject string, body string, recipientName string, recipientEmail string, htmlStr string) error {
 // 	from := mail.NewEmail(config.SENDER_NAME, config.SENDER_EMAIL)
 // 	to := mail.NewEmail(recipientName, recipientEmail)
-// 	htmlContent := body + htmlStr //TODO Email Template
+// 	htmlContent := body + htmlStr
 // 	message := mail.NewSingleEmail(from, subject, to, body, htmlContent)
 // 	client := sendgrid.NewSendClient(initializers.CONFIG.SENDGRID_KEY)
 // 	_, err := client.Send(message)

@@ -8,7 +8,6 @@ import (
 )
 
 type Event struct {
-	//TODO add event bookmarks
 	ID                  uuid.UUID             `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	Title               string                `gorm:"type:text;not null" json:"title"`
 	Tagline             string                `gorm:"type:text" json:"tagline"`
