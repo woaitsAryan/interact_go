@@ -126,6 +126,11 @@ type Profile struct {
 	Achievements         []Achievement  `gorm:"foreignKey:ProfileID;constraint:OnDelete:CASCADE" json:"achievements"`
 }
 
+type College struct {
+	Name string `gorm:"type:text;not null" json:"name"`
+	City string `gorm:"type:text;not null" json:"city"`
+}
+
 type Achievement struct {
 	ID        uuid.UUID      `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	ProfileID uuid.UUID      `gorm:"type:uuid;not null" json:"profileID"`

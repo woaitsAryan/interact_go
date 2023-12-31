@@ -199,6 +199,30 @@ func PopulateOpenings() {
 // 	FillDummies()
 // }
 
+func PopulateColleges() {
+	log.Println("----------------Populating Colleges----------------")
+
+	jsonFile, err := os.Open("populate/colleges.json")
+	if err != nil {
+		log.Fatalf("Failed to open the JSON file: %v", err)
+	}
+	defer jsonFile.Close()
+
+	var colleges []models.College
+	jsonDecoder := json.NewDecoder(jsonFile)
+	if err := jsonDecoder.Decode(&colleges); err != nil {
+		log.Fatalf("Failed to decode JSON: %v", err)
+	}
+
+	for _, college := range colleges {
+		if err := initializers.DB.Create(&college).Error; err != nil {
+			log.Printf("Failed to insert college: %v", err)
+		} else {
+			log.Printf("Insert college: %s", college.Name)
+		}
+	}
+}
+
 func FillDummies() {
 	PopulateProjects()
 	PopulatePosts()

@@ -14,6 +14,7 @@ func AutoMigrate() {
 		&models.Achievement{},
 		&models.ProfileView{},
 		&models.FollowFollower{},
+		&models.College{},
 
 		&models.PostBookmark{},
 		&models.PostBookmarkItem{},

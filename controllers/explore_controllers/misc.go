@@ -13,6 +13,52 @@ import (
 	"gorm.io/gorm"
 )
 
+func GetColleges(c *fiber.Ctx) error {
+	searchStr := strings.ToLower(c.Query("search", ""))
+
+	paginatedDB := API.Paginator(c)(initializers.DB)
+
+	var colleges []models.College
+	if err := paginatedDB.Where("LOWER(name) LIKE ?", "%"+searchStr+"%").Find(&colleges).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":   "success",
+		"colleges": "colleges",
+	})
+}
+
+func AddCollege(c *fiber.Ctx) error {
+	var reqBody struct {
+		Name string `json:"name"`
+		City string `json:"city"`
+	}
+	if err := c.BodyParser(&reqBody); err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
+	}
+
+	var college models.College
+	if err := initializers.DB.Where("name = ? AND city =?", reqBody.Name, reqBody.City).First(&college).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			newCollege := models.College{
+				Name: reqBody.Name,
+				City: reqBody.Name,
+			}
+
+			result := initializers.DB.Create(&newCollege)
+			if result.Error != nil {
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			}
+		}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	}
+
+	return c.Status(201).JSON(fiber.Map{
+		"status": "success",
+	})
+}
+
 func AddSearchQuery(c *fiber.Ctx) error {
 	var reqBody struct {
 		Search string `json:"search"`
