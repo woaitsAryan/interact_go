@@ -127,7 +127,7 @@ type Profile struct {
 }
 
 type College struct {
-	Name string `gorm:"type:text;not null" json:"name"`
+	Name string `gorm:"type:text;not null;unique" json:"name"`
 	City string `gorm:"type:text;not null" json:"city"`
 }
 

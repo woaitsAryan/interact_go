@@ -23,7 +23,7 @@ func init() {
 		populate.FillDummies()
 	}
 
-	populate.PopulateColleges()
+	// populate.PopulateColleges()
 
 	config.InitializeOAuthGoogle()
 }

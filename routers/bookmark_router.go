@@ -19,6 +19,8 @@ func setupBookmarkRoutes(router fiber.Router, bookmarkType string) {
 func BookmarkRouter(app *fiber.App) {
 	bookmarkRouter := app.Group("/bookmarks", middlewares.Protect)
 
+	bookmarkRouter.Get("/", controllers.GetBookMarks)
+
 	setupBookmarkRoutes(bookmarkRouter, "post")
 	setupBookmarkRoutes(bookmarkRouter, "project")
 	setupBookmarkRoutes(bookmarkRouter, "opening")

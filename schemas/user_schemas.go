@@ -24,7 +24,7 @@ type UserUpdateSchema struct {
 }
 
 type ProfileUpdateSchema struct {
-	School      *string         `json:"school" validate:"max=25"`
+	School      *string         `json:"school" validate:"max=150"`
 	Degree      *string         `json:"degree" validate:"max=25"`
 	YOG         *string         `json:"yog"`
 	Description *string         `json:"description" validate:"max=1500"`
