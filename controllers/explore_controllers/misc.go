@@ -3,6 +3,7 @@ package explore_controllers
 import (
 	"strings"
 
+	"github.com/Pratham-Mishra04/interact/cache"
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
@@ -14,6 +15,14 @@ import (
 )
 
 func GetColleges(c *fiber.Ctx) error {
+	var collegesInCache []models.College
+	if err := cache.GetFromCacheGeneric("colleges", &collegesInCache); err == nil {
+		return c.Status(200).JSON(fiber.Map{
+			"status":   "success",
+			"colleges": collegesInCache,
+		})
+	}
+
 	searchStr := strings.ToLower(c.Query("search", ""))
 
 	paginatedDB := API.Paginator(c)(initializers.DB)
@@ -22,6 +31,8 @@ func GetColleges(c *fiber.Ctx) error {
 	if err := paginatedDB.Where("LOWER(name) LIKE ?", "%"+searchStr+"%").Find(&colleges).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
 	}
+
+	go cache.SetToCacheGeneric("colleges", colleges)
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":   "success",
@@ -50,6 +61,8 @@ func AddCollege(c *fiber.Ctx) error {
 		}
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
+
+	go cache.RemoveFromCacheGeneric("colleges")
 
 	//TODO add a log of this college being added
 
