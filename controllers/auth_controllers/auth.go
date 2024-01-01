@@ -82,8 +82,6 @@ func SignUp(c *fiber.Ctx) error {
 		PasswordChangedAt: time.Now(),
 	}
 
-	newUser.Verified = true
-
 	result := initializers.DB.Create(&newUser)
 	if result.Error != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
@@ -100,7 +98,6 @@ func SignUp(c *fiber.Ctx) error {
 
 	c.Set("loggedInUserID", newUser.ID.String())
 
-	// picName, err := utils.SaveFile(c, "profilePic", "user/profilePics", false, 500, 500)
 	picName, err := utils.UploadImage(c, "profilePic", helpers.UserProfileClient, 500, 500)
 	if err != nil {
 		initializers.Logger.Warnw("Error in Saving Profile Pic on Sign Up", "Err", err)

@@ -13,3 +13,5 @@ server {
 
     listen 80; 
 }
+
+# //TODO add ml api to the docker network and block its public port to prevent public access.
