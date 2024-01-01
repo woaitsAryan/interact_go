@@ -172,11 +172,11 @@ func OAuthSignUp(c *fiber.Ctx) error {
 		}
 	}
 
-	newProfile := models.Profile{
+	profile := models.Profile{
 		UserID: user.ID,
 	}
 
-	result = initializers.DB.Create(&newProfile)
+	result = initializers.DB.Create(&profile)
 	if result.Error != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
 	}
