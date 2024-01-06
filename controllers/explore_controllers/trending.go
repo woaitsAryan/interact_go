@@ -180,6 +180,8 @@ func GetTrendingUsers(c *fiber.Ctx) error {
 		Where("active=?", true).
 		Where("active=? AND onboarding_completed=?", true, true).
 		Where("verified=?", true).
+		Where("username != email").
+		Where("organization_status=?", false).
 		Where("username != users.email").
 		Omit("phone_no").
 		Omit("users.email").
