@@ -178,7 +178,7 @@ func GetTrendingUsers(c *fiber.Ctx) error {
 	if err := filteredDB.
 		Preload("Profile").
 		Where("active=?", true).
-		Where("organization_status=?", false).
+		Where("active=? AND onboarding_completed=?", true, true).
 		Where("verified=?", true).
 		Where("username != users.email").
 		Omit("phone_no").
@@ -235,7 +235,7 @@ func GetTrendingOrganizationalUsers(c *fiber.Ctx) error {
 	if err := searchedDB.
 		Preload("Profile").
 		Joins("LEFT JOIN organizations ON users.id = organizations.user_id").
-		Where("users.active=?", true).
+		Where("users.active=? AND users.onboarding_completed=?", true, true).
 		Where("users.organization_status=?", true).
 		Where("users.verified=?", true).
 		Where("users.username != users.email").

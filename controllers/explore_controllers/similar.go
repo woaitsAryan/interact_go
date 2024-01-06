@@ -24,7 +24,7 @@ func GetSimilarUsers(c *fiber.Ctx) error {
 	var similarUsers []models.User
 	if err := initializers.DB.
 		Preload("Profile").
-		Where("active=?", true).
+		Where("active=? AND onboarding_completed=?", true, true).
 		Where("organization_status=?", false).
 		Where("id <> ?", username).
 		Where("tags && ?", pq.StringArray(user.Tags)).

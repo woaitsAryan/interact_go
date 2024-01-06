@@ -117,7 +117,7 @@ func GetRecommendedUsers(c *fiber.Ctx) error {
 	var users []models.User
 	if err := searchedDB.
 		Preload("Profile").
-		Where("active=?", true).
+		Where("active=? AND onboarding_completed=?", true, true).
 		Where("organization_status=?", false).
 		Where("verified=?", true).
 		Where("username != email").

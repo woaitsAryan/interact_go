@@ -388,7 +388,7 @@ func AddProject(c *fiber.Ctx) error {
 				}
 
 				go routines.IncrementUserProject(parsedID)
-				go routines.GetImageBlurHash(c, "coverPic", &newProject)
+				routines.GetImageBlurHash(c, "coverPic", &newProject)
 
 				return c.Status(201).JSON(fiber.Map{
 					"status":  "success",
@@ -473,7 +473,7 @@ func UpdateProject(c *fiber.Ctx) error {
 		go routines.MarkProjectHistory(project.ID, parsedID, 2, nil, nil, nil, nil, nil, "")
 	}
 
-	go routines.GetImageBlurHash(c, "coverPic", &project)
+	routines.GetImageBlurHash(c, "coverPic", &project)
 
 	go cache.RemoveProject(project.Slug)
 	go cache.RemoveProject("-workspace--" + project.Slug)
