@@ -24,7 +24,7 @@ func UpdateMe(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &fiber.Error{Code: 400, Message: "No user of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var reqBody schemas.UserUpdateSchema
@@ -91,7 +91,7 @@ func UpdateMe(c *fiber.Ctx) error {
 	}
 
 	if err := initializers.DB.Save(&user).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if *reqBody.ProfilePic != "" {
@@ -154,7 +154,7 @@ func UpdatePassword(c *fiber.Ctx) error {
 	user.PasswordChangedAt = time.Now()
 
 	if err := initializers.DB.Save(&user).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return auth_controllers.CreateSendToken(c, user, 200, "Password updated successfully")
@@ -180,14 +180,14 @@ func UpdateEmail(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &fiber.Error{Code: 400, Message: "No user of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	user.Email = reqBody.Email
 	user.Verified = false
 
 	if err := initializers.DB.Save(&user).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -216,13 +216,13 @@ func UpdatePhoneNo(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &fiber.Error{Code: 400, Message: "No user of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	user.PhoneNo = reqBody.PhoneNo
 
 	if err := initializers.DB.Save(&user).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -239,7 +239,7 @@ func UpdateResume(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &fiber.Error{Code: 400, Message: "No user of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	resumePath, err := utils.UploadResume(c)
@@ -252,7 +252,7 @@ func UpdateResume(c *fiber.Ctx) error {
 	user.Resume = resumePath
 
 	if err := initializers.DB.Save(&user).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if oldResume != "" {

@@ -16,7 +16,7 @@ func GetFeed(c *fiber.Ctx) error {
 
 	var followings []models.FollowFollower
 	if err := initializers.DB.Model(&models.FollowFollower{}).Where("follower_id = ?", loggedInUserID).Find(&followings).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	followingIDs := make([]uuid.UUID, len(followings))
@@ -37,7 +37,7 @@ func GetFeed(c *fiber.Ctx) error {
 		Where("user_id = ? OR user_id IN (?)", loggedInUserID, followingIDs).
 		Order("created_at DESC").
 		Find(&posts).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	go routines.IncrementPostImpression(posts)

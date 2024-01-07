@@ -96,7 +96,7 @@ func AddGroupChat(chatType string) func(c *fiber.Ctx) error {
 
 			result := initializers.DB.Create(&chat)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 
 			chatMembership := models.GroupChatMembership{
@@ -106,7 +106,7 @@ func AddGroupChat(chatType string) func(c *fiber.Ctx) error {
 			}
 			result = initializers.DB.Create(&chatMembership)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 
 			for _, chatUserID := range chatUserIDs {
@@ -145,7 +145,7 @@ func AddGroupChat(chatType string) func(c *fiber.Ctx) error {
 
 				var project models.Project
 				if err := initializers.DB.Where("id = ?", projectID).First(&project).Error; err != nil {
-					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 				}
 
 				picName, err := utils.UploadImage(c, "coverPic", helpers.ChatClient, 720, 720)
@@ -166,7 +166,7 @@ func AddGroupChat(chatType string) func(c *fiber.Ctx) error {
 
 				result := initializers.DB.Create(&chat)
 				if result.Error != nil {
-					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 				}
 
 				projectMemberID := c.GetRespHeader("projectMemberID")
@@ -183,7 +183,7 @@ func AddGroupChat(chatType string) func(c *fiber.Ctx) error {
 
 				var organization models.Organization
 				if err := initializers.DB.Where("id = ?", orgID).First(&organization).Error; err != nil {
-					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 				}
 
 				picName, err := utils.UploadImage(c, "coverPic", helpers.ChatClient, 720, 720)
@@ -204,7 +204,7 @@ func AddGroupChat(chatType string) func(c *fiber.Ctx) error {
 
 				result := initializers.DB.Create(&chat)
 				if result.Error != nil {
-					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 				}
 
 				// orgMemberID := c.GetRespHeader("orgMemberID")
@@ -230,12 +230,12 @@ func AddGroupChat(chatType string) func(c *fiber.Ctx) error {
 
 				result := initializers.DB.Create(&groupChatMembership)
 				if result.Error != nil {
-					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 				}
 			}
 
 			if err := initializers.DB.Preload("Memberships").Preload("Memberships.User").Find(&chat, "id = ? ", chat.ID).Error; err != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 			}
 		}
 
@@ -377,11 +377,11 @@ func RemoveGroupChatMember(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Chat of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if err := initializers.DB.Delete(&chatMembership).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(204).JSON(fiber.Map{
@@ -430,7 +430,7 @@ func EditGroupChat(c *fiber.Ctx) error {
 
 	result := initializers.DB.Save(&groupChat)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	if picName != "" {
@@ -464,7 +464,7 @@ func EditGroupChatRole(c *fiber.Ctx) error {
 	userChatMembership.Role = reqBody.Role
 	result := initializers.DB.Save(&userChatMembership)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -483,11 +483,11 @@ func DeleteGroupChat(c *fiber.Ctx) error {
 
 	var chat models.GroupChat
 	if err := initializers.DB.First(&chat, "id = ?", parsedChatID).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if err := initializers.DB.Delete(&chat).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(204).JSON(fiber.Map{
@@ -505,21 +505,21 @@ func LeaveGroupChat(c *fiber.Ctx) error { //! when no admin left then make the f
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Chat Membership of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if err := initializers.DB.Delete(&membership).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var groupChat models.GroupChat
 	if err := initializers.DB.Preload("Memberships").First(&groupChat, "id = ?", chatID).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if len(groupChat.Memberships) == 0 {
 		if err := initializers.DB.Delete(&groupChat).Error; err != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	}
 

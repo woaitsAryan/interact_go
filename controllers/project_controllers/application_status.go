@@ -25,7 +25,7 @@ func AcceptApplication(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Application of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if application.Opening.UserID.String() != loggedInUserID {
@@ -40,7 +40,7 @@ func AcceptApplication(c *fiber.Ctx) error {
 	result := initializers.DB.Save(&application)
 
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	go routines.CreateMembershipAndSendNotification(&application)
@@ -70,7 +70,7 @@ func RejectApplication(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Application of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if application.Opening.UserID.String() != loggedInUserID {
@@ -85,7 +85,7 @@ func RejectApplication(c *fiber.Ctx) error {
 	result := initializers.DB.Save(&application)
 
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	notification := models.Notification{
@@ -96,7 +96,7 @@ func RejectApplication(c *fiber.Ctx) error {
 	}
 
 	if err := initializers.DB.Create(&notification).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	projectMemberID := c.GetRespHeader("projectMemberID")
@@ -123,7 +123,7 @@ func SetApplicationReviewStatus(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Application of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if application.Opening.UserID.String() != loggedInUserID {
@@ -142,7 +142,7 @@ func SetApplicationReviewStatus(c *fiber.Ctx) error {
 	result := initializers.DB.Save(&application)
 
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{

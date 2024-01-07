@@ -32,7 +32,7 @@ func Deactivate(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &fiber.Error{Code: 400, Message: "No user of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	data, err := cache.GetOtpFromCache(user.ID.String())
@@ -48,7 +48,7 @@ func Deactivate(c *fiber.Ctx) error {
 	user.DeactivatedAt = time.Now()
 
 	if err := initializers.DB.Save(&user).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	cache.RemoveUser(user.ID.String())
@@ -72,16 +72,16 @@ func SendDeactivateVerificationCode(c *fiber.Ctx) error {
 
 	var user models.User
 	if err := initializers.DB.Where("id=?", parsedLoggedInUserID).First(&user).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 	err = helpers.SendMail(config.VERIFICATION_DELETE_SUBJECT, config.VERIFICATION_EMAIL_BODY+code, user.Name, user.Email, "<div><strong>This is Valid for next 10 minutes only!</strong></div>")
 	if err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	err = cache.SetOtpToCache(user.ID.String(), []byte(hash))
 	if err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{

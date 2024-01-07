@@ -36,7 +36,7 @@ func GetEvent(c *fiber.Ctx) error {
 		Preload("Coordinators").
 		Where("id = ?", eventID).
 		First(&event).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	go routines.UpdateEventViews(event.ID)
@@ -98,12 +98,12 @@ func AddEvent(c *fiber.Ctx) error {
 
 	result := initializers.DB.Create(&event)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 0, nil, nil, &event.ID, nil, nil, "")
 	go routines.IncrementOrgEvent(parsedOrgID)
-	go routines.GetImageBlurHash(c, "coverPic", &event)
+	routines.GetImageBlurHash(c, "coverPic", &event)
 
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",
@@ -129,7 +129,7 @@ func UpdateEvent(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Event of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var reqBody schemas.EventUpdateSchema
@@ -179,7 +179,7 @@ func UpdateEvent(c *fiber.Ctx) error {
 	}
 
 	if err := initializers.DB.Save(&event).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if reqBody.CoverPic != "" {
@@ -187,7 +187,7 @@ func UpdateEvent(c *fiber.Ctx) error {
 	}
 
 	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 2, nil, nil, &event.ID, nil, nil, "")
-	go routines.GetImageBlurHash(c, "coverPic", &event)
+	routines.GetImageBlurHash(c, "coverPic", &event)
 	go cache.RemoveEvent(event.ID.String())
 
 	return c.Status(200).JSON(fiber.Map{
@@ -214,7 +214,7 @@ func AddEventCoordinators(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Event of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var users []models.User
@@ -251,7 +251,7 @@ func AddEventCoordinators(c *fiber.Ctx) error {
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 16, nil, nil, &event.ID, nil, nil, "")
@@ -273,11 +273,11 @@ func RemoveEventCoordinators(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Event of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if err := initializers.DB.Model(&event).Association("Coordinators").Clear(); err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 17, nil, nil, &event.ID, nil, nil, "")
@@ -305,13 +305,13 @@ func DeleteEvent(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Event of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	eventPic := event.CoverPic
 
 	if err := initializers.DB.Delete(&event).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	go routines.DeleteFromBucket(helpers.EventClient, eventPic)

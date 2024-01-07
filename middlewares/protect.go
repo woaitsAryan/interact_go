@@ -63,7 +63,7 @@ func verifyToken(tokenString string, user *models.User, checkRedirect bool) (*mo
 				if err == gorm.ErrRecordNotFound {
 					return nil, &fiber.Error{Code: 401, Message: "User of this token no longer exists"}
 				}
-				return nil, helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+				return nil, helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 			}
 
 			go cache.SetUser(user.ID.String(), user)

@@ -56,7 +56,7 @@ func GetTrendingPosts(c *fiber.Ctx) error {
 			Select("*, posts.id, posts.created_at, (2 * no_likes + no_comments + 5 * no_shares) / (1 + EXTRACT(EPOCH FROM age(NOW(), posts.created_at)) / 3600 / 24 / 7) AS weighted_average"). //! 7 days
 			Order("weighted_average DESC, posts.created_at ASC").
 			Find(&posts).Error; err != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	} else {
 		if err := searchedDB.
@@ -69,7 +69,7 @@ func GetTrendingPosts(c *fiber.Ctx) error {
 			Select("*, posts.id, posts.created_at, (2 * no_likes + no_comments + 5 * no_shares) / (1 + EXTRACT(EPOCH FROM age(NOW(), posts.created_at)) / 3600 / 24 / 7) AS weighted_average"). //! 7 days
 			Order("weighted_average DESC, posts.created_at ASC").
 			Find(&posts).Error; err != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	}
 
@@ -99,7 +99,7 @@ func GetTrendingOpenings(c *fiber.Ctx) error {
 			Select("openings.*, (projects.total_no_views * 0.5 + openings.no_of_applications * 0.3) / (1 + EXTRACT(EPOCH FROM age(NOW(), openings.created_at)) / 3600 / 24 / 15) AS t_ratio").
 			Order("t_ratio DESC").
 			Find(&openings).Error; err != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	} else {
 		searchedDB := API.Search(c, 3)(paginatedDB)
@@ -111,7 +111,7 @@ func GetTrendingOpenings(c *fiber.Ctx) error {
 			Select("openings.*, (projects.total_no_views * 0.5 + openings.no_of_applications * 0.3) / (1 + EXTRACT(EPOCH FROM age(NOW(), openings.created_at)) / 3600 / 24 / 15) AS t_ratio").
 			Order("t_ratio DESC").
 			Find(&openings).Error; err != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	}
 	var filteredOpenings []models.Opening
@@ -147,7 +147,7 @@ func GetTrendingProjects(c *fiber.Ctx) error {
 			Order("weighted_average DESC").
 			Where("user_id <> ? AND is_private = ?", loggedInUserID, false).
 			Find(&projects).Error; err != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	} else {
 		if err := filteredDB.
@@ -157,7 +157,7 @@ func GetTrendingProjects(c *fiber.Ctx) error {
 			Order("weighted_average DESC").
 			Where("is_private = ?", false).
 			Find(&projects).Error; err != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	}
 
@@ -177,16 +177,17 @@ func GetTrendingUsers(c *fiber.Ctx) error {
 	var users []models.User
 	if err := filteredDB.
 		Preload("Profile").
-		Where("active=?", true).
-		Where("organization_status=?", false).
+		Where("active=? AND onboarding_completed=?", true, true).
 		Where("verified=?", true).
+		Where("username != email").
+		Where("organization_status=?", false).
 		Where("username != users.email").
 		Omit("phone_no").
 		Omit("users.email").
 		Select("*, (0.6 * no_followers - 0.4 * no_following + 0.3 * total_no_views) / (1 + EXTRACT(EPOCH FROM age(NOW(), created_at)) / 3600 / 24 / 21) AS weighted_average"). //! 21 days
 		Order("weighted_average DESC, created_at ASC").
 		Find(&users).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	go routines.IncrementUserImpression(users)
@@ -211,7 +212,7 @@ func GetTrendingEvents(c *fiber.Ctx) error {
 		Select("*, (no_views + 3 * no_likes + 2 * no_comments + 5 * no_shares) AS weighted_average").
 		Order("weighted_average DESC").
 		Find(&events).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	go routines.IncrementEventImpression(events)
@@ -235,7 +236,7 @@ func GetTrendingOrganizationalUsers(c *fiber.Ctx) error {
 	if err := searchedDB.
 		Preload("Profile").
 		Joins("LEFT JOIN organizations ON users.id = organizations.user_id").
-		Where("users.active=?", true).
+		Where("users.active=? AND users.onboarding_completed=?", true, true).
 		Where("users.organization_status=?", true).
 		Where("users.verified=?", true).
 		Where("users.username != users.email").
@@ -248,7 +249,7 @@ func GetTrendingOrganizationalUsers(c *fiber.Ctx) error {
     `).
 		Order("weighted_average DESC, users.created_at ASC").
 		Find(&users).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var usersWithOrganization []UserWithOrganization
@@ -258,7 +259,7 @@ func GetTrendingOrganizationalUsers(c *fiber.Ctx) error {
 		if err := initializers.DB.
 			Where("user_id = ?", user.ID).
 			First(&organization).Error; err != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 
 		userWithOrganization := UserWithOrganization{

@@ -16,25 +16,25 @@ func GetBookMarks(c *fiber.Ctx) error {
 	var postBookmarks []models.PostBookmark
 	err := initializers.DB.Preload("PostItems").Find(&postBookmarks, "user_id=?", parsedUserID).Error
 	if err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var projectBookmarks []models.ProjectBookmark
 	err = initializers.DB.Preload("ProjectItems").Find(&projectBookmarks, "user_id=?", parsedUserID).Error
 	if err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var openingBookmarks []models.OpeningBookmark
 	err = initializers.DB.Preload("OpeningItems").Find(&openingBookmarks, "user_id=?", parsedUserID).Error
 	if err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var eventBookmarks []models.EventBookmark
 	err = initializers.DB.Preload("EventItems").Find(&eventBookmarks, "user_id=?", parsedUserID).Error
 	if err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -64,7 +64,7 @@ func GetPopulatedBookMarks(bookmarkType string) func(c *fiber.Ctx) error {
 				Preload("PostItems.Post.TaggedUsers").
 				Where("user_id = ?", loggedInUserID).
 				Find(&postBookmarks).Error; err != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 			}
 			bookmarks = postBookmarks
 		case "project":
@@ -73,7 +73,7 @@ func GetPopulatedBookMarks(bookmarkType string) func(c *fiber.Ctx) error {
 				Preload("ProjectItems.Project").
 				Where("user_id = ?", loggedInUserID).
 				Find(&projectBookmarks).Error; err != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 			}
 			var filteredBookmarks []models.ProjectBookmark
 
@@ -96,7 +96,7 @@ func GetPopulatedBookMarks(bookmarkType string) func(c *fiber.Ctx) error {
 				Preload("OpeningItems.Opening.Project").
 				Where("user_id = ?", loggedInUserID).
 				Find(&openingBookmarks).Error; err != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 			}
 			bookmarks = openingBookmarks
 		case "event":
@@ -106,7 +106,7 @@ func GetPopulatedBookMarks(bookmarkType string) func(c *fiber.Ctx) error {
 				Preload("EventItems.Event.Organization").
 				Where("user_id = ?", loggedInUserID).
 				Find(&eventBookmarks).Error; err != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 			}
 			bookmarks = eventBookmarks
 		default:
@@ -146,7 +146,7 @@ func AddBookMark(bookmarkType string) func(c *fiber.Ctx) error {
 			}
 			result := initializers.DB.Create(&postBookmark)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 			bookmark = postBookmark
 		case "project":
@@ -156,7 +156,7 @@ func AddBookMark(bookmarkType string) func(c *fiber.Ctx) error {
 			}
 			result := initializers.DB.Create(&projectBookmark)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 			bookmark = projectBookmark
 		case "opening":
@@ -166,7 +166,7 @@ func AddBookMark(bookmarkType string) func(c *fiber.Ctx) error {
 			}
 			result := initializers.DB.Create(&openingBookmark)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 			bookmark = openingBookmark
 		case "event":
@@ -176,7 +176,7 @@ func AddBookMark(bookmarkType string) func(c *fiber.Ctx) error {
 			}
 			result := initializers.DB.Create(&eventBookmark)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 			bookmark = eventBookmark
 		default:
@@ -217,7 +217,7 @@ func UpdateBookMark(bookmarkType string) func(c *fiber.Ctx) error {
 
 			result := initializers.DB.Save(&bookmark)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 		case "project":
 			var bookmark models.ProjectBookmark
@@ -229,7 +229,7 @@ func UpdateBookMark(bookmarkType string) func(c *fiber.Ctx) error {
 
 			result := initializers.DB.Save(&bookmark)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 		case "opening":
 			var bookmark models.OpeningBookmark
@@ -241,7 +241,7 @@ func UpdateBookMark(bookmarkType string) func(c *fiber.Ctx) error {
 
 			result := initializers.DB.Save(&bookmark)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 		case "event":
 			var bookmark models.EventBookmark
@@ -253,7 +253,7 @@ func UpdateBookMark(bookmarkType string) func(c *fiber.Ctx) error {
 
 			result := initializers.DB.Save(&bookmark)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 		default:
 			return c.Status(400).JSON(fiber.Map{
@@ -283,7 +283,7 @@ func DeleteBookMark(bookmarkType string) func(c *fiber.Ctx) error {
 
 			result := initializers.DB.Delete(&bookmark)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 		case "project":
 			var bookmark models.ProjectBookmark
@@ -293,7 +293,7 @@ func DeleteBookMark(bookmarkType string) func(c *fiber.Ctx) error {
 
 			result := initializers.DB.Delete(&bookmark)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 		case "opening":
 			var bookmark models.OpeningBookmark
@@ -303,7 +303,7 @@ func DeleteBookMark(bookmarkType string) func(c *fiber.Ctx) error {
 
 			result := initializers.DB.Delete(&bookmark)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 		case "event":
 			var bookmark models.EventBookmark
@@ -313,7 +313,7 @@ func DeleteBookMark(bookmarkType string) func(c *fiber.Ctx) error {
 
 			result := initializers.DB.Delete(&bookmark)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 		default:
 			return c.Status(400).JSON(fiber.Map{

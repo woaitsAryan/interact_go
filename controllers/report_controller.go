@@ -92,7 +92,7 @@ func AddReport(c *fiber.Ctx) error {
 
 	result := initializers.DB.Create(&report)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	go routines.LogReport(&report)

@@ -48,14 +48,14 @@ func SendResetURL(c *fiber.Ctx) error {
 	user.PasswordResetTokenExpires = expirationTime
 	result := initializers.DB.Save(&user)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	resetURL := initializers.CONFIG.FRONTEND_URL + "/account_recovery?uid=" + user.ID.String() + "&token=" + code
 
 	err = helpers.SendMail("Account Recovery | Interact", "Hi "+user.Username+"(your username)"+", "+"Reset your Password on this URL: "+resetURL, user.Name, user.Email, "<div><strong>This is Valid for next 10 minutes only!</strong></div>")
 	if err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -100,7 +100,7 @@ func ResetPassword(c *fiber.Ctx) error {
 
 	result := initializers.DB.Save(&user)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	return c.Status(200).JSON(fiber.Map{

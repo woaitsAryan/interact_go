@@ -49,7 +49,7 @@ func OrgRoleAuthorization(Role models.OrganizationRole) func(*fiber.Ctx) error {
 					if err == gorm.ErrRecordNotFound {
 						return &fiber.Error{Code: 401, Message: "No Organization of this ID Found."}
 					}
-					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 				}
 
 				go cache.SetOrganization("-access--"+organization.ID.String(), &organization)
@@ -164,7 +164,7 @@ func ProjectRoleAuthorization(Role models.ProjectRole) func(*fiber.Ctx) error {
 					return &fiber.Error{Code: 403, Message: "You don't have the Permission to perform this action."}
 				}
 				c.Set("projectMemberID", c.GetRespHeader("loggedInUserID"))
-				c.Set("loggedInUserID", membership.Project.UserID.String())
+				c.Set("loggedInUserID", project.UserID.String())
 				check = true
 				break
 			}

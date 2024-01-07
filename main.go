@@ -37,12 +37,14 @@ func main() {
 
 	app.Use(helmet.New())
 	app.Use(config.CORS())
-	app.Use(config.RATE_LIMITER())
+	// app.Use(config.RATE_LIMITER())
 	// app.Use(config.API_CHECKER)
 
-	if initializers.CONFIG.ENV == initializers.DevelopmentEnv {
-		app.Use(logger.New())
-	}
+	// if initializers.CONFIG.ENV == initializers.DevelopmentEnv {
+	// 	app.Use(logger.New())
+	// }
+
+	app.Use(logger.New())
 
 	app.Static("/", "./public")
 

@@ -25,7 +25,7 @@ func AddTaskUser(taskType string) func(c *fiber.Ctx) error {
 			if err == gorm.ErrRecordNotFound {
 				return &fiber.Error{Code: 400, Message: "No User of this ID found."}
 			}
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 
 		switch taskType {
@@ -35,12 +35,12 @@ func AddTaskUser(taskType string) func(c *fiber.Ctx) error {
 				if err == gorm.ErrRecordNotFound {
 					return &fiber.Error{Code: 400, Message: "No Task of this ID found."}
 				}
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 			}
 
 			var project models.Project
 			if err := initializers.DB.Preload("Memberships").Preload("Memberships.User").First(&project, "id = ?", task.ProjectID).Error; err != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 			}
 
 			check := false
@@ -59,7 +59,7 @@ func AddTaskUser(taskType string) func(c *fiber.Ctx) error {
 
 			result := initializers.DB.Save(&task)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 		case "org_task":
 			var task models.Task
@@ -67,12 +67,12 @@ func AddTaskUser(taskType string) func(c *fiber.Ctx) error {
 				if err == gorm.ErrRecordNotFound {
 					return &fiber.Error{Code: 400, Message: "No Task of this ID found."}
 				}
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 			}
 
 			var organization models.Organization
 			if err := initializers.DB.Preload("Memberships").Preload("Memberships.User").First(&organization, "id = ?", task.OrganizationID).Error; err != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 			}
 
 			check := false
@@ -91,7 +91,7 @@ func AddTaskUser(taskType string) func(c *fiber.Ctx) error {
 
 			result := initializers.DB.Save(&task)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 		case "subtask":
 			var subTask models.SubTask
@@ -99,12 +99,12 @@ func AddTaskUser(taskType string) func(c *fiber.Ctx) error {
 				if err == gorm.ErrRecordNotFound {
 					return &fiber.Error{Code: 400, Message: "No Sub Task of this ID found."}
 				}
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 			}
 
 			var task models.Task
 			if err := initializers.DB.Preload("Users").First(&task, "id = ?", subTask.TaskID).Error; err != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 			}
 
 			check := false
@@ -123,7 +123,7 @@ func AddTaskUser(taskType string) func(c *fiber.Ctx) error {
 
 			result := initializers.DB.Save(&subTask)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 		}
 
@@ -156,7 +156,7 @@ func RemoveTaskUser(taskType string) func(c *fiber.Ctx) error {
 			if err == gorm.ErrRecordNotFound {
 				return &fiber.Error{Code: 400, Message: "No User of this ID found."}
 			}
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 
 		switch taskType {
@@ -166,7 +166,7 @@ func RemoveTaskUser(taskType string) func(c *fiber.Ctx) error {
 				if err == gorm.ErrRecordNotFound {
 					return &fiber.Error{Code: 400, Message: "No Task of this ID found."}
 				}
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 			}
 
 			userIndex := GetUserIndex(userID, task.Users)
@@ -177,12 +177,12 @@ func RemoveTaskUser(taskType string) func(c *fiber.Ctx) error {
 			task.Users = append(task.Users[:userIndex], task.Users[userIndex+1:]...)
 			result := initializers.DB.Save(&task)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 
 			// Delete the user from the task_assigned_users table
 			if err := initializers.DB.Model(&task).Association("Users").Delete(&user); err != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 			}
 		case "subtask":
 			var task models.SubTask
@@ -190,7 +190,7 @@ func RemoveTaskUser(taskType string) func(c *fiber.Ctx) error {
 				if err == gorm.ErrRecordNotFound {
 					return &fiber.Error{Code: 400, Message: "No Sub Task of this ID found."}
 				}
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 			}
 
 			userIndex := GetUserIndex(userID, task.Users)
@@ -202,12 +202,12 @@ func RemoveTaskUser(taskType string) func(c *fiber.Ctx) error {
 
 			result := initializers.DB.Save(&task)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 
 			// Delete the user from the subtask_assigned_users table
 			if err := initializers.DB.Model(&task).Association("Users").Delete(&user); err != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 			}
 		}
 

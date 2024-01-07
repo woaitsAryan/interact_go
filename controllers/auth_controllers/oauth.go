@@ -136,16 +136,7 @@ func GoogleCallback(c *fiber.Ctx) error {
 
 				result := initializers.DB.Create(&newUser)
 				if result.Error != nil {
-					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
-				}
-
-				profile := models.Profile{
-					UserID: newUser.ID,
-				}
-
-				result = initializers.DB.Create(&profile)
-				if result.Error != nil {
-					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 				}
 
 				oauth := models.OAuth{
@@ -156,7 +147,7 @@ func GoogleCallback(c *fiber.Ctx) error {
 
 				result = initializers.DB.Create(&oauth)
 				if result.Error != nil {
-					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 				}
 
 				return RedirectToSignUp(c, newUser)

@@ -33,7 +33,7 @@ func GetNonMembers(c *fiber.Ctx) error {
 
 	var users []models.User
 	if err := searchedDB.Where("id NOT IN (?)", membershipUserIDs).Limit(10).Find(&users).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -64,7 +64,7 @@ func AddMember(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No User of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var project models.Project
@@ -72,7 +72,7 @@ func AddMember(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if reqBody.UserID == project.UserID.String() {
@@ -97,7 +97,7 @@ func AddMember(c *fiber.Ctx) error {
 			result := initializers.DB.Create(&invitation)
 
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 
 			projectMemberID := c.GetRespHeader("projectMemberID")
@@ -115,7 +115,7 @@ func AddMember(c *fiber.Ctx) error {
 				"invitation": invitation,
 			})
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	} else {
 		return &fiber.Error{Code: 400, Message: "User is a already a collaborator of this project."}
 	}
@@ -136,7 +136,7 @@ func RemoveMember(c *fiber.Ctx) error { //TODO add manager cannot remove manager
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Membership of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if membership.Project.UserID != parsedLoggedInUserID {
@@ -145,7 +145,7 @@ func RemoveMember(c *fiber.Ctx) error { //TODO add manager cannot remove manager
 
 	err = ProcessLeaveProject(&membership)
 	if err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	parsedUserID := membership.UserID
@@ -176,12 +176,12 @@ func LeaveProject(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Membership of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	err := ProcessLeaveProject(&membership)
 	if err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	parsedUserID := membership.UserID
@@ -223,7 +223,7 @@ func ChangeMemberRole(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Membership of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if parsedLoggedInUserID != membership.Project.UserID {
@@ -232,7 +232,7 @@ func ChangeMemberRole(c *fiber.Ctx) error {
 			if err == gorm.ErrRecordNotFound {
 				return &fiber.Error{Code: 403, Message: "You are not a part of this project."}
 			}
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 
 		if updatingUserMembership.Role != models.ProjectManager {
@@ -254,7 +254,7 @@ func ChangeMemberRole(c *fiber.Ctx) error {
 
 	result := initializers.DB.Save(&membership)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	go cache.RemoveProject(membership.Project.Slug)

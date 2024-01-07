@@ -27,7 +27,7 @@ func GetOrganization(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Organization of this ID Found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -45,7 +45,7 @@ func GetOrganizationTasks(c *fiber.Ctx) error {
 		Preload("Memberships").
 		Preload("Memberships.User").
 		Find(&organization, "id = ? ", orgID).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var tasks []models.Task
@@ -54,7 +54,7 @@ func GetOrganizationTasks(c *fiber.Ctx) error {
 		Preload("SubTasks").
 		Preload("SubTasks.Users").
 		Find(&tasks, "organization_id = ? ", orgID).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -73,7 +73,7 @@ func GetOrganizationChats(c *fiber.Ctx) error {
 		Preload("Memberships").
 		Preload("Memberships.User").
 		Find(&organization, "id = ? ", orgID).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var chats []models.GroupChat
@@ -83,7 +83,7 @@ func GetOrganizationChats(c *fiber.Ctx) error {
 		Preload("Memberships.User").
 		Order("created_at DESC").
 		Find(&chats, "organization_id = ? ", orgID).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -106,7 +106,7 @@ func GetOrgEvents(c *fiber.Ctx) error {
 		Where("organization_id = ?", orgID).
 		Order("created_at DESC").
 		Find(&events).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -133,7 +133,7 @@ func GetOrganizationHistory(c *fiber.Ctx) error {
 		Where("organization_id=?", orgID).
 		Order("created_at DESC").
 		Find(&history).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
@@ -148,7 +148,7 @@ func UpdateOrg(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &fiber.Error{Code: 400, Message: "No organization of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	orgMemberID := c.GetRespHeader("orgMemberID")
@@ -209,12 +209,12 @@ func UpdateOrg(c *fiber.Ctx) error {
 	}
 
 	if err := initializers.DB.Save(&user).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if isOrgEdited {
 		if err := initializers.DB.Save(&organization).Error; err != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	}
 
@@ -256,7 +256,7 @@ func DeleteOrganization(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &fiber.Error{Code: 400, Message: "No User of this ID Found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var organization models.Organization
@@ -264,7 +264,7 @@ func DeleteOrganization(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &fiber.Error{Code: 400, Message: "No Organization of this ID Found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	data, err := cache.GetOtpFromCache(user.ID.String())
@@ -280,7 +280,7 @@ func DeleteOrganization(c *fiber.Ctx) error {
 	organization.User.DeactivatedAt = time.Now()
 
 	if err := initializers.DB.Delete(&organization).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(204).JSON(fiber.Map{

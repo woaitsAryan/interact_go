@@ -30,7 +30,7 @@ func GetNotifications(c *fiber.Ctx) error {
 		Order("created_at DESC").
 		Find(&notifications).
 		Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -56,7 +56,7 @@ func GetUnreadNotifications(c *fiber.Ctx) error {
 		Order("created_at DESC").
 		Find(&notifications).
 		Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var notificationIDs []uuid.UUID
@@ -83,7 +83,7 @@ func GetUnreadNotificationCount(c *fiber.Ctx) error {
 		Where("user_id=? AND read=?", loggedInUserID, false).
 		Count(&count).
 		Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -102,12 +102,12 @@ func DeleteNotification(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Notification of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	result := initializers.DB.Delete(&notification)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	return c.Status(204).JSON(fiber.Map{

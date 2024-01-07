@@ -42,7 +42,7 @@ func verifyEarlyAccessToken(tokenString string, email string) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 401, Message: "Invalid Token."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if time.Now().After(earlyAccessModel.ExpirationTime) {

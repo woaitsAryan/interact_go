@@ -38,7 +38,7 @@ func GetPost(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Post of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	go cache.SetPost(postID, &post)
@@ -64,7 +64,7 @@ func GetUserPosts(c *fiber.Ctx) error {
 		Where("user_id = ?", userID).
 		Order("created_at DESC").
 		Find(&posts).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -86,7 +86,7 @@ func GetMyPosts(c *fiber.Ctx) error {
 		Preload("TaggedUsers").
 		Preload("RePost.TaggedUsers").
 		Where("user_id = ?", loggedInUserID).Find(&posts).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -101,7 +101,7 @@ func GetMyLikedPosts(c *fiber.Ctx) error {
 
 	var postLikes []models.Like
 	if err := initializers.DB.Where("user_id = ? AND post_id IS NOT NULL", loggedInUserID).Find(&postLikes).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var postIDs []string
@@ -129,7 +129,7 @@ func AddPost(c *fiber.Ctx) error {
 
 	var user models.User
 	if err := initializers.DB.Where("id=?", parsedID).First(&user).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 	if !user.Verified {
 		return &fiber.Error{Code: 401, Message: config.VERIFICATION_ERROR}
@@ -175,7 +175,7 @@ func AddPost(c *fiber.Ctx) error {
 
 	result := initializers.DB.Create(&newPost)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	if err := initializers.DB.Preload("User").
@@ -183,7 +183,7 @@ func AddPost(c *fiber.Ctx) error {
 		Preload("RePost.User").
 		Preload("TaggedUsers").
 		First(&newPost).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	orgMemberID := c.GetRespHeader("orgMemberID")
@@ -225,7 +225,7 @@ func UpdatePost(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Post of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var reqBody schemas.PostUpdateSchema
@@ -271,7 +271,7 @@ func UpdatePost(c *fiber.Ctx) error {
 	}
 
 	if err := initializers.DB.Save(&post).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	for _, userToRemove := range usersToRemove {
@@ -317,7 +317,7 @@ func DeletePost(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Post of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	for _, image := range post.Images {
@@ -327,23 +327,23 @@ func DeletePost(c *fiber.Ctx) error {
 	var messages []models.Message
 	if err := initializers.DB.Find(&messages, "post_id=?", parsedPostID).Error; err != nil {
 		if err != gorm.ErrRecordNotFound {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	}
 
 	for _, message := range messages {
 		if err := initializers.DB.Delete(&message).Error; err != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	}
 
 	// Delete all users from the task_assigned_users table
 	if err := initializers.DB.Model(&post).Association("TaggedUsers").Clear(); err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if err := initializers.DB.Delete(&post).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	orgMemberID := c.GetRespHeader("orgMemberID")

@@ -24,7 +24,7 @@ func GetSimilarUsers(c *fiber.Ctx) error {
 	var similarUsers []models.User
 	if err := initializers.DB.
 		Preload("Profile").
-		Where("active=?", true).
+		Where("active=? AND onboarding_completed=?", true, true).
 		Where("organization_status=?", false).
 		Where("id <> ?", username).
 		Where("tags && ?", pq.StringArray(user.Tags)).
@@ -35,7 +35,7 @@ func GetSimilarUsers(c *fiber.Ctx) error {
 		Order("no_followers DESC").
 		Limit(10).
 		Find(&similarUsers).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	go routines.IncrementUserImpression(similarUsers)
@@ -75,7 +75,7 @@ func GetSimilarProjects(c *fiber.Ctx) error {
 			Where("category = ? OR tags && ?", project.Category, pq.StringArray(project.Tags)).
 			Order("total_no_views DESC").
 			Find(&projects).Error; err != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	} else {
 		if err := initializers.DB.
@@ -83,7 +83,7 @@ func GetSimilarProjects(c *fiber.Ctx) error {
 			Preload("Memberships").
 			Where("id IN ?", recommendations).
 			Find(&projects).Error; err != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	}
 
@@ -123,7 +123,7 @@ func GetSimilarEvents(c *fiber.Ctx) error {
 			Where("category = ? OR tags && ?", event.Category, pq.StringArray(event.Tags)).
 			Order("no_views DESC").
 			Find(&events).Error; err != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	} else {
 		if err := initializers.DB.
@@ -131,7 +131,7 @@ func GetSimilarEvents(c *fiber.Ctx) error {
 			Preload("Organization.User").
 			Where("id IN ?", recommendations).
 			Find(&events).Error; err != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	}
 

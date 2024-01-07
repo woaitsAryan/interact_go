@@ -6,13 +6,14 @@ import (
 )
 
 type AppError struct {
-	Code    int
-	Message string
-	Err     error
+	Code       int
+	Message    string
+	LogMessage string
+	Err        error
 }
 
 func (err AppError) Error() string {
-	return err.Message
+	return err.LogMessage
 }
 
 func ErrorHandler(c *fiber.Ctx, err error) error {

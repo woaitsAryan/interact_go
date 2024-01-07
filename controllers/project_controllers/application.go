@@ -29,7 +29,7 @@ func GetApplication(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Application of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if application.UserID != parsedLoggedInUserID && application.Project.UserID != parsedLoggedInUserID {
@@ -60,7 +60,7 @@ func GetAllApplicationsOfOpening(c *fiber.Ctx) error {
 
 	var applications []models.Application
 	if err := initializers.DB.Preload("User").Where("opening_id=?", parsedOpeningID).Order("created_at DESC").Find(&applications).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	for i, application := range applications {
@@ -92,7 +92,7 @@ func AddApplication(c *fiber.Ctx) error {
 
 	var user models.User
 	if err := initializers.DB.Where("id=?", parsedUserID).First(&user).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 	if !user.Verified {
 		return &fiber.Error{Code: 401, Message: config.VERIFICATION_ERROR}
@@ -147,7 +147,7 @@ func AddApplication(c *fiber.Ctx) error {
 
 	result := initializers.DB.Create(&newApplication)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	go routines.IncrementOpeningApplicationsAndSendNotification(parsedOpeningID, newApplication.ID, parsedUserID)
@@ -173,13 +173,13 @@ func DeleteApplication(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Application of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	result := initializers.DB.Delete(&application)
 
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	go cache.RemoveProject("-workspace--" + application.Project.Slug)
