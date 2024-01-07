@@ -84,7 +84,7 @@ func SignUp(c *fiber.Ctx) error {
 
 	result := initializers.DB.Create(&newUser)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	profile := models.Profile{
@@ -93,7 +93,7 @@ func SignUp(c *fiber.Ctx) error {
 
 	result = initializers.DB.Create(&profile)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	c.Set("loggedInUserID", newUser.ID.String())
@@ -107,7 +107,7 @@ func SignUp(c *fiber.Ctx) error {
 
 			result = initializers.DB.Save(&newUser)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 		}
 	}
@@ -127,18 +127,18 @@ func OAuthSignUp(c *fiber.Ctx) error {
 
 	var user models.User
 	if err := initializers.DB.Session(&gorm.Session{SkipHooks: true}).First(&user, "id = ?", loggedInUserID).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var existingUser models.User
-	initializers.DB.Session(&gorm.Session{SkipHooks: true}).First(&user, "username = ?", reqBody.Username)
+	initializers.DB.Session(&gorm.Session{SkipHooks: true}).First(&existingUser, "username = ?", reqBody.Username)
 	if existingUser.ID != uuid.Nil {
 		return &fiber.Error{Code: 400, Message: "User with this Username already exists"}
 	}
 
 	var oauth models.OAuth
 	if err := initializers.DB.First(&oauth, "user_id = ?", loggedInUserID).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	user.Username = reqBody.Username
@@ -147,12 +147,12 @@ func OAuthSignUp(c *fiber.Ctx) error {
 
 	result := initializers.DB.Save(&user)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	result = initializers.DB.Save(&oauth)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	c.Set("loggedInUserID", user.ID.String())
@@ -167,7 +167,7 @@ func OAuthSignUp(c *fiber.Ctx) error {
 
 			result = initializers.DB.Save(&user)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 		}
 	}
@@ -178,7 +178,7 @@ func OAuthSignUp(c *fiber.Ctx) error {
 
 	result = initializers.DB.Create(&profile)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	go routines.SendWelcomeNotification(user.ID)
@@ -201,7 +201,7 @@ func LogIn(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No account with these credentials found."}
 		} else {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	}
 
@@ -219,7 +219,7 @@ func LogIn(c *fiber.Ctx) error {
 	user.LastLoggedIn = time.Now()
 
 	if err := initializers.DB.Save(&user).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return CreateSendToken(c, user, 200, "Logged In")
@@ -230,7 +230,7 @@ func OAuthLogIn(c *fiber.Ctx) error {
 
 	var user models.User
 	if err := initializers.DB.Session(&gorm.Session{SkipHooks: true}).First(&user, "id = ? AND organization_status = false", loggedInUserID).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if user.ID == uuid.Nil {
@@ -247,7 +247,7 @@ func OAuthLogIn(c *fiber.Ctx) error {
 	user.LastLoggedIn = time.Now()
 
 	if err := initializers.DB.Save(&user).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return CreateSendToken(c, user, 200, "Logged In")
@@ -286,7 +286,7 @@ func Refresh(c *fiber.Ctx) error {
 		var user models.User
 		err := initializers.DB.First(&user, "id = ?", access_token_userID).Error
 		if err != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 
 		if user.ID == uuid.Nil {

@@ -29,12 +29,12 @@ func EditProfile(c *fiber.Ctx) error {
 
 			result := initializers.DB.Create(&newProfile)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 
 			return &fiber.Error{Code: 400, Message: "Some Error Occurred, Please Try Again."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var reqBody schemas.ProfileUpdateSchema
@@ -75,7 +75,7 @@ func EditProfile(c *fiber.Ctx) error {
 
 	result := initializers.DB.Save(&profile)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	orgID := c.GetRespHeader("orgID")
@@ -121,7 +121,7 @@ func AddAchievement(c *fiber.Ctx) error {
 			err := initializers.DB.Create(&achievementModel).Error
 
 			if err != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 			}
 		} else {
 			err := initializers.DB.First(&achievementModel, "id = ?", achievement.ID).Error
@@ -129,12 +129,12 @@ func AddAchievement(c *fiber.Ctx) error {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
 					return &fiber.Error{Code: 400, Message: "Invalid ID."}
 				}
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 			} else {
 				achievementModel.Skills = achievement.Skills
 				achievementModel.Title = achievement.Title
 				if err := initializers.DB.Save(&achievementModel).Error; err != nil {
-					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 				}
 			}
 		}
@@ -156,11 +156,11 @@ func DeleteAchievement(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Achievement of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if err := initializers.DB.Delete(&achievement).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(204).JSON(fiber.Map{

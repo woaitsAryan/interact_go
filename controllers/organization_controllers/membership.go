@@ -1,8 +1,11 @@
 package organization_controllers
 
 import (
+	"time"
+
 	"github.com/Pratham-Mishra04/interact/cache"
 	"github.com/Pratham-Mishra04/interact/config"
+	"github.com/Pratham-Mishra04/interact/controllers/auth_controllers"
 	"github.com/Pratham-Mishra04/interact/controllers/project_controllers"
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
@@ -11,6 +14,7 @@ import (
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -49,8 +53,15 @@ func GetNonMembers(c *fiber.Ctx) error {
 	searchedDB := API.Search(c, 0)(initializers.DB)
 
 	var users []models.User
-	if err := searchedDB.Where("id NOT IN (?)", membershipUserIDs).Limit(10).Find(&users).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	if err := searchedDB.Where("id NOT IN (?)", membershipUserIDs).
+		Where("active=? AND onboarding_completed=?", true, true).
+		Where("verified=?", true).
+		Where("username != email").
+		Where("organization_status=?", false).
+		Where("username != users.email").
+		Limit(10).
+		Find(&users).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -109,7 +120,7 @@ func AddMember(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No User of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var organization models.Organization
@@ -117,7 +128,7 @@ func AddMember(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Organization of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if reqBody.UserID == organization.UserID.String() {
@@ -128,9 +139,26 @@ func AddMember(c *fiber.Ctx) error {
 	if err := initializers.DB.Where("user_id=? AND organization_id=?", user.ID, parsedOrganizationID).First(&membership).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			var existingInvitation models.Invitation
-			err := initializers.DB.Where("user_id=? AND organization_id=? AND status=0", user.ID, parsedOrganizationID).First(&existingInvitation).Error
+			err := initializers.DB.Where("user_id=? AND organization_id=?", user.ID, parsedOrganizationID).First(&existingInvitation).Error
 			if err == nil {
-				return &fiber.Error{Code: 400, Message: "Have already invited this User."}
+				if existingInvitation.Status != 0 {
+					existingInvitation.Status = 0
+					existingInvitation.Title = reqBody.Title
+					existingInvitation.CreatedAt = time.Now()
+
+					if err := initializers.DB.Save(&existingInvitation).Error; err != nil {
+						return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+					}
+
+					existingInvitation.User = user
+
+					return c.Status(201).JSON(fiber.Map{
+						"status":     "success",
+						"message":    "Invitation sent to the user.",
+						"invitation": existingInvitation,
+					})
+				}
+				return &fiber.Error{Code: 400, Message: "An invitation is already sent to this user."}
 			}
 
 			var invitation models.Invitation
@@ -141,7 +169,7 @@ func AddMember(c *fiber.Ctx) error {
 			result := initializers.DB.Create(&invitation)
 
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 			}
 
 			invitation.User = user
@@ -154,7 +182,7 @@ func AddMember(c *fiber.Ctx) error {
 				"invitation": invitation,
 			})
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	} else {
 		return &fiber.Error{Code: 400, Message: "User is a already a collaborator of this project."}
 	}
@@ -177,7 +205,7 @@ func RemoveMember(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Membership of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if membership.UserID.String() == orgMemberID {
@@ -190,7 +218,7 @@ func RemoveMember(c *fiber.Ctx) error {
 
 	err = processLeaveOrganization(&membership)
 	if err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	go routines.DecrementOrgMember(membership.OrganizationID)
@@ -213,12 +241,29 @@ func LeaveOrganization(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Membership of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	err := processLeaveOrganization(&membership)
+	var reqBody struct {
+		VerificationCode string `json:"otp"`
+	}
+
+	if err := c.BodyParser(&reqBody); err != nil {
+		return &fiber.Error{Code: 400, Message: "OTP not provided."}
+	}
+
+	data, err := cache.GetOtpFromCache(membership.UserID.String() + "-" + membership.ID.String())
 	if err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return &fiber.Error{Code: 400, Message: "OTP Expired"}
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(data), []byte(reqBody.VerificationCode)); err != nil {
+		return &fiber.Error{Code: 400, Message: "Incorrect OTP"}
+	}
+
+	err = processLeaveOrganization(&membership)
+	if err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	go routines.DecrementOrgMember(membership.OrganizationID)
@@ -255,7 +300,7 @@ func ChangeMemberRole(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Membership of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	membership.Title = reqBody.Title
@@ -272,7 +317,7 @@ func ChangeMemberRole(c *fiber.Ctx) error {
 
 	result := initializers.DB.Save(&membership)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	go cache.RemoveOrganization("-access--" + membership.OrganizationID.String())
@@ -363,4 +408,37 @@ func processLeaveOrganization(membership *models.OrganizationMembership) error {
 	}
 
 	return nil
+}
+
+func SendLeaveOrgVerificationCode(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("orgMemberID")
+	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
+
+	orgID := c.Params("orgID")
+
+	code := auth_controllers.GenerateOTP(6)
+	hash, err := bcrypt.GenerateFromPassword([]byte(code), 10)
+	if err != nil {
+		go helpers.LogServerError("Error while hashing an OTP.", err, c.Path())
+		return helpers.AppError{Code: 500, Message: config.SERVER_ERROR, Err: err}
+	}
+
+	var membership models.OrganizationMembership
+	if err := initializers.DB.Preload("User").Where("organization_id=? AND user_id=?", orgID, parsedLoggedInUserID).First(&membership).Error; err != nil {
+		return &fiber.Error{Code: 400, Message: "No Membership found."}
+	}
+	err = helpers.SendMail(config.VERIFICATION_LEAVE_ORG_SUBJECT, config.VERIFICATION_EMAIL_BODY+code, membership.User.Name, membership.User.Email, "<div><strong>This is Valid for next 10 minutes only!</strong></div>")
+	if err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	err = cache.SetOtpToCache(membership.UserID.String()+"-"+membership.ID.String(), []byte(hash))
+	if err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "OTP sent to registered mail",
+	})
 }

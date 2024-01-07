@@ -34,17 +34,17 @@ func LikePost(c *fiber.Ctx) error {
 
 			result := initializers.DB.Create(&likeModel)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 			go routines.IncrementPostLikesAndSendNotification(parsedPostID, parsedLoggedInUserID)
 
 		} else {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	} else {
 		result := initializers.DB.Delete(&like)
 		if result.Error != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 		}
 		go routines.DecrementPostLikes(parsedPostID)
 
@@ -78,16 +78,16 @@ func LikeProject(c *fiber.Ctx) error {
 			result := initializers.DB.Create(&likeModel)
 
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 			go routines.IncrementProjectLikesAndSendNotification(parsedProjectID, userID)
 		} else {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	} else {
 		result := initializers.DB.Delete(&like)
 		if result.Error != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 		}
 		go routines.DecrementProjectLikes(parsedProjectID)
 	}
@@ -113,7 +113,7 @@ func LikeComment(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var like models.Like
@@ -125,16 +125,16 @@ func LikeComment(c *fiber.Ctx) error {
 			}
 			result := initializers.DB.Create(&likeModel)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 			go routines.IncrementCommentLikes(parsedCommentID, userID)
 		} else {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	} else {
 		result := initializers.DB.Delete(&like)
 		if result.Error != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 		}
 		go routines.DecrementCommentLikes(parsedCommentID)
 	}
@@ -165,16 +165,16 @@ func LikeEvent(c *fiber.Ctx) error {
 			}
 			result := initializers.DB.Create(&likeModel)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 			go routines.IncrementEventLikesAndSendNotification(parsedEventID, userID)
 		} else {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	} else {
 		result := initializers.DB.Delete(&like)
 		if result.Error != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 		}
 		go routines.DecrementEventLikes(parsedEventID)
 	}

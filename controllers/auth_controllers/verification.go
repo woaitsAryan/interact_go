@@ -44,7 +44,7 @@ func SendVerificationCode(c *fiber.Ctx) error {
 
 	var user models.User
 	if err := initializers.DB.Where("id=?", parsedLoggedInUserID).First(&user).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if user.Verified {
@@ -61,22 +61,22 @@ func SendVerificationCode(c *fiber.Ctx) error {
 			}
 			result := initializers.DB.Create(&newVerification)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 		} else {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	} else {
 		verification.Code = string(hash)
 		verification.ExpirationTime = expirationTime
 		result := initializers.DB.Save(&verification)
 		if result.Error != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 		}
 	}
 	err = helpers.SendMail(config.VERIFICATION_EMAIL_SUBJECT, config.VERIFICATION_EMAIL_BODY+code, user.Name, user.Email, "<div><strong>This is Valid for next 10 minutes only!</strong></div>")
 	if err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -99,7 +99,7 @@ func VerifyCode(c *fiber.Ctx) error {
 
 	var user models.User
 	if err := initializers.DB.Where("id=?", parsedLoggedInUserID).First(&user).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if user.Verified {
@@ -111,7 +111,7 @@ func VerifyCode(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "First Request for the Verification Code"}
 		} else {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	}
 
@@ -126,7 +126,7 @@ func VerifyCode(c *fiber.Ctx) error {
 	user.Verified = true
 	result := initializers.DB.Save(&user)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	return c.Status(200).JSON(fiber.Map{

@@ -19,7 +19,7 @@ func AddProjectMembers(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &fiber.Error{Code: 400, Message: "No project of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if project.Memberships != nil && len(project.Memberships) > 0 {
@@ -51,7 +51,7 @@ func AddProjectMembers(c *fiber.Ctx) error {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				continue
 			}
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 
 		membership := models.Membership{
@@ -63,7 +63,7 @@ func AddProjectMembers(c *fiber.Ctx) error {
 
 		result := initializers.DB.Create(&membership)
 		if result.Error != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 		}
 
 		memberships = append(memberships, membership)
@@ -73,7 +73,7 @@ func AddProjectMembers(c *fiber.Ctx) error {
 
 	result := initializers.DB.Save(&project)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	project.Memberships = memberships

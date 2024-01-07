@@ -26,7 +26,7 @@ func GetLatestPosts(c *fiber.Ctx) error {
 		Select("*, posts.id, posts.created_at").
 		Order("posts.created_at DESC").
 		Find(&posts).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	go routines.IncrementPostImpression(posts)
@@ -49,7 +49,7 @@ func GetLatestProjects(c *fiber.Ctx) error {
 		Order("created_at DESC").
 		Where("is_private = ?", false).
 		Find(&projects).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	go routines.IncrementProjectImpression(projects)

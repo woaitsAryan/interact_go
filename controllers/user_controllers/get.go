@@ -72,7 +72,7 @@ func GetMyLikes(c *fiber.Ctx) error {
 	var likes []models.Like
 	if err := initializers.DB.
 		Find(&likes, "user_id = ?", loggedInUserID).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var likeIDs []string
@@ -107,12 +107,12 @@ func GetMyOrgMemberships(c *fiber.Ctx) error {
 			Preload("Organization").
 			Preload("Organization.User").
 			Find(&memberships, "user_id = ?", loggedInUserID).Error; err != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	} else {
 		if err := initializers.DB.
 			Find(&memberships, "user_id = ?", loggedInUserID).Error; err != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	}
 

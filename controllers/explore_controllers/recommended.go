@@ -30,7 +30,7 @@ func GetRecommendedPosts(c *fiber.Ctx) error {
 		Preload("User").
 		Where("id IN ?", recommendations).
 		Find(&posts).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	go routines.IncrementPostImpression(posts)
@@ -60,7 +60,7 @@ func GetRecommendedOpenings(c *fiber.Ctx) error {
 		Preload("User").
 		Where("id IN ?", recommendations).
 		Find(&openings).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var filteredOpenings []models.Opening
@@ -97,7 +97,7 @@ func GetRecommendedProjects(c *fiber.Ctx) error {
 		Preload("Memberships").
 		Where("id IN ?", recommendations).
 		Find(&projects).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	go routines.IncrementProjectImpression(projects)
@@ -127,7 +127,7 @@ func GetRecommendedUsers(c *fiber.Ctx) error {
 		Order("weighted_average DESC, created_at ASC").
 		Where("id <> ? AND organization_status = ?", loggedInUserID, false).
 		Find(&users).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	go routines.IncrementUserImpression(users)
@@ -157,7 +157,7 @@ func GetRecommendedEvents(c *fiber.Ctx) error {
 		Preload("Organization.User").
 		Where("id IN ?", recommendations).
 		Find(&events).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	go routines.IncrementEventImpression(events)
@@ -197,7 +197,7 @@ func GetRecommendedOrganizationalUsers(c *fiber.Ctx) error {
     `).
 		Order("weighted_average DESC, users.created_at ASC").
 		Find(&users).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var usersWithOrganization []UserWithOrganization
@@ -207,7 +207,7 @@ func GetRecommendedOrganizationalUsers(c *fiber.Ctx) error {
 		if err := initializers.DB.
 			Where("user_id = ?", user.ID).
 			First(&organization).Error; err != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 
 		userWithOrganization := UserWithOrganization{

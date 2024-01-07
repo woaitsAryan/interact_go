@@ -36,7 +36,7 @@ func FollowUser(c *fiber.Ctx) error {
 			newFollow.FollowedID = toFollowID
 
 			if err := initializers.DB.Create(&newFollow).Error; err != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 			}
 
 			go routines.IncrementCountsAndSendNotification(loggedInUserID, toFollowID) //! Check if race conditions of - + numFollowers happens when handling multiple users
@@ -46,7 +46,7 @@ func FollowUser(c *fiber.Ctx) error {
 				"message": "User followed successfully.",
 			})
 		} else {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	} else {
 		return &fiber.Error{Code: 400, Message: "You are already following this user."}
@@ -68,11 +68,11 @@ func UnfollowUser(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &fiber.Error{Code: 400, Message: "You do not follow this user."}
 		} else {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	} else {
 		if err := initializers.DB.Where(&follow).Delete(&follow).Error; err != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 
 		go routines.DecrementCounts(loggedInUserID, toUnFollowID)
@@ -99,11 +99,11 @@ func RemoveFollow(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &fiber.Error{Code: 400, Message: "This user does not follow you."}
 		} else {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	} else {
 		if err := initializers.DB.Where(&follow).Delete(&follow).Error; err != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 
 		go routines.DecrementCounts(followerToRemoveID, loggedInUserID)
@@ -127,7 +127,7 @@ func GetFollowers(c *fiber.Ctx) error {
 
 	var followers []models.FollowFollower
 	if err := searchDB.Preload("Follower").Where("followed_id = ?", userID).Find(&followers).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var followerUsers []models.User
@@ -154,7 +154,7 @@ func GetFollowing(c *fiber.Ctx) error {
 
 	var following []models.FollowFollower
 	if err := searchDB.Preload("Followed").Where("follower_id = ?", userID).Find(&following).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var followingUsers []models.User
@@ -178,7 +178,7 @@ func GetMyFollowing(c *fiber.Ctx) error {
 
 	var following []models.FollowFollower
 	if err := initializers.DB.Where("follower_id = ?", userID).Find(&following).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var followingUserIDs []uuid.UUID
@@ -204,13 +204,13 @@ func GetMutuals(c *fiber.Ctx) error {
 	if err := joinQuery.
 		Preload("Followed").
 		Find(&mutualFollowers).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var count int64
 	if err := joinQuery.
 		Count(&count).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var mutuals []models.User

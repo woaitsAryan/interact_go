@@ -16,7 +16,7 @@ func GetMyProjects(c *fiber.Ctx) error {
 
 	var projects []models.Project
 	if err := searchedDB.Where("user_id = ?", loggedInUserID).Order("created_at DESC").Find(&projects).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -31,7 +31,7 @@ func GetMyContributingProjects(c *fiber.Ctx) error {
 
 	var memberships []models.Membership
 	if err := initializers.DB.Preload("Project").Preload("Project.User").Where("user_id = ?", loggedInUserID).Order("created_at DESC").Find(&memberships).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var projects []models.Project
@@ -51,7 +51,7 @@ func GetMyApplications(c *fiber.Ctx) error {
 
 	var applications []models.Application
 	if err := initializers.DB.Preload("Opening").Preload("Project").Where("user_id=?", loggedInUserID).Order("created_at DESC").Find(&applications).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -66,7 +66,7 @@ func GetMyMemberships(c *fiber.Ctx) error {
 
 	var memberships []models.Membership
 	if err := initializers.DB.Where("user_id = ?", loggedInUserID).Find(&memberships).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{

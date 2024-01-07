@@ -46,7 +46,7 @@ func GetMessages(c *fiber.Ctx) error {
 		Where("chat_id = ? AND created_at > ?", chatID, timestamp).
 		Order("created_at DESC").
 		Find(&messages).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	// if len(messages) > 0 {
@@ -77,7 +77,7 @@ func GetGroupChatMessages(c *fiber.Ctx) error {
 		Where("chat_id = ? AND created_at > ?", chatID, membership.CreatedAt).
 		Order("created_at DESC").
 		Find(&messages).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 	return c.Status(200).JSON(fiber.Map{
 		"status":   "success",
@@ -126,14 +126,14 @@ func AddMessage(c *fiber.Ctx) error {
 
 	result := initializers.DB.Create(&message)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	chat.LatestMessageID = &message.ID
 
 	result = initializers.DB.Save(&chat)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(201).JSON(fiber.Map{
@@ -179,7 +179,7 @@ func AddGroupChatMessage(c *fiber.Ctx) error {
 
 	result := initializers.DB.Create(&message)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	message.User = membership.User
@@ -204,13 +204,13 @@ func DeleteMessage(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Message of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	result := initializers.DB.Delete(&message)
 
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(204).JSON(fiber.Map{

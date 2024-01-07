@@ -29,7 +29,7 @@ func GetColleges(c *fiber.Ctx) error {
 
 	var colleges []models.College
 	if err := paginatedDB.Where("LOWER(name) LIKE ?", "%"+searchStr+"%").Find(&colleges).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	go cache.SetToCacheGeneric("colleges", colleges)
@@ -59,7 +59,7 @@ func AddCollege(c *fiber.Ctx) error {
 		if result.Error == gorm.ErrDuplicatedKey {
 			return &fiber.Error{Code: 400, Message: "College already present."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	go cache.RemoveFromCacheGeneric("colleges")
@@ -98,7 +98,7 @@ func GetProjectOpenings(c *fiber.Ctx) error {
 				"message": "Project Not Found",
 			})
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var openings []models.Opening
@@ -107,7 +107,7 @@ func GetProjectOpenings(c *fiber.Ctx) error {
 		Where("project_id = ? AND active=true", project.ID).
 		Order("created_at DESC").
 		Find(&openings).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	go routines.IncrementOpeningImpression(openings)
@@ -129,7 +129,7 @@ func GetOrgEvents(c *fiber.Ctx) error {
 		Where("organization_id = ?", orgID).
 		Order("created_at DESC").
 		Find(&events).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	go routines.IncrementEventImpression(events)
@@ -153,7 +153,7 @@ func GetMostLikedProjects(c *fiber.Ctx) error {
 		Order("no_likes DESC").
 		Where("is_private = ?", false).
 		Find(&projects).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	go routines.IncrementProjectImpression(projects)
@@ -177,7 +177,7 @@ func GetLastViewedProjects(c *fiber.Ctx) error {
 		Preload("Project").
 		Where("user_id=?", loggedInUserID).
 		Find(&projectViewed).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var projects []models.Project
@@ -202,7 +202,7 @@ func GetOrganizationalUser(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Organization of this ID Found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var organization models.Organization
@@ -210,7 +210,7 @@ func GetOrganizationalUser(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Organization of this ID Found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{

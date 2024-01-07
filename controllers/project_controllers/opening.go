@@ -26,7 +26,7 @@ func GetOpening(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Opening of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
@@ -52,8 +52,8 @@ func GetAllOpeningsOfProject(c *fiber.Ctx) error {
 	}
 
 	var openings []models.Opening
-	if err := initializers.DB.Where("project_id=?", projectID).Find(&openings).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+	if err := initializers.DB.Where("project_id=?", projectID).Order("created_at DESC").Find(&openings).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -82,7 +82,7 @@ func AddOpening(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var reqBody schemas.OpeningCreateSchema
@@ -105,7 +105,7 @@ func AddOpening(c *fiber.Ctx) error {
 	result := initializers.DB.Create(&newOpening)
 
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	projectMemberID := c.GetRespHeader("projectMemberID")
@@ -150,7 +150,7 @@ func EditOpening(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Opening of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if reqBody.Description != "" {
@@ -164,14 +164,14 @@ func EditOpening(c *fiber.Ctx) error {
 		if !opening.Active {
 			var pendingApplications []models.Application
 			if err := initializers.DB.Find(&pendingApplications, "opening_id AND (status=0 OR status=1)", parsedOpeningID).Error; err != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 			}
 
 			for _, application := range pendingApplications {
 				application.Status = -1
 				result := initializers.DB.Save(&application)
 				if result.Error != nil {
-					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 				}
 			}
 		}
@@ -179,7 +179,7 @@ func EditOpening(c *fiber.Ctx) error {
 
 	result := initializers.DB.Save(&opening)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	projectMemberID := c.GetRespHeader("projectMemberID")
@@ -214,7 +214,7 @@ func DeleteOpening(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Opening of this ID found."}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	projectID := opening.ProjectID
@@ -223,7 +223,7 @@ func DeleteOpening(c *fiber.Ctx) error {
 	result := initializers.DB.Delete(&opening)
 
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	projectMemberID := c.GetRespHeader("projectMemberID")

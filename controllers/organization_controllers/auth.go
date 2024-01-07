@@ -82,7 +82,7 @@ func SignUp(c *fiber.Ctx) error {
 
 	result := initializers.DB.Create(&newOrg)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	organization := models.Organization{
@@ -93,7 +93,7 @@ func SignUp(c *fiber.Ctx) error {
 
 	result = initializers.DB.Create(&organization)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	newProfile := models.Profile{
@@ -102,7 +102,7 @@ func SignUp(c *fiber.Ctx) error {
 
 	result = initializers.DB.Create(&newProfile)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	go routines.SendWelcomeNotification(newOrg.ID)
@@ -133,12 +133,12 @@ func LogIn(c *fiber.Ctx) error {
 	user.LastLoggedIn = time.Now()
 
 	if err := initializers.DB.Save(&user).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var organization models.Organization
 	if err := initializers.DB.First(&organization, "user_id=?", user.ID).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return createSendToken(c, user, 200, "Logged In", organization)
@@ -149,7 +149,7 @@ func OAuthLogIn(c *fiber.Ctx) error {
 
 	var user models.User
 	if err := initializers.DB.Session(&gorm.Session{SkipHooks: true}).First(&user, "id = ? AND organization_status = true", loggedInUserID).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if user.ID == uuid.Nil {
@@ -166,12 +166,12 @@ func OAuthLogIn(c *fiber.Ctx) error {
 	user.LastLoggedIn = time.Now()
 
 	if err := initializers.DB.Save(&user).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var organization models.Organization
 	if err := initializers.DB.First(&organization, "user_id=?", user.ID).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return createSendToken(c, user, 200, "Logged In", organization)

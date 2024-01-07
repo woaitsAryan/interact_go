@@ -21,7 +21,7 @@ func GetInvitations(c *fiber.Ctx) error {
 		Preload("Organization").
 		Preload("Organization.User").
 		Where("user_id = ? ", loggedInUserID).Order("created_at DESC").Find(&invitations).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -39,7 +39,7 @@ func AcceptInvitation(c *fiber.Ctx) error {
 
 	var user models.User
 	if err := initializers.DB.Where("id=?", loggedInUserID).First(&user).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 	if !user.Verified {
 		return &fiber.Error{Code: 401, Message: config.VERIFICATION_ERROR}
@@ -67,7 +67,7 @@ func AcceptInvitation(c *fiber.Ctx) error {
 
 		result := initializers.DB.Create(&membership)
 		if result.Error != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 		}
 
 		go routines.MarkProjectHistory(*invitation.ProjectID, parsedLoggedInUserID, 1, nil, nil, nil, nil, nil, "")
@@ -83,7 +83,7 @@ func AcceptInvitation(c *fiber.Ctx) error {
 
 		result := initializers.DB.Create(&membership)
 		if result.Error != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 		}
 	} else if invitation.GroupChatID != nil {
 		membership := models.GroupChatMembership{
@@ -94,13 +94,13 @@ func AcceptInvitation(c *fiber.Ctx) error {
 
 		result := initializers.DB.Create(&membership)
 		if result.Error != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 		}
 	}
 
 	result := initializers.DB.Save(&invitation)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 	if invitation.OrganizationID != nil {
 		go routines.IncrementOrgMember(*invitation.OrganizationID)
@@ -137,7 +137,7 @@ func RejectInvitation(c *fiber.Ctx) error {
 	result := initializers.DB.Save(&invitation)
 
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -173,7 +173,7 @@ func WithdrawInvitation(c *fiber.Ctx) error {
 	result := initializers.DB.Delete(&invitation)
 
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	orgMemberID := c.GetRespHeader("orgMemberID")
@@ -206,7 +206,7 @@ func GetUnreadInvitationCount(c *fiber.Ctx) error {
 		Where("user_id=? AND status=0", loggedInUserID).
 		Count(&count).
 		Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -235,12 +235,12 @@ func MarkReadInvitations(c *fiber.Ctx) error {
 			if err == gorm.ErrRecordNotFound {
 				return &fiber.Error{Code: 400, Message: "No Invitation of this ID found."}
 			}
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: err}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 		invitation.Read = true
 		result := initializers.DB.Save(&invitation)
 		if result.Error != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, Err: result.Error}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 		}
 	}
 
