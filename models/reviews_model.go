@@ -6,7 +6,12 @@ import (
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 )
+/* Organizational Review Model
 
+Models a review for an organization.
+Has an anonymous field to review anonymously.
+Has a relevance field to compute relevance of the review and sort by it.
+*/
 type OrganizationReview struct {
 	ID                  uuid.UUID             `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	UserID              uuid.UUID             `gorm:"type:uuid;not null" json:"userID"`

@@ -1,8 +1,6 @@
 package organization_controllers
 
 import (
-	"log"
-
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
@@ -12,7 +10,12 @@ import (
 	"gorm.io/gorm"
 )
 
-// Add a review
+/*
+	Adds an organizational review
+
+Takes input of content, rating and anonymity to make a review for an organization.
+Has a go routine to compute relevance of the review.
+*/
 func AddReview(c *fiber.Ctx) error {
 	var reqBody schemas.ReviewReqBody
 	if err := c.BodyParser(&reqBody); err != nil {
@@ -20,21 +23,19 @@ func AddReview(c *fiber.Ctx) error {
 	}
 	parsedUserID, err := uuid.Parse(c.GetRespHeader("orgMemberID"))
 	if err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid User ID."}
+		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid User ID."}
 	}
 	parsedOrgID, err := uuid.Parse(c.Params("orgID"))
 	if err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
+		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid Organization ID."}
 	}
-
-	log.Println(parsedUserID, parsedOrgID)
 
 	var review models.OrganizationReview
 	if err := initializers.DB.Where("user_id = ? AND organization_id = ?", parsedUserID, parsedOrgID).First(&review).Error; err == nil {
 		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Review already exists."}
-	} else{
-		if(err != gorm.ErrRecordNotFound){
-			return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Error creating review."}
+	} else {
+		if err != gorm.ErrRecordNotFound {
+			return &fiber.Error{Code: fiber.StatusInternalServerError, Message: "Error creating review."}
 		}
 	}
 
@@ -46,7 +47,7 @@ func AddReview(c *fiber.Ctx) error {
 		Anonymous:      reqBody.Anonymous,
 	}
 	if err := initializers.DB.Create(&review).Error; err != nil {
-		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Error creating review."}
+		return &fiber.Error{Code: fiber.StatusInternalServerError, Message: "Error creating review."}
 	}
 
 	go routines.ComputeRelevance(review.ID)
@@ -57,16 +58,19 @@ func AddReview(c *fiber.Ctx) error {
 	})
 }
 
-// Delete a review
+/* Deletes an organizational review
+
+Takes input of organization ID and user ID to delete a review for an organization.
+*/
 func DeleteReview(c *fiber.Ctx) error {
 
 	parsedUserID, err := uuid.Parse(c.GetRespHeader("orgMemberID"))
 	if err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid User ID."}
+		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid User ID."}
 	}
 	parsedOrgID, err := uuid.Parse(c.Params("orgID"))
 	if err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
+		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid Organization ID."}
 	}
 
 	var review models.OrganizationReview
@@ -74,10 +78,10 @@ func DeleteReview(c *fiber.Ctx) error {
 		if err != gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Review does not exist."}
 		}
-		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Error deleting review."}
+		return &fiber.Error{Code: fiber.StatusInternalServerError, Message: "Error deleting review."}
 	}
 	if err := initializers.DB.Delete(&review).Error; err != nil {
-		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Error deleting review."}
+		return &fiber.Error{Code: fiber.StatusInternalServerError, Message: "Error deleting review."}
 	}
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status":  "success",
@@ -85,12 +89,16 @@ func DeleteReview(c *fiber.Ctx) error {
 	})
 }
 
-// Fetch all reviews
+/* Fetches all organizational reviews
+
+Takes input of organization ID to fetch all reviews for an organization.
+If anonymous is true then omits user information
+*/
 func FetchReviews(c *fiber.Ctx) error {
 
 	parsedOrgID, err := uuid.Parse(c.Params("orgID"))
 	if err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
+		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid Organization ID."}
 	}
 
 	var reviews []models.OrganizationReview
@@ -101,10 +109,10 @@ func FetchReviews(c *fiber.Ctx) error {
 		if err != gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: fiber.StatusNotFound, Message: "No reviews found."}
 		}
-		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Error fetching reviews."}
+		return &fiber.Error{Code: fiber.StatusInternalServerError, Message: "Error fetching reviews."}
 	}
 	for i := range reviews {
-		if(reviews[i].Anonymous){
+		if reviews[i].Anonymous {
 			reviews[i].UserID = uuid.Nil
 		}
 	}
@@ -115,7 +123,12 @@ func FetchReviews(c *fiber.Ctx) error {
 	})
 }
 
-// Like a review
+/* Likes an organizational review
+
+Takes input of review ID to like a review.
+Currently an user can like their own review.
+Also checks so you can't like a review multiple times
+*/
 func LikeReview(c *fiber.Ctx) error {
 	parsedUserID, err := uuid.Parse(c.GetRespHeader("orgMemberID"))
 	if err != nil {
@@ -127,7 +140,7 @@ func LikeReview(c *fiber.Ctx) error {
 	}
 	var review models.OrganizationReview
 	if err := initializers.DB.Where("id = ?", reviewID).First(&review).Error; err != nil {
-		return &fiber.Error{Code: fiber.StatusBadRequest, Message: err.Error()}
+		return &fiber.Error{Code: fiber.StatusInternalServerError, Message: err.Error()}
 	}
 
 	for _, id := range review.LikedBy {
@@ -139,7 +152,7 @@ func LikeReview(c *fiber.Ctx) error {
 	review.LikeCount++
 	review.LikedBy = append(review.LikedBy, parsedUserID.String())
 	if err := initializers.DB.Save(&review).Error; err != nil {
-		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Error liking review."}
+		return &fiber.Error{Code: fiber.StatusInternalServerError, Message: "Error liking review."}
 	}
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status":  "success",
@@ -147,7 +160,11 @@ func LikeReview(c *fiber.Ctx) error {
 	})
 }
 
-// Remove like from a review
+/* Remove like from an organizational review
+
+Takes input of review ID to remove like from a review.
+Checks if the user has liked to be able to unlike.
+*/
 func RemoveLike(c *fiber.Ctx) error {
 	parsedUserID, err := uuid.Parse(c.GetRespHeader("orgMemberID"))
 	if err != nil {
@@ -159,7 +176,7 @@ func RemoveLike(c *fiber.Ctx) error {
 	}
 	var review models.OrganizationReview
 	if err := initializers.DB.Where("id = ?", reviewID).First(&review).Error; err != nil {
-		return &fiber.Error{Code: fiber.StatusBadRequest, Message: err.Error()}
+		return &fiber.Error{Code: fiber.StatusInternalServerError, Message: err.Error()}
 	}
 
 	isFound := false
@@ -176,7 +193,7 @@ func RemoveLike(c *fiber.Ctx) error {
 		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "User has not liked this review."}
 	}
 	if err := initializers.DB.Save(&review).Error; err != nil {
-		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Error removing like from review."}
+		return &fiber.Error{Code: fiber.StatusInternalServerError, Message: "Error removing like from review."}
 	}
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status":  "success",
@@ -184,7 +201,12 @@ func RemoveLike(c *fiber.Ctx) error {
 	})
 }
 
-// Dislike a review
+/* Dislike a review
+
+Takes input of review ID to dislike a review.
+Currently an user can dislike their own review.
+Also checks so you can't dislike a review multiple times
+*/
 func DislikeReview(c *fiber.Ctx) error {
 	parsedUserID, err := uuid.Parse(c.GetRespHeader("orgMemberID"))
 	if err != nil {
@@ -196,7 +218,7 @@ func DislikeReview(c *fiber.Ctx) error {
 	}
 	var review models.OrganizationReview
 	if err := initializers.DB.Where("id = ?", reviewID).First(&review).Error; err != nil {
-		return &fiber.Error{Code: fiber.StatusBadRequest, Message: err.Error()}
+		return &fiber.Error{Code: fiber.StatusInternalServerError, Message: err.Error()}
 	}
 
 	for _, id := range review.DislikedBy {
@@ -208,7 +230,7 @@ func DislikeReview(c *fiber.Ctx) error {
 	review.DislikeCount++
 	review.DislikedBy = append(review.DislikedBy, parsedUserID.String())
 	if err := initializers.DB.Save(&review).Error; err != nil {
-		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Error disliking review."}
+		return &fiber.Error{Code: fiber.StatusInternalServerError, Message: "Error disliking review."}
 	}
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status":  "success",
@@ -216,7 +238,11 @@ func DislikeReview(c *fiber.Ctx) error {
 	})
 }
 
-// Remove dislike from a review
+/* Remove dislike from a review
+
+Takes input of review ID to remove dislike from a review.
+Checks if the user has disliked to be able to undislike.
+*/
 func RemoveDislike(c *fiber.Ctx) error {
 	parsedUserID, err := uuid.Parse(c.GetRespHeader("orgMemberID"))
 	if err != nil {
@@ -228,7 +254,7 @@ func RemoveDislike(c *fiber.Ctx) error {
 	}
 	var review models.OrganizationReview
 	if err := initializers.DB.Where("id = ?", reviewID).First(&review).Error; err != nil {
-		return &fiber.Error{Code: fiber.StatusBadRequest, Message: err.Error()}
+		return &fiber.Error{Code: fiber.StatusInternalServerError, Message: "Error fetching reviews"}
 	}
 
 	isFound := false
@@ -245,7 +271,7 @@ func RemoveDislike(c *fiber.Ctx) error {
 		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "User has not disliked this review."}
 	}
 	if err := initializers.DB.Save(&review).Error; err != nil {
-		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Error removing dislike from review."}
+		return &fiber.Error{Code: fiber.StatusInternalServerError, Message: "Error removing dislike from review."}
 	}
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status":  "success",

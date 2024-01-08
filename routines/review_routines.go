@@ -9,13 +9,17 @@ import (
 	"github.com/google/uuid"
 )
 
+/* Routine to compute relevance of a review 
+
+used in controllers/organization_controllers/reviews.go
+*/
 func ComputeRelevance(reviewID uuid.UUID) {
 	var review models.OrganizationReview
 	if err := initializers.DB.First(&review, "id=?", reviewID).Error; err != nil {
-		helpers.LogDatabaseError("No Post of this ID found-IncrementPostShare.", err, "go_routine")
+		helpers.LogDatabaseError("No Review of this ID found-ComputeRelevance.", err, "go_routine")
 	}
 	review.Relevance = rand.Intn(91) + 10
 	if err := initializers.DB.Save(&review).Error; err != nil {
-		helpers.LogDatabaseError("Error in saving post-IncrementPostShare.", err, "go_routine")
+		helpers.LogDatabaseError("Error in saving Review-ComputeRelevance.", err, "go_routine")
 	}
 }
