@@ -11,175 +11,152 @@ import (
 	"gorm.io/gorm"
 )
 
-func LikePost(c *fiber.Ctx) error {
-	loggedInUserID := c.GetRespHeader("loggedInUserID")
-	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
+func LikeItem(likeType string) func(c *fiber.Ctx) error {
+	return func(c *fiber.Ctx) error {
 
-	postID := c.Params("postID")
-	parsedPostID, err := uuid.Parse(postID)
+		loggedInUserID := c.GetRespHeader("loggedInUserID")
+		parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid ID"}
-	}
+		var like models.Like
 
-	var like models.Like
-	err = initializers.DB.Where("user_id=? AND post_id=?", parsedLoggedInUserID, parsedPostID).First(&like).Error
+		switch likeType {
+		case "post":
+			postID := c.Params("postID")
+			parsedPostID, err := uuid.Parse(postID)
 
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			likeModel := models.Like{
-				PostID: &parsedPostID,
-				UserID: parsedLoggedInUserID,
+			if err != nil {
+				return &fiber.Error{Code: 400, Message: "Invalid ID"}
 			}
 
-			result := initializers.DB.Create(&likeModel)
-			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
-			}
-			go routines.IncrementPostLikesAndSendNotification(parsedPostID, parsedLoggedInUserID)
+			err = initializers.DB.Where("user_id=? AND post_id=?", parsedLoggedInUserID, parsedPostID).First(&like).Error
+			if err != nil {
+				if err == gorm.ErrRecordNotFound {
+					likeModel := models.Like{
+						PostID: &parsedPostID,
+						UserID: parsedLoggedInUserID,
+					}
 
-		} else {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
-		}
-	} else {
-		result := initializers.DB.Delete(&like)
-		if result.Error != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
-		}
-		go routines.DecrementPostLikes(parsedPostID)
+					result := initializers.DB.Create(&likeModel)
+					if result.Error != nil {
+						return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
+					}
+					go routines.IncrementPostLikesAndSendNotification(parsedPostID, parsedLoggedInUserID)
 
-	}
-
-	return c.Status(200).JSON(fiber.Map{
-		"status":  "success",
-		"message": "Post Liked/Unliked.",
-	})
-}
-
-func LikeProject(c *fiber.Ctx) error {
-	loggedInUserID := c.GetRespHeader("loggedInUserID")
-	userID, _ := uuid.Parse(loggedInUserID)
-
-	projectID := c.Params("projectID")
-	parsedProjectID, err := uuid.Parse(projectID)
-
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid ID"}
-	}
-
-	var like models.Like
-	if err := initializers.DB.Where("user_id=? AND project_id=?", userID, parsedProjectID).First(&like).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			likeModel := models.Like{
-				ProjectID: &parsedProjectID,
-				UserID:    userID,
+				} else {
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+				}
+			} else {
+				result := initializers.DB.Delete(&like)
+				if result.Error != nil {
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
+				}
+				go routines.DecrementPostLikes(parsedPostID)
 			}
 
-			result := initializers.DB.Create(&likeModel)
+		case "project":
+			projectID := c.Params("projectID")
+			parsedProjectID, err := uuid.Parse(projectID)
 
-			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
+			if err != nil {
+				return &fiber.Error{Code: 400, Message: "Invalid ID"}
 			}
-			go routines.IncrementProjectLikesAndSendNotification(parsedProjectID, userID)
-		} else {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
-		}
-	} else {
-		result := initializers.DB.Delete(&like)
-		if result.Error != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
-		}
-		go routines.DecrementProjectLikes(parsedProjectID)
-	}
-	return c.Status(200).JSON(fiber.Map{
-		"status":  "success",
-		"message": "Project Liked/Unliked.",
-	})
-}
 
-func LikeComment(c *fiber.Ctx) error {
-	loggedInUserID := c.GetRespHeader("loggedInUserID")
-	userID, _ := uuid.Parse(loggedInUserID)
+			var like models.Like
+			if err := initializers.DB.Where("user_id=? AND project_id=?", parsedLoggedInUserID, parsedProjectID).First(&like).Error; err != nil {
+				if err == gorm.ErrRecordNotFound {
+					likeModel := models.Like{
+						ProjectID: &parsedProjectID,
+						UserID:    parsedLoggedInUserID,
+					}
 
-	commentID := c.Params("commentID")
-	parsedCommentID, err := uuid.Parse(commentID)
+					result := initializers.DB.Create(&likeModel)
 
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid ID"}
-	}
-
-	var comment models.Comment
-	if err := initializers.DB.Where("id = ?", parsedCommentID).First(&comment).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
-		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
-	}
-
-	var like models.Like
-	if err := initializers.DB.Where("user_id=? AND comment_id=?", userID, parsedCommentID).First(&like).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			likeModel := models.Like{
-				CommentID: &comment.ID,
-				UserID:    userID,
+					if result.Error != nil {
+						return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
+					}
+					go routines.IncrementProjectLikesAndSendNotification(parsedProjectID, parsedLoggedInUserID)
+				} else {
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+				}
+			} else {
+				result := initializers.DB.Delete(&like)
+				if result.Error != nil {
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
+				}
+				go routines.DecrementProjectLikes(parsedProjectID)
 			}
-			result := initializers.DB.Create(&likeModel)
-			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
+		case "comment":
+			commentID := c.Params("commentID")
+			parsedCommentID, err := uuid.Parse(commentID)
+
+			if err != nil {
+				return &fiber.Error{Code: 400, Message: "Invalid ID"}
 			}
-			go routines.IncrementCommentLikes(parsedCommentID, userID)
-		} else {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
-		}
-	} else {
-		result := initializers.DB.Delete(&like)
-		if result.Error != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
-		}
-		go routines.DecrementCommentLikes(parsedCommentID)
-	}
 
-	return c.Status(200).JSON(fiber.Map{
-		"status":  "success",
-		"message": "Comment Liked/Unliked.",
-	})
-}
-
-func LikeEvent(c *fiber.Ctx) error {
-	loggedInUserID := c.GetRespHeader("loggedInUserID")
-	userID, _ := uuid.Parse(loggedInUserID)
-
-	eventID := c.Params("eventID")
-	parsedEventID, err := uuid.Parse(eventID)
-
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid ID"}
-	}
-
-	var like models.Like
-	if err := initializers.DB.Where("user_id=? AND event_id=?", userID, parsedEventID).First(&like).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			likeModel := models.Like{
-				EventID: &parsedEventID,
-				UserID:  userID,
+			var comment models.Comment
+			if err := initializers.DB.Where("id = ?", parsedCommentID).First(&comment).Error; err != nil {
+				if err == gorm.ErrRecordNotFound {
+					return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
+				}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 			}
-			result := initializers.DB.Create(&likeModel)
-			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
+
+			var like models.Like
+			if err := initializers.DB.Where("user_id=? AND comment_id=?", parsedLoggedInUserID, parsedCommentID).First(&like).Error; err != nil {
+				if err == gorm.ErrRecordNotFound {
+					likeModel := models.Like{
+						CommentID: &comment.ID,
+						UserID:    parsedLoggedInUserID,
+					}
+					result := initializers.DB.Create(&likeModel)
+					if result.Error != nil {
+						return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
+					}
+					go routines.IncrementCommentLikes(parsedCommentID, parsedLoggedInUserID)
+				} else {
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+				}
+			} else {
+				result := initializers.DB.Delete(&like)
+				if result.Error != nil {
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
+				}
+				go routines.DecrementCommentLikes(parsedCommentID)
 			}
-			go routines.IncrementEventLikesAndSendNotification(parsedEventID, userID)
-		} else {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+		case "event":
+			eventID := c.Params("eventID")
+			parsedEventID, err := uuid.Parse(eventID)
+
+			if err != nil {
+				return &fiber.Error{Code: 400, Message: "Invalid ID"}
+			}
+
+			var like models.Like
+			if err := initializers.DB.Where("user_id=? AND event_id=?", parsedLoggedInUserID, parsedEventID).First(&like).Error; err != nil {
+				if err == gorm.ErrRecordNotFound {
+					likeModel := models.Like{
+						EventID: &parsedEventID,
+						UserID:  parsedLoggedInUserID,
+					}
+					result := initializers.DB.Create(&likeModel)
+					if result.Error != nil {
+						return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
+					}
+					go routines.IncrementEventLikesAndSendNotification(parsedEventID, parsedLoggedInUserID)
+				} else {
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+				}
+			} else {
+				result := initializers.DB.Delete(&like)
+				if result.Error != nil {
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
+				}
+				go routines.DecrementEventLikes(parsedEventID)
+			}
 		}
-	} else {
-		result := initializers.DB.Delete(&like)
-		if result.Error != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
-		}
-		go routines.DecrementEventLikes(parsedEventID)
+		return c.Status(200).JSON(fiber.Map{
+			"status":  "success",
+			"message": "Liked/Unliked.",
+		})
 	}
-	return c.Status(200).JSON(fiber.Map{
-		"status":  "success",
-		"message": "Event Liked/Unliked.",
-	})
 }
