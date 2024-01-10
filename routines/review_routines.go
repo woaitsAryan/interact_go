@@ -20,7 +20,7 @@ func ComputeRelevance(reviewID uuid.UUID) {
 		helpers.LogDatabaseError("No Review of this ID found-ComputeRelevance.", err, "go_routine")
 		return
 	}
-	review.Relevance = rand.Intn(91) + 10
+	review.Relevance = int8(rand.Intn(91) + 10)
 	if err := initializers.DB.Save(&review).Error; err != nil {
 		helpers.LogDatabaseError("Error in saving Review-ComputeRelevance.", err, "go_routine")
 	}

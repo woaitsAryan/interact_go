@@ -17,7 +17,7 @@ type Application struct {
 	User          User             `gorm:"" json:"user"`
 	Email         string           `gorm:"" json:"email"`
 	CreatedAt     time.Time        `gorm:"default:current_timestamp" json:"createdAt"`
-	Status        int              `json:"status"` //* -1 rejected, 0 submitted, 1 under review, 2 accepted
+	Status        int8             `json:"status"` //* -1 rejected, 0 submitted, 1 under review, 2 accepted
 	Content       string           `gorm:"type:text;not null" json:"content"`
 	Resume        string           `gorm:"type:text" json:"resume"`
 	Links         pq.StringArray   `gorm:"type:text[]" json:"links"`

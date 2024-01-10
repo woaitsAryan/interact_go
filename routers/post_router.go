@@ -16,5 +16,5 @@ func PostRouter(app *fiber.App) {
 	postRoutes.Delete("/:postID", controllers.DeletePost)
 
 	postRoutes.Get("/like/:postID", controllers.LikeItem("post"))
-
+	postRoutes.Get("/dislike/:postID", controllers.DislikeItem("post"))
 }

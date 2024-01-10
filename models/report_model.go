@@ -8,7 +8,7 @@ import (
 
 type Report struct { //TODO notifications will be sent after reporting
 	ID          uuid.UUID  `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	ReportType  int        `json:"reportType"`
+	ReportType  int8       `json:"reportType"`
 	ReporterID  uuid.UUID  `gorm:"type:uuid;not null" json:"reporterID"`
 	Reporter    User       `json:"report"`
 	UserID      *uuid.UUID `gorm:"type:uuid;" json:"userID"`

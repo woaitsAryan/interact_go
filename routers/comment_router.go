@@ -20,4 +20,5 @@ func CommentRouter(app *fiber.App) {
 	commentRoutes.Delete("/:commentID", controllers.DeleteComment)
 
 	commentRoutes.Get("/like/:commentID", controllers.LikeItem("comment"))
+	commentRoutes.Get("/dislike/:commentID", controllers.DislikeItem("comment"))
 }

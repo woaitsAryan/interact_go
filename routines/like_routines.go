@@ -193,7 +193,7 @@ func DecrementEventLikes(eventID uuid.UUID) {
 	}
 }
 
-func IncrementReviewLikes(eventID uuid.UUID, loggedInUserID uuid.UUID) {
+func IncrementReviewUpVotes(eventID uuid.UUID, loggedInUserID uuid.UUID) {
 	var review models.Review
 	if err := initializers.DB.Preload("Organization").First(&review, "id = ?", eventID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -224,7 +224,7 @@ func IncrementReviewLikes(eventID uuid.UUID, loggedInUserID uuid.UUID) {
 	// }
 }
 
-func DecrementReviewLikes(reviewID uuid.UUID) {
+func DecrementReviewUpVotes(reviewID uuid.UUID) {
 	var review models.Review
 	if err := initializers.DB.First(&review, "id = ?", reviewID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -234,6 +234,42 @@ func DecrementReviewLikes(reviewID uuid.UUID) {
 		}
 	} else {
 		review.NumberOfUpVotes--
+
+		result := initializers.DB.Save(&review)
+		if result.Error != nil {
+			helpers.LogDatabaseError("Error while updating Review-DecrementReviewLikes", result.Error, "go_routine")
+		}
+	}
+}
+
+func IncrementReviewDownVotes(eventID uuid.UUID, loggedInUserID uuid.UUID) {
+	var review models.Review
+	if err := initializers.DB.Preload("Organization").First(&review, "id = ?", eventID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			helpers.LogDatabaseError("No Review of this ID found-IncrementReviewLikesAndSendNotification.", err, "go_routine")
+		} else {
+			helpers.LogDatabaseError("Error while fetching Review-IncrementReviewLikesAndSendNotification", err, "go_routine")
+		}
+	} else {
+		review.NumberOfDownVotes++
+
+		result := initializers.DB.Save(&review)
+		if result.Error != nil {
+			helpers.LogDatabaseError("Error while updating Review-IncrementReviewLikesAndSendNotification", result.Error, "go_routine")
+		}
+	}
+}
+
+func DecrementReviewDownVotes(reviewID uuid.UUID) {
+	var review models.Review
+	if err := initializers.DB.First(&review, "id = ?", reviewID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			helpers.LogDatabaseError("No Review of this ID found-DecrementReviewLikes.", err, "go_routine")
+		} else {
+			helpers.LogDatabaseError("Error while fetching Review-DecrementReviewLikes", err, "go_routine")
+		}
+	} else {
+		review.NumberOfDownVotes--
 
 		result := initializers.DB.Save(&review)
 		if result.Error != nil {

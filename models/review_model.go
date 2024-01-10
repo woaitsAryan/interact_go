@@ -21,8 +21,8 @@ type Review struct {
 	OrganizationID    uuid.UUID    `gorm:"type:uuid;not null" json:"organizationID"`
 	Organization      Organization `gorm:"" json:"-"`
 	Content           string       `gorm:"type:text;not null" json:"content"`
-	Relevance         int          `gorm:"not null;default:10" json:"-"`
-	Rating            int          `gorm:"not null;default:0" json:"rating"`
+	Relevance         int8         `gorm:"not null;default:10" json:"-"`
+	Rating            int8         `gorm:"not null;default:0" json:"rating"`
 	NumberOfUpVotes   int          `gorm:"not null;default:0" json:"noUpVotes"`
 	NumberOfDownVotes int          `gorm:"not null;default:0" json:"noDownVotes"`
 	Anonymous         bool         `gorm:"not null;default:false" json:"isAnonymous"`

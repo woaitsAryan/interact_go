@@ -25,7 +25,6 @@ type Project struct {
 	TotalNoViews        int                   `gorm:"default:0" json:"totalNoViews"`
 	Category            string                `gorm:"type:text;not null" json:"category"`
 	IsPrivate           bool                  `gorm:"default:false" json:"isPrivate"`
-	TRatio              int                   `json:"-"`
 	Views               int                   `json:"views"`
 	NumberOfMembers     int                   `gorm:"default:1" json:"noMembers"`
 	Impressions         int                   `gorm:"default:0" json:"noImpressions"`
@@ -77,7 +76,7 @@ history type:
 type ProjectHistory struct {
 	ID            uuid.UUID   `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	ProjectID     uuid.UUID   `gorm:"type:uuid;not null" json:"projectID"`
-	HistoryType   int         `json:"historyType"`
+	HistoryType   int8        `json:"historyType"`
 	SenderID      uuid.UUID   `gorm:"type:uuid;not null" json:"senderID"`
 	Sender        User        `json:"sender"`
 	UserID        *uuid.UUID  `gorm:"type:uuid" json:"userID"`

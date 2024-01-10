@@ -30,7 +30,7 @@ notification type:
 
 type Notification struct {
 	ID               uuid.UUID   `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	NotificationType int         `json:"notificationType"`
+	NotificationType int16       `json:"notificationType"`
 	UserID           uuid.UUID   `gorm:"type:uuid;not null" json:"userID"`
 	User             User        `json:"user"`
 	SenderID         uuid.UUID   `gorm:"type:uuid;not null" json:"senderID"`

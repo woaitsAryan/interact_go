@@ -16,9 +16,9 @@ type Organization struct {
 	History           []OrganizationHistory    `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE" json:"history"`
 	Events            []Event                  `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE" json:"events"`
 	Reviews           []Review                 `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE" json:"-"`
-	NumberOfMembers   int                      `gorm:"default:0" json:"noMembers"`
-	NumberOfEvents    int                      `gorm:"default:0" json:"noEvents"`
-	NumberOfProjects  int                      `gorm:"default:0" json:"noProjects"`
+	NumberOfMembers   int16                    `gorm:"default:0" json:"noMembers"`
+	NumberOfEvents    int16                    `gorm:"default:0" json:"noEvents"`
+	NumberOfProjects  int16                    `gorm:"default:0" json:"noProjects"`
 	CreatedAt         time.Time                `gorm:"default:current_timestamp" json:"createdAt"`
 }
 
@@ -72,7 +72,7 @@ history type:
 type OrganizationHistory struct {
 	ID             uuid.UUID  `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	OrganizationID uuid.UUID  `gorm:"type:uuid;not null" json:"orgID"`
-	HistoryType    int        `json:"historyType"`
+	HistoryType    int8       `json:"historyType"`
 	UserID         uuid.UUID  `gorm:"type:uuid;not null" json:"userID"`
 	User           User       `json:"user"`
 	PostID         *uuid.UUID `gorm:"type:uuid" json:"postID"`
