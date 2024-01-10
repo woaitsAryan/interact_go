@@ -13,7 +13,6 @@ import (
 
 func LikeItem(likeType string) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
-
 		loggedInUserID := c.GetRespHeader("loggedInUserID")
 		parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
@@ -153,7 +152,38 @@ func LikeItem(likeType string) func(c *fiber.Ctx) error {
 				}
 				go routines.DecrementEventLikes(parsedEventID)
 			}
+		case "review":
+			reviewID := c.Params("reviewID")
+			parsedReviewID, err := uuid.Parse(reviewID)
+
+			if err != nil {
+				return &fiber.Error{Code: 400, Message: "Invalid ID"}
+			}
+
+			var like models.Like
+			if err := initializers.DB.Where("user_id=? AND review_id=?", parsedLoggedInUserID, parsedReviewID).First(&like).Error; err != nil {
+				if err == gorm.ErrRecordNotFound {
+					likeModel := models.Like{
+						EventID: &parsedReviewID,
+						UserID:  parsedLoggedInUserID,
+					}
+					result := initializers.DB.Create(&likeModel)
+					if result.Error != nil {
+						return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
+					}
+					go routines.IncrementReviewLikes(parsedReviewID, parsedLoggedInUserID)
+				} else {
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+				}
+			} else {
+				result := initializers.DB.Delete(&like)
+				if result.Error != nil {
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
+				}
+				go routines.DecrementReviewLikes(parsedReviewID)
+			}
 		}
+
 		return c.Status(200).JSON(fiber.Map{
 			"status":  "success",
 			"message": "Liked/Unliked.",

@@ -25,6 +25,7 @@
         "gorm",
         "hasher",
         "SENDGRID",
+        "varchar",
         "Warnw"
     ]
 }

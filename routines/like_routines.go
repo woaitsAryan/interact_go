@@ -192,3 +192,52 @@ func DecrementEventLikes(eventID uuid.UUID) {
 		}
 	}
 }
+
+func IncrementReviewLikes(eventID uuid.UUID, loggedInUserID uuid.UUID) {
+	var review models.Review
+	if err := initializers.DB.Preload("Organization").First(&review, "id = ?", eventID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			helpers.LogDatabaseError("No Review of this ID found-IncrementReviewLikesAndSendNotification.", err, "go_routine")
+		} else {
+			helpers.LogDatabaseError("Error while fetching Review-IncrementReviewLikesAndSendNotification", err, "go_routine")
+		}
+	} else {
+		review.NumberOfUpVotes++
+
+		result := initializers.DB.Save(&review)
+		if result.Error != nil {
+			helpers.LogDatabaseError("Error while updating Review-IncrementReviewLikesAndSendNotification", result.Error, "go_routine")
+		}
+	}
+
+	// if loggedInUserID != review.Organization.UserID && loggedInUserID != review.UserID {
+	// 	notification := models.Notification{
+	// 		NotificationType: 12,
+	// 		UserID:           review.Organization.UserID,
+	// 		SenderID:         loggedInUserID,
+	// 		EventID:          &review.ID,
+	// 	}
+
+	// 	if err := initializers.DB.Create(&notification).Error; err != nil {
+	// 		helpers.LogDatabaseError("Error while creating Notification-IncrementReviewLikesAndSendNotification", err, "go_routine")
+	// 	}
+	// }
+}
+
+func DecrementReviewLikes(reviewID uuid.UUID) {
+	var review models.Review
+	if err := initializers.DB.First(&review, "id = ?", reviewID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			helpers.LogDatabaseError("No Review of this ID found-DecrementReviewLikes.", err, "go_routine")
+		} else {
+			helpers.LogDatabaseError("Error while fetching Review-DecrementReviewLikes", err, "go_routine")
+		}
+	} else {
+		review.NumberOfUpVotes--
+
+		result := initializers.DB.Save(&review)
+		if result.Error != nil {
+			helpers.LogDatabaseError("Error while updating Review-DecrementReviewLikes", result.Error, "go_routine")
+		}
+	}
+}

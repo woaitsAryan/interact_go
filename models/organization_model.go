@@ -15,6 +15,7 @@ type Organization struct {
 	Invitations       []Invitation             `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE" json:"invitations"`
 	History           []OrganizationHistory    `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE" json:"history"`
 	Events            []Event                  `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE" json:"events"`
+	Reviews           []Review                 `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE" json:"-"`
 	NumberOfMembers   int                      `gorm:"default:0" json:"noMembers"`
 	NumberOfEvents    int                      `gorm:"default:0" json:"noEvents"`
 	NumberOfProjects  int                      `gorm:"default:0" json:"noProjects"`
