@@ -25,12 +25,12 @@ func handleLikeStatus(likeType string, parsedLoggedInUserID, parsedItemID uuid.U
 
 			result := initializers.DB.Create(&likeModel)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
+				return result.Error
 			}
 
 			go incrementFunc(parsedItemID, parsedLoggedInUserID)
 		} else {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+			return err
 		}
 	} else {
 		// Update the like status
@@ -38,7 +38,7 @@ func handleLikeStatus(likeType string, parsedLoggedInUserID, parsedItemID uuid.U
 			like.Status = 0
 			result := initializers.DB.Save(&like)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
+				return result.Error
 			}
 
 			go incrementFunc(parsedItemID, parsedLoggedInUserID)
@@ -46,7 +46,7 @@ func handleLikeStatus(likeType string, parsedLoggedInUserID, parsedItemID uuid.U
 			// Delete the like record
 			result := initializers.DB.Delete(&like)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
+				return result.Error
 			}
 
 			go decrementFunc(parsedItemID)
@@ -71,12 +71,12 @@ func handleDislikeStatus(likeType string, parsedLoggedInUserID, parsedItemID uui
 
 			result := initializers.DB.Create(&likeModel)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
+				return result.Error
 			}
 
 			go incrementFunc(parsedItemID, parsedLoggedInUserID)
 		} else {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+			return err
 		}
 	} else {
 		// Update the like status
@@ -84,7 +84,7 @@ func handleDislikeStatus(likeType string, parsedLoggedInUserID, parsedItemID uui
 			like.Status = -1
 			result := initializers.DB.Save(&like)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
+				return result.Error
 			}
 
 			go incrementFunc(parsedItemID, parsedLoggedInUserID)
@@ -92,7 +92,7 @@ func handleDislikeStatus(likeType string, parsedLoggedInUserID, parsedItemID uui
 			// Delete the like record
 			result := initializers.DB.Delete(&like)
 			if result.Error != nil {
-				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
+				return result.Error
 			}
 
 			go decrementFunc(parsedItemID)
@@ -148,7 +148,7 @@ func LikeItem(likeType string) func(c *fiber.Ctx) error {
 		}
 
 		if err := handleLikeStatus(likeType, parsedLoggedInUserID, parsedItemID, incrementFunc, decrementFunc); err != nil {
-			return err
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 
 		return c.Status(200).JSON(fiber.Map{
@@ -204,7 +204,7 @@ func DislikeItem(likeType string) func(c *fiber.Ctx) error {
 		}
 
 		if err := handleDislikeStatus(likeType, parsedLoggedInUserID, parsedItemID, incrementFunc, decrementFunc); err != nil {
-			return err
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 
 		return c.Status(200).JSON(fiber.Map{
