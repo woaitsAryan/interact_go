@@ -71,7 +71,7 @@ func GetMyLikes(c *fiber.Ctx) error {
 
 	var likes []models.Like
 	if err := initializers.DB.
-		Find(&likes, "user_id = ?", loggedInUserID).Error; err != nil {
+		Find(&likes, "user_id = ? AND status = 0", loggedInUserID).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
@@ -85,6 +85,8 @@ func GetMyLikes(c *fiber.Ctx) error {
 			likeIDs = append(likeIDs, like.CommentID.String())
 		} else if like.EventID != nil {
 			likeIDs = append(likeIDs, like.EventID.String())
+		} else if like.ReviewID != nil {
+			likeIDs = append(likeIDs, like.ReviewID.String())
 		}
 	}
 
@@ -92,6 +94,37 @@ func GetMyLikes(c *fiber.Ctx) error {
 		"status":  "success",
 		"message": "User Found",
 		"likes":   likeIDs,
+	})
+}
+
+func GetMyDislikes(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	var likes []models.Like
+	if err := initializers.DB.
+		Find(&likes, "user_id = ? AND status = -1", loggedInUserID).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	var likeIDs []string
+	for _, like := range likes {
+		if like.PostID != nil {
+			likeIDs = append(likeIDs, like.PostID.String())
+		} else if like.ProjectID != nil {
+			likeIDs = append(likeIDs, like.ProjectID.String())
+		} else if like.CommentID != nil {
+			likeIDs = append(likeIDs, like.CommentID.String())
+		} else if like.EventID != nil {
+			likeIDs = append(likeIDs, like.EventID.String())
+		} else if like.ReviewID != nil {
+			likeIDs = append(likeIDs, like.ReviewID.String())
+		}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":   "success",
+		"message":  "User Found",
+		"dislikes": likeIDs,
 	})
 }
 
