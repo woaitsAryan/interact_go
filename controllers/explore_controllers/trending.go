@@ -64,6 +64,7 @@ func GetTrendingPosts(c *fiber.Ctx) error {
 			Preload("RePost").
 			Preload("RePost.User").
 			Preload("RePost.TaggedUsers").
+			Preload("TaggedUsers").
 			Where("user_id <> ?", loggedInUserID).
 			Joins("JOIN users ON posts.user_id = users.id AND users.active = ?", true).
 			Select("*, posts.id, posts.created_at, (2 * no_likes + no_comments + 5 * no_shares) / (1 + EXTRACT(EPOCH FROM age(NOW(), posts.created_at)) / 3600 / 24 / 7) AS weighted_average"). //! 7 days

@@ -158,6 +158,7 @@ func AddPost(c *fiber.Ctx) error {
 			return &fiber.Error{Code: 400, Message: "Invalid Post ID in rePost"}
 		}
 		newPost.RePostID = &parsedRePostID
+		newPost.IsRePost = true
 	}
 
 	if reqBody.TaggedUsernames != nil {
@@ -312,6 +313,24 @@ func DeletePost(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
 	}
 
+	orgMemberID := c.GetRespHeader("orgMemberID")
+	orgID := c.Params("orgID")
+
+	parsedOrgID := uuid.Nil
+	parsedOrgMemberID := uuid.Nil
+
+	if orgMemberID != "" && orgID != "" {
+		parsedOrgID, err = uuid.Parse(orgID)
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
+		}
+
+		parsedOrgMemberID, err = uuid.Parse(orgMemberID)
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid User ID."}
+		}
+	}
+
 	var post models.Post
 	if err := initializers.DB.Preload("User").First(&post, "id = ? AND user_id=?", parsedPostID, loggedInUserID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -320,44 +339,64 @@ func DeletePost(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	for _, image := range post.Images {
-		go routines.DeleteFromBucket(helpers.PostClient, image)
+	tx := initializers.DB.Begin()
+	if tx.Error != nil {
+		return tx.Error
 	}
 
+	defer func() {
+		if tx.Error != nil {
+			tx.Rollback()
+			go helpers.LogDatabaseError("Transaction rolled back due to error", tx.Error, "DeletePost")
+		}
+	}()
+
+	// Delete all the shared messages
 	var messages []models.Message
-	if err := initializers.DB.Find(&messages, "post_id=?", parsedPostID).Error; err != nil {
+	if err := tx.Find(&messages, "post_id=?", parsedPostID).Error; err != nil {
 		if err != gorm.ErrRecordNotFound {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	}
 
 	for _, message := range messages {
-		if err := initializers.DB.Delete(&message).Error; err != nil {
+		if err := tx.Delete(&message).Error; err != nil {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	}
 
-	// Delete all users from the task_assigned_users table
-	if err := initializers.DB.Model(&post).Association("TaggedUsers").Clear(); err != nil {
+	// Delete all the tagged users
+	if err := tx.Model(&post).Association("TaggedUsers").Clear(); err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	if err := initializers.DB.Delete(&post).Error; err != nil {
+	// Edit all the posts where this is a repost
+	var posts []models.Post
+	if err := tx.Where("re_post_id=?", post.ID).Find(&posts).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	orgMemberID := c.GetRespHeader("orgMemberID")
-	orgID := c.Params("orgID")
+	for _, p := range posts {
+		p.RePostID = nil
+		if err := tx.Save(&p).Error; err != nil {
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+		}
+	}
+
+	// Delete the post
+	if err := tx.Delete(&post).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	for _, image := range post.Images {
+		go routines.DeleteFromBucket(helpers.PostClient, image)
+	}
+
 	if orgMemberID != "" && orgID != "" {
-		parsedOrgID, err := uuid.Parse(orgID)
-		if err != nil {
-			return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
-		}
-
-		parsedOrgMemberID, err := uuid.Parse(orgMemberID)
-		if err != nil {
-			return &fiber.Error{Code: 400, Message: "Invalid User ID."}
-		}
 		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 7, nil, nil, nil, nil, nil, post.Content)
 	}
 
