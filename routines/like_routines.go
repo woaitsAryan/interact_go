@@ -193,9 +193,9 @@ func DecrementEventLikes(eventID uuid.UUID) {
 	}
 }
 
-func IncrementReviewUpVotes(eventID uuid.UUID, loggedInUserID uuid.UUID) {
+func IncrementReviewUpVotes(reviewID uuid.UUID, loggedInUserID uuid.UUID) {
 	var review models.Review
-	if err := initializers.DB.Preload("Organization").First(&review, "id = ?", eventID).Error; err != nil {
+	if err := initializers.DB.Preload("Organization").First(&review, "id = ?", reviewID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			helpers.LogDatabaseError("No Review of this ID found-IncrementReviewLikesAndSendNotification.", err, "go_routine")
 		} else {

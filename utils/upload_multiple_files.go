@@ -23,6 +23,7 @@ func UploadMultipleImages(c *fiber.Ctx, fieldName string, client *helpers.Bucket
 	for _, file := range files {
 		resizedImgBuffer, err := ResizeFormImage(file, width, height)
 		if err != nil {
+			go helpers.LogServerError("Error while resize image", err, c.Path())
 			continue
 		}
 
@@ -32,6 +33,7 @@ func UploadMultipleImages(c *fiber.Ctx, fieldName string, client *helpers.Bucket
 
 		err = client.UploadBucketFile(resizedImgBuffer, resizedPicPath)
 		if err != nil {
+			go helpers.LogServerError("Error while uploading to bucket", err, c.Path())
 			continue
 		}
 

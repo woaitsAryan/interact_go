@@ -16,7 +16,7 @@ Has a relevance field to compute relevance of the review and sort by it.
 */
 type Review struct {
 	ID                uuid.UUID    `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	UserID            uuid.UUID    `gorm:"type:uuid;not null" json:"userID"`
+	UserID            *uuid.UUID   `gorm:"type:uuid;" json:"userID"`
 	User              User         `gorm:"" json:"user"`
 	OrganizationID    uuid.UUID    `gorm:"type:uuid;not null" json:"organizationID"`
 	Organization      Organization `gorm:"" json:"-"`
@@ -27,11 +27,12 @@ type Review struct {
 	NumberOfDownVotes int          `gorm:"not null;default:0" json:"noDownVotes"`
 	Anonymous         bool         `gorm:"not null;default:false" json:"isAnonymous"`
 	CreatedAt         time.Time    `gorm:"default:current_timestamp" json:"createdAt"`
+	Likes             []Like       `gorm:"foreignKey:ReviewID;constraint:OnDelete:CASCADE" json:"-"`
 }
 
 func (r *Review) AfterFind(tx *gorm.DB) error {
 	if r.Anonymous {
-		r.UserID = uuid.Nil
+		r.UserID = nil
 		r.User = User{}
 	}
 	return nil

@@ -9,13 +9,13 @@ import (
 )
 
 func ReviewRouter(app *fiber.App) {
-	app.Get("/org/:orgID/review", organization_controllers.FetchOrgReviews)
+	app.Get("/org/:orgID/reviews", organization_controllers.FetchOrgReviews)
 
 	//TODO change all like/dislike routes to POST
-	app.Get("/org/:orgID/review/like/:reviewID", middlewares.Protect, controllers.LikeItem("review"))
-	app.Get("/org/:orgID/review/dislike/:reviewID", middlewares.Protect, controllers.DislikeItem("review"))
+	app.Get("/org/:orgID/reviews/like/:reviewID", middlewares.Protect, controllers.LikeItem("review"))
+	app.Get("/org/:orgID/reviews/dislike/:reviewID", middlewares.Protect, controllers.DislikeItem("review"))
 
-	reviewRoutes := app.Group("/org/:orgID/review", middlewares.OrgRoleAuthorization(models.Member), middlewares.Protect)
+	reviewRoutes := app.Group("/org/:orgID/reviews", middlewares.OrgRoleAuthorization(models.Member), middlewares.Protect)
 	reviewRoutes.Post("/", organization_controllers.AddReview)
-	reviewRoutes.Delete("/", organization_controllers.DeleteReview)
+	reviewRoutes.Delete("/:reviewID", organization_controllers.DeleteReview)
 }

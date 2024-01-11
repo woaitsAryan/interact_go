@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func handleLikeStatus(likeType string, parsedLoggedInUserID, parsedItemID uuid.UUID, incrementFunc func(uuid.UUID, uuid.UUID), decrementFunc func(uuid.UUID)) error {
+func handleLikeStatus(likeType string, parsedLoggedInUserID, parsedItemID uuid.UUID, incrementFunc func(uuid.UUID, uuid.UUID), decrementFunc func(uuid.UUID), updateFunc func(uuid.UUID, uuid.UUID)) error {
 	var like models.Like
 
 	err := initializers.DB.Where("user_id=? AND "+likeType+"_id=?", parsedLoggedInUserID, parsedItemID).First(&like).Error
@@ -41,7 +41,7 @@ func handleLikeStatus(likeType string, parsedLoggedInUserID, parsedItemID uuid.U
 				return result.Error
 			}
 
-			go incrementFunc(parsedItemID, parsedLoggedInUserID)
+			go updateFunc(parsedItemID, parsedLoggedInUserID)
 		} else {
 			// Delete the like record
 			result := initializers.DB.Delete(&like)
@@ -56,7 +56,7 @@ func handleLikeStatus(likeType string, parsedLoggedInUserID, parsedItemID uuid.U
 	return nil
 }
 
-func handleDislikeStatus(likeType string, parsedLoggedInUserID, parsedItemID uuid.UUID, incrementFunc func(uuid.UUID, uuid.UUID), decrementFunc func(uuid.UUID)) error {
+func handleDislikeStatus(likeType string, parsedLoggedInUserID, parsedItemID uuid.UUID, incrementFunc func(uuid.UUID, uuid.UUID), decrementFunc func(uuid.UUID), updateFunc func(uuid.UUID, uuid.UUID)) error {
 	var like models.Like
 
 	err := initializers.DB.Where("user_id=? AND "+likeType+"_id=?", parsedLoggedInUserID, parsedItemID).First(&like).Error
@@ -87,7 +87,7 @@ func handleDislikeStatus(likeType string, parsedLoggedInUserID, parsedItemID uui
 				return result.Error
 			}
 
-			go incrementFunc(parsedItemID, parsedLoggedInUserID)
+			go updateFunc(parsedItemID, parsedLoggedInUserID)
 		} else {
 			// Delete the like record
 			result := initializers.DB.Delete(&like)
@@ -110,32 +110,42 @@ func LikeItem(likeType string) func(c *fiber.Ctx) error {
 		var itemIDParam string
 		var incrementFunc func(uuid.UUID, uuid.UUID)
 		var decrementFunc func(uuid.UUID)
+		var updateFunc func(uuid.UUID, uuid.UUID)
 
 		switch likeType {
 		case "post":
 			itemIDParam = "postID"
 			incrementFunc = routines.IncrementPostLikesAndSendNotification
 			decrementFunc = routines.DecrementPostLikes
+			updateFunc = func(u1, u2 uuid.UUID) {}
 
 		case "project":
 			itemIDParam = "projectID"
 			incrementFunc = routines.IncrementProjectLikesAndSendNotification
 			decrementFunc = routines.DecrementProjectLikes
+			updateFunc = func(u1, u2 uuid.UUID) {}
 
 		case "comment":
 			itemIDParam = "commentID"
 			incrementFunc = routines.IncrementCommentLikes
 			decrementFunc = routines.DecrementCommentLikes
+			updateFunc = func(u1, u2 uuid.UUID) {}
 
 		case "event":
 			itemIDParam = "eventID"
 			incrementFunc = routines.IncrementEventLikesAndSendNotification
 			decrementFunc = routines.DecrementEventLikes
+			updateFunc = func(u1, u2 uuid.UUID) {}
 
 		case "review":
 			itemIDParam = "reviewID"
 			incrementFunc = routines.IncrementReviewUpVotes
-			decrementFunc = routines.DecrementReviewDownVotes
+			decrementFunc = routines.DecrementReviewUpVotes
+			updateFunc = func(reviewID, userID uuid.UUID) {
+				routines.IncrementReviewUpVotes(reviewID, userID)
+				routines.DecrementReviewDownVotes(reviewID)
+			}
+
 		default:
 			return &fiber.Error{Code: 400, Message: "Invalid likeType"}
 		}
@@ -147,7 +157,7 @@ func LikeItem(likeType string) func(c *fiber.Ctx) error {
 			return &fiber.Error{Code: 400, Message: "Invalid ID"}
 		}
 
-		if err := handleLikeStatus(likeType, parsedLoggedInUserID, parsedItemID, incrementFunc, decrementFunc); err != nil {
+		if err := handleLikeStatus(likeType, parsedLoggedInUserID, parsedItemID, incrementFunc, decrementFunc, updateFunc); err != nil {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 
@@ -166,32 +176,42 @@ func DislikeItem(likeType string) func(c *fiber.Ctx) error {
 		var itemIDParam string
 		var incrementFunc func(uuid.UUID, uuid.UUID)
 		var decrementFunc func(uuid.UUID)
+		var updateFunc func(uuid.UUID, uuid.UUID)
 
 		switch likeType {
 		case "post":
 			itemIDParam = "postID"
 			incrementFunc = func(u1, u2 uuid.UUID) {}
 			decrementFunc = func(u1 uuid.UUID) {}
+			updateFunc = func(u1, u2 uuid.UUID) {}
 
 		case "project":
 			itemIDParam = "projectID"
 			incrementFunc = func(u1, u2 uuid.UUID) {}
 			decrementFunc = func(u1 uuid.UUID) {}
+			updateFunc = func(u1, u2 uuid.UUID) {}
 
 		case "comment":
 			itemIDParam = "commentID"
 			incrementFunc = func(u1, u2 uuid.UUID) {}
 			decrementFunc = func(u1 uuid.UUID) {}
+			updateFunc = func(u1, u2 uuid.UUID) {}
 
 		case "event":
 			itemIDParam = "eventID"
 			incrementFunc = func(u1, u2 uuid.UUID) {}
 			decrementFunc = func(u1 uuid.UUID) {}
+			updateFunc = func(u1, u2 uuid.UUID) {}
 
 		case "review":
 			itemIDParam = "reviewID"
 			incrementFunc = routines.IncrementReviewDownVotes
 			decrementFunc = routines.DecrementReviewDownVotes
+			updateFunc = func(reviewID, userID uuid.UUID) {
+				routines.IncrementReviewDownVotes(reviewID, userID)
+				routines.DecrementReviewUpVotes(reviewID)
+			}
+
 		default:
 			return &fiber.Error{Code: 400, Message: "Invalid likeType"}
 		}
@@ -203,7 +223,7 @@ func DislikeItem(likeType string) func(c *fiber.Ctx) error {
 			return &fiber.Error{Code: 400, Message: "Invalid ID"}
 		}
 
-		if err := handleDislikeStatus(likeType, parsedLoggedInUserID, parsedItemID, incrementFunc, decrementFunc); err != nil {
+		if err := handleDislikeStatus(likeType, parsedLoggedInUserID, parsedItemID, incrementFunc, decrementFunc, updateFunc); err != nil {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 
