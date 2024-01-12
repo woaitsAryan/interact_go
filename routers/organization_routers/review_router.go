@@ -8,6 +8,12 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+/* Router for reviewing organizations.
+
+Add and delete a review.
+Like, dislike, removing that like and dislike from that review.
+Fetch all reviews.
+*/
 func ReviewRouter(app *fiber.App) {
 	app.Get("/org/:orgID/reviews", organization_controllers.FetchOrgReviews)
 	app.Get("/org/:orgID/reviews/data", organization_controllers.GetOrgReviewData)

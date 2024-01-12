@@ -17,4 +17,5 @@ func Config(app *fiber.App) {
 	TaskRouter(app)
 	MiscRouter(app)
 	ReviewRouter(app)
+	PollRouter(app)
 }

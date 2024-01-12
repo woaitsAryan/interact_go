@@ -58,6 +58,8 @@ func AutoMigrate() {
 		&models.OrganizationHistory{},
 		&models.Event{},
 		&models.Review{},
+		&models.Poll{},
+		&models.Option{},
 
 		&models.Report{},
 		&models.Notification{},
