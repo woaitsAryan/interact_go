@@ -256,7 +256,7 @@ func UpdateResume(c *fiber.Ctx) error {
 	}
 
 	if oldResume != "" {
-		go routines.DeleteFromBucket(helpers.UserResumeBucket, oldResume)
+		go routines.DeleteFromBucket(helpers.UserResumeClient, oldResume)
 	}
 
 	return c.Status(200).JSON(fiber.Map{

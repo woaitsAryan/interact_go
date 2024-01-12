@@ -16,6 +16,7 @@ type Organization struct {
 	History           []OrganizationHistory    `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE" json:"history"`
 	Events            []Event                  `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE" json:"events"`
 	Reviews           []Review                 `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE" json:"-"`
+	ResourceBucket    []ResourceBucket         `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE" json:"-"`
 	NumberOfMembers   int16                    `gorm:"default:0" json:"noMembers"`
 	NumberOfEvents    int16                    `gorm:"default:0" json:"noEvents"`
 	NumberOfProjects  int16                    `gorm:"default:0" json:"noProjects"`

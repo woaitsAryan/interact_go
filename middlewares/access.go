@@ -85,6 +85,79 @@ func OrgRoleAuthorization(Role models.OrganizationRole) func(*fiber.Ctx) error {
 	}
 }
 
+func OrgBucketAuthorization(action string) func(*fiber.Ctx) error {
+	return func(c *fiber.Ctx) error {
+		loggedInUserID := c.GetRespHeader("loggedInUserID")
+		orgID := c.Params("orgID")
+		resourceBucketID := c.Params("resourceBucketID")
+
+		var organization models.Organization
+		if orgID != "" {
+			orgInCache, err := cache.GetOrganization("-access--" + orgID)
+			if err == nil {
+				organization = *orgInCache
+			} else {
+				if err := initializers.DB.Preload("Memberships").First(&organization, "id=?", orgID).Error; err != nil {
+					if err == gorm.ErrRecordNotFound {
+						return &fiber.Error{Code: 401, Message: "No Organization of this ID Found."}
+					}
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+				}
+
+				go cache.SetOrganization("-access--"+organization.ID.String(), &organization)
+			}
+		} else {
+			return &fiber.Error{Code: 401, Message: "Invalid Organization ID."}
+		}
+
+		if organization.UserID.String() == loggedInUserID {
+			c.Set("orgMemberID", c.GetRespHeader("loggedInUserID"))
+			return c.Next()
+		}
+
+		var resourceBucket models.ResourceBucket
+
+		resourceBucketInCache, err := cache.GetResourceBucket(resourceBucketID)
+		if err == nil {
+			resourceBucket = *resourceBucketInCache
+		} else {
+			if err := initializers.DB.Where("id=? AND organization_id = ?", resourceBucketID, orgID).First(&resourceBucket).Error; err != nil {
+				if err != gorm.ErrRecordNotFound {
+					return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Resource Bucket does not exist."}
+				}
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+			}
+		}
+
+		var check bool
+		check = false
+
+		level := models.Member
+		if action == "view" {
+			level = resourceBucket.ViewAccess
+		} else {
+			level = resourceBucket.EditAccess
+		}
+
+		for _, membership := range organization.Memberships {
+			if membership.UserID.String() == loggedInUserID {
+				if !checkOrgAccess(membership.Role, level) {
+					return &fiber.Error{Code: 403, Message: "You don't have the Permission to perform this action."}
+				}
+				c.Set("orgMemberID", c.GetRespHeader("loggedInUserID"))
+				c.Set("loggedInUserID", organization.UserID.String())
+				check = true
+				break
+			}
+		}
+		if !check {
+			return &fiber.Error{Code: 403, Message: "Cannot access this Organization."}
+		}
+
+		return c.Next()
+	}
+}
+
 func ProjectRoleAuthorization(Role models.ProjectRole) func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		loggedInUserID := c.GetRespHeader("loggedInUserID")

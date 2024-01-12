@@ -1,6 +1,8 @@
 package organization_controllers
 
 import (
+	"math"
+
 	"github.com/Pratham-Mishra04/interact/cache"
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
@@ -58,6 +60,7 @@ func GetOrgReviewData(c *fiber.Ctx) error {
 
 	if len(reviews) > 0 {
 		avgRating = float64(totalRatings) / float64(len(reviews))
+		avgRating = math.Round(avgRating*100) / 100 // Round to two decimal places
 	}
 
 	reviewData.Average = avgRating
@@ -181,6 +184,7 @@ func DeleteReview(c *fiber.Ctx) error {
 		}
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
+
 	if err := initializers.DB.Delete(&review).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
