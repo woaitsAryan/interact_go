@@ -1,6 +1,7 @@
 package organization_controllers
 
 import (
+	"github.com/Pratham-Mishra04/interact/cache"
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
@@ -12,6 +13,64 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
+
+type ReviewData struct {
+	Total   int          `json:"total"`
+	Average float64      `json:"average"`
+	Counts  map[int8]int `json:"counts"`
+}
+
+func GetOrgReviewData(c *fiber.Ctx) error {
+	orgID := c.Params("orgID")
+	parsedOrgID, err := uuid.Parse(orgID)
+	if err != nil {
+		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid Organization ID."}
+	}
+
+	var reviewData ReviewData
+	if err = cache.GetFromCacheGeneric("review-data-"+orgID, reviewData); err == nil {
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{
+			"status":     "success",
+			"reviewData": reviewData,
+		})
+	}
+
+	var reviews []models.Review
+	if err := initializers.DB.Where("organization_id = ?", parsedOrgID).Find(&reviews).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	ratingCounts := make(map[int8]int)
+
+	totalRatings := 0
+	avgRating := 0.0
+
+	ratingCounts[1] = 0
+	ratingCounts[2] = 0
+	ratingCounts[3] = 0
+	ratingCounts[4] = 0
+	ratingCounts[5] = 0
+
+	for _, review := range reviews {
+		ratingCounts[review.Rating]++
+		totalRatings += int(review.Rating)
+	}
+
+	if len(reviews) > 0 {
+		avgRating = float64(totalRatings) / float64(len(reviews))
+	}
+
+	reviewData.Average = avgRating
+	reviewData.Counts = ratingCounts
+	reviewData.Total = len(reviews)
+
+	go cache.SetToCacheGeneric("review-data-"+orgID, reviewData)
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":     "success",
+		"reviewData": reviewData,
+	})
+}
 
 /*
 	Fetches all organizational reviews
@@ -57,7 +116,9 @@ func AddReview(c *fiber.Ctx) error {
 	if err != nil {
 		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid User ID."}
 	}
-	parsedOrgID, err := uuid.Parse(c.Params("orgID"))
+
+	orgID := c.Params("orgID")
+	parsedOrgID, err := uuid.Parse(orgID)
 	if err != nil {
 		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid Organization ID."}
 	}
@@ -69,11 +130,16 @@ func AddReview(c *fiber.Ctx) error {
 		Rating:         reqBody.Rating,
 		Anonymous:      reqBody.Anonymous,
 	}
+	if reqBody.Anonymous {
+		review.UserID = nil
+	}
+
 	if err := initializers.DB.Create(&review).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	go routines.ComputeRelevance(review.ID)
+	go cache.RemoveFromCacheGeneric("review-data-" + orgID)
 
 	if err := initializers.DB.Preload("User").First(&review).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
@@ -101,7 +167,9 @@ func DeleteReview(c *fiber.Ctx) error {
 	if err != nil {
 		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid User ID."}
 	}
-	parsedOrgID, err := uuid.Parse(c.Params("orgID"))
+
+	orgID := c.Params("orgID")
+	parsedOrgID, err := uuid.Parse(orgID)
 	if err != nil {
 		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid Organization ID."}
 	}
@@ -116,6 +184,8 @@ func DeleteReview(c *fiber.Ctx) error {
 	if err := initializers.DB.Delete(&review).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
+
+	go cache.RemoveFromCacheGeneric("review-data-" + orgID)
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",

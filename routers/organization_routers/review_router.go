@@ -10,6 +10,7 @@ import (
 
 func ReviewRouter(app *fiber.App) {
 	app.Get("/org/:orgID/reviews", organization_controllers.FetchOrgReviews)
+	app.Get("/org/:orgID/reviews/data", organization_controllers.GetOrgReviewData)
 
 	//TODO change all like/dislike routes to POST
 	app.Get("/org/:orgID/reviews/like/:reviewID", middlewares.Protect, controllers.LikeItem("review"))
