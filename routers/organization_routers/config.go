@@ -16,5 +16,6 @@ func Config(app *fiber.App) {
 	MembershipRouter(app)
 	TaskRouter(app)
 	MiscRouter(app)
+	ResourceRouter(app)
 	ReviewRouter(app)
 }
