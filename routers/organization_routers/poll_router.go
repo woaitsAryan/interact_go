@@ -14,6 +14,6 @@ func PollRouter(app *fiber.App) {
 	pollRouter.Get("/", middlewares.OrgRoleAuthorization(models.Member), organization_controllers.FetchPolls)
 	pollRouter.Patch("/vote/:pollID/:OptionID", middlewares.OrgRoleAuthorization(models.Member),  organization_controllers.VotePoll)
 	pollRouter.Patch("/unvote/:OptionID", middlewares.OrgRoleAuthorization(models.Member), organization_controllers.UnvotePoll)
-	pollRouter.Delete("/:pollID", middlewares.OrgRoleAuthorization(models.Senior), organization_controllers.DeletePoll)
+	pollRouter.Delete("/:pollID", middlewares.OrgRoleAuthorization(models.Manager), organization_controllers.DeletePoll)
 	pollRouter.Patch("/:pollID", middlewares.OrgRoleAuthorization(models.Senior), organization_controllers.EditPoll)
 }

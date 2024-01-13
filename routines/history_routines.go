@@ -110,6 +110,7 @@ func MarkOrganizationHistory(
 	eventID *uuid.UUID,
 	taskID *uuid.UUID,
 	invitationID *uuid.UUID,
+	pollID *uuid.UUID,
 	deletedText string) {
 
 	organizationHistory := models.OrganizationHistory{
@@ -132,6 +133,9 @@ func MarkOrganizationHistory(
 	}
 	if invitationID != nil {
 		organizationHistory.InvitationID = invitationID
+	}
+	if pollID != nil{
+		organizationHistory.PollID = pollID
 	}
 	if deletedText != "" {
 		organizationHistory.DeletedText = deletedText

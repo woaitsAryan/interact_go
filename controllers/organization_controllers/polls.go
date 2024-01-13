@@ -5,6 +5,7 @@ import (
 
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/schemas"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -55,6 +56,10 @@ func CreatePoll(c *fiber.Ctx) error {
 	if err := initializers.DB.Save(&poll).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal  error"})
 	}
+
+	parsedUserID, _ := uuid.Parse(c.GetRespHeader("orgMemberID"))
+
+	go routines.MarkOrganizationHistory(orgID, parsedUserID, 18, nil, nil, nil, nil, nil, &poll.ID, "")
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status":  "success",
@@ -209,6 +214,10 @@ func DeletePoll(c *fiber.Ctx) error {
 	if err := initializers.DB.Delete(&poll).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal  error"})
 	}
+	orgID := poll.OrganizationID
+	parsedUserID, _ := uuid.Parse(c.GetRespHeader("orgMemberID"))
+
+	go routines.MarkOrganizationHistory(orgID, parsedUserID, 19, nil, nil, nil, nil, nil, nil, poll.Question)
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status":  "success",
@@ -238,6 +247,10 @@ func EditPoll(c *fiber.Ctx) error {
 	if err := initializers.DB.Save(&poll).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal  error"})
 	}
+	orgID := poll.OrganizationID
+	parsedUserID, _ := uuid.Parse(c.GetRespHeader("orgMemberID"))
+
+	go routines.MarkOrganizationHistory(orgID, parsedUserID, 20, nil, nil, nil, nil, nil, &poll.ID, "")
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status":  "success",

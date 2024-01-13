@@ -68,6 +68,9 @@ history type:
 *15 - Member left Org
 *16 - Event coordinators added
 *17 - Event coordinators removed
+*18 - User added a poll
+*19 - User deleted a poll
+*20 - User edited a poll
 */
 
 type OrganizationHistory struct {
@@ -86,6 +89,8 @@ type OrganizationHistory struct {
 	Task           Task       `json:"task"`
 	InvitationID   *uuid.UUID `gorm:"type:uuid" json:"invitationID"`
 	Invitation     Invitation `json:"invitation"`
+	PollID         *uuid.UUID `gorm:"type:uuid" json:"pollID"`
+	Poll           Poll       `json:"poll"`
 	DeletedText    string     `gorm:"type:text" json:"deletedText"`
 	CreatedAt      time.Time  `gorm:"default:current_timestamp" json:"createdAt"`
 }
