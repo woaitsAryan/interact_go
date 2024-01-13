@@ -22,7 +22,7 @@ func CreatePoll(c *fiber.Ctx) error {
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid request body."}
 	}
-	if(reqBody.Question == "" || len(reqBody.Options) < 2 || len(reqBody.Options) > 10 || len(reqBody.Question) > 100){
+	if reqBody.Question == "" || len(reqBody.Options) < 2 || len(reqBody.Options) > 10 || len(reqBody.Question) > 100 {
 		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid request body."}
 	}
 
@@ -31,13 +31,7 @@ func CreatePoll(c *fiber.Ctx) error {
 		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid organization ID."}
 	}
 
-	parsedUserID, _ := uuid.Parse(c.GetRespHeader("orgMemberID"))
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal  error"})
-	}
-
 	var poll = models.Poll{
-		UserID:         parsedUserID,
 		OrganizationID: orgID,
 		Question:       reqBody.Question,
 		IsMultiAnswer:  reqBody.IsMultiAnswer,
@@ -165,6 +159,7 @@ func UnvotePoll(c *fiber.Ctx) error {
 		"message": "Vote removed!",
 	})
 }
+
 /*
 	Fetches all polls in an organization.
 
@@ -189,8 +184,8 @@ func FetchPolls(c *fiber.Ctx) error {
 	})
 }
 
-
-/* Deletes a poll.
+/*
+	Deletes a poll.
 
 Reads the poll ID from request params
 Deletes the poll cascading all the options
@@ -201,10 +196,8 @@ func DeletePoll(c *fiber.Ctx) error {
 		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid poll ID."}
 	}
 
-	parsedUserID, _ := uuid.Parse(c.GetRespHeader("orgMemberID"))
-
 	var poll models.Poll
-	if err := initializers.DB.First(&poll, "id = ? AND user_id = ?", pollID, parsedUserID).Error; err != nil {
+	if err := initializers.DB.First(&poll, "id = ?", pollID).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal  error"})
 	}
 
@@ -220,5 +213,34 @@ func DeletePoll(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Poll deleted!",
+	})
+}
+
+func EditPoll(c *fiber.Ctx) error {
+	var reqBody schemas.EditPollRequest
+	if err := c.BodyParser(&reqBody); err != nil {
+		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid request body."}
+	}
+	if reqBody.Question == "" ||  len(reqBody.Question) > 100 {
+		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid request body."}
+	}
+
+	pollID, _ := uuid.Parse(c.Params("pollID"))
+
+	var poll models.Poll
+	if err := initializers.DB.First(&poll, "id = ?", pollID).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal  error"})
+	}
+
+	poll.Question = reqBody.Question
+	poll.IsMultiAnswer = reqBody.IsMultiAnswer
+
+	if err := initializers.DB.Save(&poll).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal  error"})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Poll edited!",
 	})
 }

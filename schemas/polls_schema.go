@@ -9,3 +9,8 @@ type CreatePollRequest struct {
 	Options       []string `json:"options"`
 	IsMultiAnswer bool     `json:"isMultiAnswer"`
 }
+
+type EditPollRequest struct {
+	Question      string   `json:"question"`
+	IsMultiAnswer bool     `json:"isMultiAnswer"`
+}

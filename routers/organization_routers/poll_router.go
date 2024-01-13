@@ -9,10 +9,11 @@ import (
 
 /* Router for adding polls */
 func PollRouter(app *fiber.App) {
-	pollRouter := app.Group("/org/:orgID/poll", middlewares.Protect, middlewares.OrgRoleAuthorization(models.Member))
-	pollRouter.Post("/", organization_controllers.CreatePoll)
-	pollRouter.Get("/", organization_controllers.FetchPolls)
-	pollRouter.Patch("/vote/:pollID/:OptionID", organization_controllers.VotePoll)
-	pollRouter.Patch("/unvote/:OptionID", organization_controllers.UnvotePoll)
-	pollRouter.Delete("/:pollID", organization_controllers.DeletePoll)
+	pollRouter := app.Group("/org/:orgID/poll", middlewares.Protect)
+	pollRouter.Post("/", middlewares.OrgRoleAuthorization(models.Senior), organization_controllers.CreatePoll)
+	pollRouter.Get("/", middlewares.OrgRoleAuthorization(models.Member), organization_controllers.FetchPolls)
+	pollRouter.Patch("/vote/:pollID/:OptionID", middlewares.OrgRoleAuthorization(models.Member),  organization_controllers.VotePoll)
+	pollRouter.Patch("/unvote/:OptionID", middlewares.OrgRoleAuthorization(models.Member), organization_controllers.UnvotePoll)
+	pollRouter.Delete("/:pollID", middlewares.OrgRoleAuthorization(models.Senior), organization_controllers.DeletePoll)
+	pollRouter.Patch("/:pollID", middlewares.OrgRoleAuthorization(models.Senior), organization_controllers.EditPoll)
 }

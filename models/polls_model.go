@@ -27,8 +27,6 @@ Has a multi answer option with isMultiAnswer field
 */
 type Poll struct {
 	ID             uuid.UUID    `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	UserID         uuid.UUID    `gorm:"type:uuid;not null" json:"userID"`
-	User           User         `gorm:"" json:"user"`
 	OrganizationID uuid.UUID    `gorm:"type:uuid;not null" json:"organizationID"`
 	Organization   Organization `gorm:"" json:"organization"`
 	Question       string       `gorm:"type:varchar(100);not null" json:"question"`
