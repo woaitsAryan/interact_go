@@ -3,14 +3,15 @@ package organization_controllers
 import (
 	"time"
 
+	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/schemas"
-	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 /*
@@ -36,6 +37,7 @@ func CreatePoll(c *fiber.Ctx) error {
 		OrganizationID: orgID,
 		Question:       reqBody.Question,
 		IsMultiAnswer:  reqBody.IsMultiAnswer,
+		IsOpen:         reqBody.IsOpen,
 	}
 
 	if err := initializers.DB.Create(&poll).Error; err != nil {
@@ -58,7 +60,7 @@ func CreatePoll(c *fiber.Ctx) error {
 		tx.Rollback()
 		return helpers.AppError{Code: fiber.StatusInternalServerError, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
-	
+
 	go routines.MarkOrganizationHistory(orgID, parsedUserID, 18, nil, nil, nil, nil, nil, &poll.ID, "")
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -75,8 +77,9 @@ For a single answer poll, it checks if the user has already voted
 Then it increments the vote count for the option and adds the user to the votedBy array
 */
 func VotePoll(c *fiber.Ctx) error {
+	
 	parsedUserID, _ := uuid.Parse(c.GetRespHeader("orgMemberID"))
-
+	
 	parsedPollID, err := uuid.Parse(c.Params("pollID"))
 	if err != nil {
 		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid Poll ID."}
@@ -113,6 +116,7 @@ func VotePoll(c *fiber.Ctx) error {
 	}
 
 	option.Votes++
+	poll.TotalVotes++
 	option.VotedBy = append(option.VotedBy, user)
 
 	if err := initializers.DB.Save(&option).Error; err != nil {
@@ -132,8 +136,9 @@ Reads the OptionID from request params
 Removes the user from the votedBy array and decrements the vote count
 */
 func UnvotePoll(c *fiber.Ctx) error {
+	
 	parsedUserID, _ := uuid.Parse(c.GetRespHeader("orgMemberID"))
-
+	
 	parsedOptionID, err := uuid.Parse(c.Params("OptionID"))
 	if err != nil {
 		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid Option ID."}
@@ -143,12 +148,26 @@ func UnvotePoll(c *fiber.Ctx) error {
 	if err := initializers.DB.Preload("VotedBy").First(&option, "id = ?", parsedOptionID).Error; err != nil {
 		return helpers.AppError{Code: fiber.StatusInternalServerError, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
+
+	var poll models.Poll
+	if err := initializers.DB.First(&poll, "id = ?", option.PollID).Error; err != nil {
+		return helpers.AppError{Code: fiber.StatusInternalServerError, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	isFound := false
+
 	for i, voter := range option.VotedBy {
 		if voter.ID == parsedUserID {
 			option.VotedBy = append(option.VotedBy[:i], option.VotedBy[i+1:]...)
 			option.Votes--
+			poll.TotalVotes--
+			isFound = true
 			break
 		}
+	}
+
+	if !isFound {
+		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "User has not voted"}
 	}
 
 	if err := initializers.DB.Model(&option).Association("VotedBy").Replace(option.VotedBy); err != nil {
@@ -173,13 +192,36 @@ Fetches all polls created in the last week
 */
 func FetchPolls(c *fiber.Ctx) error {
 	orgID, err := uuid.Parse(c.Params("orgID"))
+	parsedUserID, _ := uuid.Parse(c.GetRespHeader("loggedInUserID"))
 	if err != nil {
 		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid organization ID."}
 	}
+	var organization models.Organization
+	if err := initializers.DB.First(&organization, "id = ?", orgID).Error; err != nil {
+		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid organization ID."}
+	}
+	isMember := false
+	// Check if the user is a member of the organization
+	if(organization.UserID == parsedUserID){
+		isMember = true
+	}else{
+		for _, member := range organization.Memberships {
+			if member.UserID == parsedUserID {
+				isMember = true
+				break
+			}
+		}
+	}
+
+	oneWeekAgo := time.Now().AddDate(0, 0, -7)
+	db := initializers.DB.Preload("Options").Preload("Options.VotedBy", LimitedUsers).Where("organization_id = ? AND created_at >= ?", orgID, oneWeekAgo)
+	// If the user is not a member, only show open polls
+	if(!isMember){
+		db = db.Where("is_open = ?", true)
+	}
 
 	var polls []models.Poll
-	oneWeekAgo := time.Now().AddDate(0, 0, -7)
-	if err := initializers.DB.Preload("Options").Preload("Options.VotedBy").Where("organization_id = ? AND created_at >= ?", orgID, oneWeekAgo).Find(&polls).Error; err != nil {
+	if err := db.Find(&polls).Error; err != nil {
 		return helpers.AppError{Code: fiber.StatusInternalServerError, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
@@ -247,6 +289,7 @@ func EditPoll(c *fiber.Ctx) error {
 
 	poll.Question = reqBody.Question
 	poll.IsEdited = true
+	poll.IsOpen = reqBody.IsOpen
 
 	if err := initializers.DB.Save(&poll).Error; err != nil {
 		return helpers.AppError{Code: fiber.StatusInternalServerError, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
@@ -259,4 +302,8 @@ func EditPoll(c *fiber.Ctx) error {
 		"status":  "success",
 		"message": "Poll edited!",
 	})
+}
+
+func LimitedUsers(db *gorm.DB) *gorm.DB{
+	return db.Limit(3)
 }
