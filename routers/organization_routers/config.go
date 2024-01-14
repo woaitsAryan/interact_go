@@ -18,4 +18,5 @@ func Config(app *fiber.App) {
 	MiscRouter(app)
 	ResourceRouter(app)
 	ReviewRouter(app)
+	PollRouter(app)
 }
