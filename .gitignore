@@ -5,5 +5,5 @@ interact.exe*
 /log
 /database
 .DS_Store
-bucket-key.json
+bucket-key*.json
 a.out

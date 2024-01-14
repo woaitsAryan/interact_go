@@ -9,4 +9,5 @@ type ReportCreateSchema struct {
 	EventID     string `json:"eventID"`
 	OpeningID   string `json:"openingID"`
 	GroupChatID string `json:"chatID"`
+	ReviewID    string `json:"reviewID"`
 }

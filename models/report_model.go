@@ -23,6 +23,8 @@ type Report struct { //TODO notifications will be sent after reporting
 	Opening     Opening    `json:"opening"`
 	GroupChatID *uuid.UUID `gorm:"type:uuid" json:"chatID"`
 	GroupChat   GroupChat  `json:"chat"`
+	ReviewID    *uuid.UUID `gorm:"type:uuid" json:"reviewID"`
+	Review      Review     `json:"review"`
 	Content     string     `json:"content"`
 	CreatedAt   time.Time  `gorm:"default:current_timestamp" json:"createdAt"`
 }
