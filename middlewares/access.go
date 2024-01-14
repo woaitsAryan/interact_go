@@ -85,6 +85,65 @@ func OrgRoleAuthorization(Role models.OrganizationRole) func(*fiber.Ctx) error {
 	}
 }
 
+func PollRoleAuthorization(Role models.OrganizationRole) func(*fiber.Ctx) error {
+	return func(c *fiber.Ctx) error {
+		loggedInUserID := c.GetRespHeader("loggedInUserID")
+		orgID := c.Params("orgID")
+		pollID := c.Params("pollID")
+
+		var organization models.Organization
+		if orgID != "" {
+			orgInCache, err := cache.GetOrganization("-access--" + orgID)
+			if err == nil {
+				organization = *orgInCache
+			} else {
+				if err := initializers.DB.Preload("Memberships").First(&organization, "id=?", orgID).Error; err != nil {
+					if err == gorm.ErrRecordNotFound {
+						return &fiber.Error{Code: 401, Message: "No Organization of this ID Found."}
+					}
+					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+				}
+
+				go cache.SetOrganization("-access--"+organization.ID.String(), &organization)
+			}
+		} else {
+			return &fiber.Error{Code: 401, Message: "Invalid Organization ID."}
+		}
+		var poll models.Poll
+		if err := initializers.DB.First(&poll, "id = ?", pollID).Error; err != nil {
+			return &fiber.Error{Code: 400, Message: "No poll of this id found."}
+		}
+		if(poll.IsOpen){
+			c.Set("orgMemberID", c.GetRespHeader("loggedInUserID"))
+			return c.Next()
+		}
+
+		if organization.UserID.String() == loggedInUserID {
+			c.Set("orgMemberID", c.GetRespHeader("loggedInUserID"))
+			return c.Next()
+		}
+
+		var check bool
+		check = false
+
+		for _, membership := range organization.Memberships {
+			if membership.UserID.String() == loggedInUserID {
+				if !checkOrgAccess(membership.Role, Role) {
+					return &fiber.Error{Code: 403, Message: "You don't have the Permission to perform this action."}
+				}
+				c.Set("orgMemberID", c.GetRespHeader("loggedInUserID"))
+				c.Set("loggedInUserID", organization.UserID.String())
+				check = true
+				break
+			}
+		}
+		if !check {
+			return &fiber.Error{Code: 403, Message: "Cannot access this Organization."}
+		}
+		return c.Next()
+	}
+}
+
 func OrgBucketAuthorization(action string) func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		loggedInUserID := c.GetRespHeader("loggedInUserID")

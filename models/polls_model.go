@@ -32,5 +32,8 @@ type Poll struct {
 	Question       string       `gorm:"type:varchar(100);not null" json:"question"`
 	Options        []Option     `gorm:"foreignKey:PollID;constraint:OnDelete:CASCADE" json:"options"`
 	IsMultiAnswer  bool         `gorm:"default:false" json:"isMultiAnswer"`
+	IsEdited       bool         `gorm:"default:false" json:"isEdited"`
+	IsOpen         bool         `gorm:"default:false" json:"isOpen"`
+	TotalVotes     int          `gorm:"default:0" json:"numberOfVotes"`
 	CreatedAt      time.Time    `gorm:"default:current_timestamp" json:"createdAt"`
 }
