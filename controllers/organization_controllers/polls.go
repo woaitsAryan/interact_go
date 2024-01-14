@@ -3,10 +3,12 @@ package organization_controllers
 import (
 	"time"
 
+	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/schemas"
+	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
@@ -19,18 +21,16 @@ If the request body is invalid, it returns a 400 status code.
 If the user ID is invalid, it returns a 500 status code.
 */
 func CreatePoll(c *fiber.Ctx) error {
+	parsedUserID, _ := uuid.Parse(c.GetRespHeader("orgMemberID"))
 	var reqBody schemas.CreatePollRequest
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid request body."}
 	}
-	if reqBody.Question == "" || len(reqBody.Options) < 2 || len(reqBody.Options) > 10 || len(reqBody.Question) > 100 {
+	if len(reqBody.Options) < 2 || len(reqBody.Options) > 10 {
 		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid request body."}
 	}
 
-	orgID, err := uuid.Parse(c.Params("orgID"))
-	if err != nil {
-		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid organization ID."}
-	}
+	orgID, _ := uuid.Parse(c.Params("orgID"))
 
 	var poll = models.Poll{
 		OrganizationID: orgID,
@@ -39,26 +39,26 @@ func CreatePoll(c *fiber.Ctx) error {
 	}
 
 	if err := initializers.DB.Create(&poll).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal  error"})
+		return helpers.AppError{Code: fiber.StatusInternalServerError, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
+
+	tx := initializers.DB.Begin()
 
 	for _, optionText := range reqBody.Options {
 		option := &models.Option{
 			PollID: poll.ID,
 			Text:   optionText,
 		}
-		if err := initializers.DB.Create(&option).Error; err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal  error"})
+		if err := tx.Create(&option).Error; err != nil {
+			tx.Rollback()
+			return helpers.AppError{Code: fiber.StatusInternalServerError, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
-		poll.Options = append(poll.Options, *option)
 	}
-
-	if err := initializers.DB.Save(&poll).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal  error"})
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return helpers.AppError{Code: fiber.StatusInternalServerError, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
-
-	parsedUserID, _ := uuid.Parse(c.GetRespHeader("orgMemberID"))
-
+	
 	go routines.MarkOrganizationHistory(orgID, parsedUserID, 18, nil, nil, nil, nil, nil, &poll.ID, "")
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -89,7 +89,7 @@ func VotePoll(c *fiber.Ctx) error {
 
 	var poll models.Poll
 	if err := initializers.DB.First(&poll, "id = ?", parsedPollID).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal  error"})
+		return helpers.AppError{Code: fiber.StatusInternalServerError, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if !poll.IsMultiAnswer {
@@ -104,19 +104,19 @@ func VotePoll(c *fiber.Ctx) error {
 
 	var option models.Option
 	if err := initializers.DB.First(&option, "id = ?", parsedOptionID).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal server error"})
+		return helpers.AppError{Code: fiber.StatusInternalServerError, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var user models.User
 	if err := initializers.DB.First(&user, "id = ?", parsedUserID).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal server error"})
+		return helpers.AppError{Code: fiber.StatusInternalServerError, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	option.Votes++
 	option.VotedBy = append(option.VotedBy, user)
 
 	if err := initializers.DB.Save(&option).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal  error"})
+		return helpers.AppError{Code: fiber.StatusInternalServerError, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -141,7 +141,7 @@ func UnvotePoll(c *fiber.Ctx) error {
 
 	var option models.Option
 	if err := initializers.DB.Preload("VotedBy").First(&option, "id = ?", parsedOptionID).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal server error"})
+		return helpers.AppError{Code: fiber.StatusInternalServerError, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 	for i, voter := range option.VotedBy {
 		if voter.ID == parsedUserID {
@@ -152,11 +152,11 @@ func UnvotePoll(c *fiber.Ctx) error {
 	}
 
 	if err := initializers.DB.Model(&option).Association("VotedBy").Replace(option.VotedBy); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal  error"})
+		return helpers.AppError{Code: fiber.StatusInternalServerError, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if err := initializers.DB.Save(&option).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal  error"})
+		return helpers.AppError{Code: fiber.StatusInternalServerError, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -180,7 +180,7 @@ func FetchPolls(c *fiber.Ctx) error {
 	var polls []models.Poll
 	oneWeekAgo := time.Now().AddDate(0, 0, -7)
 	if err := initializers.DB.Preload("Options").Preload("Options.VotedBy").Where("organization_id = ? AND created_at >= ?", orgID, oneWeekAgo).Find(&polls).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal  error"})
+		return helpers.AppError{Code: fiber.StatusInternalServerError, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -203,16 +203,16 @@ func DeletePoll(c *fiber.Ctx) error {
 
 	var poll models.Poll
 	if err := initializers.DB.First(&poll, "id = ?", pollID).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal  error"})
+		return helpers.AppError{Code: fiber.StatusInternalServerError, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	pollOption := models.Poll{ID: pollID}
 	if err := initializers.DB.Model(&pollOption).Association("Options").Delete(); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal  error"})
+		return helpers.AppError{Code: fiber.StatusInternalServerError, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if err := initializers.DB.Delete(&poll).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal  error"})
+		return helpers.AppError{Code: fiber.StatusInternalServerError, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 	orgID := poll.OrganizationID
 	parsedUserID, _ := uuid.Parse(c.GetRespHeader("orgMemberID"))
@@ -225,12 +225,16 @@ func DeletePoll(c *fiber.Ctx) error {
 	})
 }
 
+/*	Edit a poll.
+
+Reads the poll ID from request params
+Reads the new question from request body
+*/
+
 func EditPoll(c *fiber.Ctx) error {
 	var reqBody schemas.EditPollRequest
+	parsedUserID, _ := uuid.Parse(c.GetRespHeader("orgMemberID"))
 	if err := c.BodyParser(&reqBody); err != nil {
-		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid request body."}
-	}
-	if reqBody.Question == "" ||  len(reqBody.Question) > 100 {
 		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid request body."}
 	}
 
@@ -238,17 +242,16 @@ func EditPoll(c *fiber.Ctx) error {
 
 	var poll models.Poll
 	if err := initializers.DB.First(&poll, "id = ?", pollID).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal  error"})
+		return helpers.AppError{Code: fiber.StatusInternalServerError, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	poll.Question = reqBody.Question
-	poll.IsMultiAnswer = reqBody.IsMultiAnswer
+	poll.IsEdited = true
 
 	if err := initializers.DB.Save(&poll).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal  error"})
+		return helpers.AppError{Code: fiber.StatusInternalServerError, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 	orgID := poll.OrganizationID
-	parsedUserID, _ := uuid.Parse(c.GetRespHeader("orgMemberID"))
 
 	go routines.MarkOrganizationHistory(orgID, parsedUserID, 20, nil, nil, nil, nil, nil, &poll.ID, "")
 
