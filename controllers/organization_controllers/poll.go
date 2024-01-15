@@ -20,12 +20,14 @@ Fetches all polls created in the last week
 */
 func FetchPolls(c *fiber.Ctx) error {
 	orgID, err := uuid.Parse(c.Params("orgID"))
-	parsedUserID, _ := uuid.Parse(c.GetRespHeader("loggedInUserID"))
 	if err != nil {
 		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid organization ID."}
 	}
+
+	parsedUserID, _ := uuid.Parse(c.GetRespHeader("loggedInUserID"))
+
 	var organization models.Organization
-	if err := initializers.DB.Preload("User").Preload("Memberships").First(&organization, "id = ?", orgID).Error; err != nil {
+	if err := initializers.DB.Preload("Memberships").First(&organization, "id = ?", orgID).Error; err != nil {
 		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid organization ID."}
 	}
 	isMember := false
@@ -43,8 +45,9 @@ func FetchPolls(c *fiber.Ctx) error {
 
 	// oneWeekAgo := time.Now().AddDate(0, 0, -7)
 	// db := initializers.DB.Preload("Options").Preload("Options.VotedBy", LimitedUsers).Where("organization_id = ? AND created_at >= ?", orgID, oneWeekAgo)
-
-	db := initializers.DB.Preload("Options").Preload("Options.VotedBy", LimitedUsers).Where("organization_id = ?", orgID)
+	db := initializers.DB.Preload("Options", func(db *gorm.DB) *gorm.DB {
+		return db.Order("options.created_at DESC")
+	}).Preload("Options.VotedBy", LimitedUsers).Where("organization_id = ?", orgID)
 	// If the user is not a member, only show open polls
 	if !isMember {
 		db = db.Where("is_open = ?", true)

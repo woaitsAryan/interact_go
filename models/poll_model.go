@@ -12,11 +12,12 @@ import (
 VotedBy array is an array of user IDs who have voted for this option
 */
 type Option struct {
-	ID      uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	PollID  uuid.UUID `gorm:"type:uuid;not null" json:"pollID"`
-	Content string    `gorm:"not null" json:"content"`
-	Votes   int       `gorm:"type:int;default:0" json:"noVotes"`
-	VotedBy []User    `gorm:"many2many:voted_by;constraint:OnDelete:CASCADE" json:"votedBy"`
+	ID        uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	PollID    uuid.UUID `gorm:"type:uuid;not null" json:"pollID"`
+	Content   string    `gorm:"not null" json:"content"`
+	Votes     int       `gorm:"type:int;default:0" json:"noVotes"`
+	VotedBy   []User    `gorm:"many2many:voted_by;constraint:OnDelete:CASCADE" json:"votedBy"`
+	CreatedAt time.Time `gorm:"default:current_timestamp" json:"createdAt"`
 }
 
 /*

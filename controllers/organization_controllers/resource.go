@@ -204,7 +204,7 @@ func EditResourceBucket(c *fiber.Ctx) error {
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":         "success",
-		"message":        "Resource Bucket added",
+		"message":        "Resource Bucket Edited",
 		"resourceBucket": resourceBucket,
 	})
 }

@@ -5,6 +5,7 @@ import (
 )
 
 func Config(app *fiber.App) {
+	AnnouncementRouter(app)
 	AuthRouter(app)
 	ChatRouter(app)
 	EventRouter(app)
