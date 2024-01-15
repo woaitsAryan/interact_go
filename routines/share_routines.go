@@ -20,6 +20,19 @@ func IncrementPostShare(postID uuid.UUID) {
 	}
 }
 
+func IncrementAnnouncementShare(announcementID uuid.UUID) {
+	var announcement models.Announcement
+	if err := initializers.DB.First(&announcement, "id=?", announcementID).Error; err != nil {
+		helpers.LogDatabaseError("No Post of this ID found-IncrementAnnouncementShare.", err, "go_routine")
+	} else {
+		announcement.NoShares++
+		result := initializers.DB.Save(announcement)
+		if result.Error != nil {
+			helpers.LogDatabaseError("Error while updating Post-IncrementAnnouncementShare", result.Error, "go_routine")
+		}
+	}
+}
+
 func IncrementProjectShare(projectID uuid.UUID) {
 	var project models.Project
 	if err := initializers.DB.First(&project, "id=?", projectID).Error; err != nil {

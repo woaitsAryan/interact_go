@@ -5,6 +5,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/schemas"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
@@ -60,6 +61,8 @@ func AddAnnouncement(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
 	}
 
+	parsedLoggedInUserID, _ := uuid.Parse(c.GetRespHeader("orgMemberID"))
+
 	parsedOrgID, err := uuid.Parse(c.Params("orgID"))
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
@@ -72,9 +75,24 @@ func AddAnnouncement(c *fiber.Ctx) error {
 		IsOpen:         reqBody.IsOpen,
 	}
 
+	if reqBody.TaggedUsernames != nil {
+		var taggedUsers []models.User
+
+		for _, username := range reqBody.TaggedUsernames {
+			var user models.User
+			if err := initializers.DB.First(&user, "username=?", username).Error; err == nil {
+				taggedUsers = append(taggedUsers, user)
+			}
+		}
+
+		announcement.TaggedUsers = taggedUsers
+	}
+
 	if err := initializers.DB.Create(&announcement).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
+
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedLoggedInUserID, 21, nil, nil, nil, nil, nil, nil, &announcement.ID, "")
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"status":       "success",
@@ -88,6 +106,8 @@ func EditAnnouncement(c *fiber.Ctx) error {
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
 	}
+
+	parsedLoggedInUserID, _ := uuid.Parse(c.GetRespHeader("orgMemberID"))
 
 	parsedAnnouncementID, err := uuid.Parse(c.Params("announcementID"))
 	if err != nil {
@@ -120,6 +140,8 @@ func EditAnnouncement(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedLoggedInUserID, 23, nil, nil, nil, nil, nil, nil, &announcement.ID, "")
+
 	return c.Status(200).JSON(fiber.Map{
 		"status":       "success",
 		"message":      "Announcement Edited",
@@ -132,6 +154,8 @@ func DeleteAnnouncement(c *fiber.Ctx) error {
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Announcement ID."}
 	}
+
+	parsedLoggedInUserID, _ := uuid.Parse(c.GetRespHeader("orgMemberID"))
 
 	parsedOrgID, err := uuid.Parse(c.Params("orgID"))
 	if err != nil {
@@ -149,6 +173,8 @@ func DeleteAnnouncement(c *fiber.Ctx) error {
 	if err := initializers.DB.Delete(&announcement).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
+
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedLoggedInUserID, 22, nil, nil, nil, nil, nil, nil, nil, announcement.Title)
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",

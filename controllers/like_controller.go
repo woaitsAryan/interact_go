@@ -136,6 +136,12 @@ func LikeItem(likeType string) func(c *fiber.Ctx) error {
 			incrementFunc = routines.IncrementEventLikesAndSendNotification
 			decrementFunc = routines.DecrementEventLikes
 			updateFunc = func(u1, u2 uuid.UUID) {}
+		
+		case "announcement":
+			itemIDParam = "announcementID"
+			incrementFunc = routines.IncrementAnnouncementLikesAndSendNotification
+			decrementFunc = routines.DecrementAnnouncementLikes
+			updateFunc = func(u1, u2 uuid.UUID) {}
 
 		case "review":
 			itemIDParam = "reviewID"

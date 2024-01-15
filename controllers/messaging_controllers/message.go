@@ -39,6 +39,7 @@ func GetMessages(c *fiber.Ctx) error {
 		Preload("User").
 		Preload("Post").
 		Preload("Profile").
+		Preload("Announcement").
 		Preload("Opening").
 		Preload("Opening.Project").
 		Preload("Post.User").

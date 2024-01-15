@@ -2,6 +2,7 @@ package schemas
 
 import (
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/lib/pq"
 )
 
 /*
@@ -40,9 +41,10 @@ type ResourceFileEditSchema struct {
 }
 
 type AnnouncementCreateSchema struct {
-	Title   string `json:"title" validate:"max=50"`
-	Content string `json:"content" validate:"required,max=1000"`
-	IsOpen  bool   `json:"isOpen"`
+	Title           string         `json:"title" validate:"max=50"`
+	Content         string         `json:"content" validate:"required,max=1000"`
+	TaggedUsernames pq.StringArray `json:"taggedUsernames"`
+	IsOpen          bool           `json:"isOpen"`
 }
 
 type AnnouncementUpdateSchema struct {

@@ -34,6 +34,33 @@ func IncrementPostCommentsAndSendNotification(postID uuid.UUID, loggedInUserID u
 	}
 }
 
+func IncrementAnnouncementCommentsAndSendNotification(announcementID uuid.UUID, loggedInUserID uuid.UUID) {
+	var announcement models.Announcement
+	if err := initializers.DB.First(&announcement, "id=?", announcementID).Error; err != nil {
+		helpers.LogDatabaseError("No Post of this ID found-IncrementAnnouncementCommentsAndSendNotification.", err, "go_routine")
+	} else {
+		announcement.NoComments++
+		result := initializers.DB.Save(&announcement)
+
+		if result.Error != nil {
+			helpers.LogDatabaseError("Error while updating Post-IncrementAnnouncementCommentsAndSendNotification", result.Error, "go_routine")
+		}
+
+		if loggedInUserID != announcement.Organization.UserID {
+			notification := models.Notification{
+				SenderID:         loggedInUserID,
+				NotificationType: 19,
+				UserID:           announcement.Organization.UserID,
+				AnnouncementID:           &announcement.ID,
+			}
+
+			if err := initializers.DB.Create(&notification).Error; err != nil {
+				helpers.LogDatabaseError("Error while creating Notification-IncrementAnnouncementCommentsAndSendNotification", err, "go_routine")
+			}
+		}
+	}
+}
+
 func IncrementProjectCommentsAndSendNotification(projectID uuid.UUID, loggedInUserID uuid.UUID) {
 	var project models.Project
 	if err := initializers.DB.First(&project, "id=?", projectID).Error; err != nil {
