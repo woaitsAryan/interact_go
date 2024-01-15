@@ -85,7 +85,7 @@ func OrgRoleAuthorization(Role models.OrganizationRole) func(*fiber.Ctx) error {
 	}
 }
 
-func PollRoleAuthorization(Role models.OrganizationRole) func(*fiber.Ctx) error {
+func OrgPollAuthorization() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		loggedInUserID := c.GetRespHeader("loggedInUserID")
 		orgID := c.Params("orgID")
@@ -113,7 +113,7 @@ func PollRoleAuthorization(Role models.OrganizationRole) func(*fiber.Ctx) error 
 		if err := initializers.DB.First(&poll, "id = ?", pollID).Error; err != nil {
 			return &fiber.Error{Code: 400, Message: "No poll of this id found."}
 		}
-		if(poll.IsOpen){
+		if poll.IsOpen {
 			c.Set("orgMemberID", c.GetRespHeader("loggedInUserID"))
 			return c.Next()
 		}
@@ -128,7 +128,7 @@ func PollRoleAuthorization(Role models.OrganizationRole) func(*fiber.Ctx) error 
 
 		for _, membership := range organization.Memberships {
 			if membership.UserID.String() == loggedInUserID {
-				if !checkOrgAccess(membership.Role, Role) {
+				if !checkOrgAccess(membership.Role, models.Member) {
 					return &fiber.Error{Code: 403, Message: "You don't have the Permission to perform this action."}
 				}
 				c.Set("orgMemberID", c.GetRespHeader("loggedInUserID"))

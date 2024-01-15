@@ -9,11 +9,13 @@ import (
 
 /* Router for adding polls */
 func PollRouter(app *fiber.App) {
-	pollRouter := app.Group("/org/:orgID/poll", middlewares.Protect)
+	pollRouter := app.Group("/org/:orgID/polls", middlewares.Protect)
+	pollRouter.Get("/", organization_controllers.FetchPolls)
+
 	pollRouter.Post("/", middlewares.OrgRoleAuthorization(models.Senior), organization_controllers.CreatePoll)
-	pollRouter.Get("/",  organization_controllers.FetchPolls)
-	pollRouter.Patch("/vote/:pollID/:OptionID", middlewares.PollRoleAuthorization(models.Member), organization_controllers.VotePoll)
-	pollRouter.Patch("/unvote/:OptionID", middlewares.PollRoleAuthorization(models.Member), organization_controllers.UnvotePoll)
-	pollRouter.Delete("/:pollID", middlewares.OrgRoleAuthorization(models.Manager), organization_controllers.DeletePoll)
 	pollRouter.Patch("/:pollID", middlewares.OrgRoleAuthorization(models.Senior), organization_controllers.EditPoll)
+	pollRouter.Delete("/:pollID", middlewares.OrgRoleAuthorization(models.Senior), organization_controllers.DeletePoll)
+
+	pollRouter.Patch("/vote/:pollID/:OptionID", middlewares.OrgPollAuthorization(), organization_controllers.VotePoll)
+	pollRouter.Patch("/unvote/:pollID/:OptionID", middlewares.OrgPollAuthorization(), organization_controllers.UnvotePoll)
 }

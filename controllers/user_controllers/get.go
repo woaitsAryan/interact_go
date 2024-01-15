@@ -155,3 +155,26 @@ func GetMyOrgMemberships(c *fiber.Ctx) error {
 		"memberships": memberships,
 	})
 }
+
+func GetMyVotedOptions(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	var options []models.Option
+	if err := initializers.DB.
+		Joins("JOIN voted_by ON voted_by.option_id = options.id").
+		Where("voted_by.user_id = ?", loggedInUserID).
+		Find(&options).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	var optionIDs []string
+	for _, option := range options {
+		optionIDs = append(optionIDs, option.ID.String())
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "User Found",
+		"options": optionIDs,
+	})
+}

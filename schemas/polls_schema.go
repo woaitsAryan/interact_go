@@ -6,13 +6,14 @@ package schemas
 Options field is just an array of options as strings
 */
 type CreatePollRequest struct {
-	Question      string   `json:"question" validate:"required,max=100"`
+	Title         string   `json:"title" validate:"max=50"`
+	Content       string   `json:"content" validate:"required,max=500"`
 	Options       []string `json:"options"`
 	IsMultiAnswer bool     `json:"isMultiAnswer"`
 	IsOpen        bool     `json:"isOpen"`
 }
 
 type EditPollRequest struct {
-	Question string `json:"question" validate:"required,max=100"`
-	IsOpen   bool   `json:"isOpen"`
+	Content string `json:"question" validate:"max=500"`
+	IsOpen  bool   `json:"isOpen"`
 }
