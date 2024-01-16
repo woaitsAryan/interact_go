@@ -1,6 +1,8 @@
 package organization_controllers
 
 import (
+	"path"
+
 	"github.com/Pratham-Mishra04/interact/cache"
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
@@ -20,6 +22,14 @@ func GetOrgResourceBuckets(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
 	}
 
+	var organization models.Organization
+	if err := initializers.DB.Preload("User").Where("id = ?", parsedOrgID).First(&organization).Error; err != nil {
+		if err != gorm.ErrRecordNotFound {
+			return &fiber.Error{Code: fiber.StatusBadRequest, Message: "No Organization of this ID found."}
+		}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
 	var resourceBuckets []models.ResourceBucket
 	if err := initializers.DB.Where("organization_id = ?", parsedOrgID).Find(&resourceBuckets).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
@@ -27,6 +37,7 @@ func GetOrgResourceBuckets(c *fiber.Ctx) error {
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":          "success",
+		"organization":    organization,
 		"resourceBuckets": resourceBuckets,
 	})
 }
@@ -132,12 +143,18 @@ func AddResourceFile(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.SERVER_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
+	fileExtension := path.Ext(link)
+
+	// Remove the leading dot from the extension
+	fileExtension = fileExtension[1:]
+
 	resourceFile := models.ResourceFile{
 		ResourceBucketID: resourceBucket.ID,
 		UserID:           parsedUserID,
 		Title:            reqBody.Title,
 		Description:      reqBody.Description,
 		Path:             link,
+		Type:             fileExtension,
 	}
 
 	if err := initializers.DB.Create(&resourceFile).Error; err != nil {
@@ -160,7 +177,7 @@ func AddResourceFile(c *fiber.Ctx) error {
 }
 
 func EditResourceBucket(c *fiber.Ctx) error {
-	var reqBody schemas.ResourceBucketCreateSchema
+	var reqBody schemas.ResourceBucketEditSchema
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
 	}
@@ -186,8 +203,8 @@ func EditResourceBucket(c *fiber.Ctx) error {
 	if reqBody.Title != "" {
 		resourceBucket.Title = reqBody.Title
 	}
-	if reqBody.Description != "" {
-		resourceBucket.Description = reqBody.Description
+	if reqBody.Description != nil {
+		resourceBucket.Description = *reqBody.Description
 	}
 	if reqBody.ViewAccess != "" {
 		resourceBucket.ViewAccess = reqBody.ViewAccess
@@ -220,8 +237,13 @@ func EditResourceFile(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid Resource File ID."}
 	}
 
+	parsedUserID, err := uuid.Parse(c.GetRespHeader("orgMemberID"))
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid Member ID."}
+	}
+
 	var resourceFile models.ResourceFile
-	if err := initializers.DB.Where("id=?", parsedResourceFileID).First(&resourceFile).Error; err != nil {
+	if err := initializers.DB.Where("id=? AND user_id=?", parsedResourceFileID, parsedUserID).First(&resourceFile).Error; err != nil {
 		if err != gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Resource File does not exist."}
 		}
@@ -249,6 +271,7 @@ func EditResourceFile(c *fiber.Ctx) error {
 }
 
 func DeleteResourceBucket(c *fiber.Ctx) error {
+	//TODO add OTP here
 	parsedResourceBucketID, err := uuid.Parse(c.Params("resourceBucketID"))
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Resource Bucket ID."}
@@ -291,8 +314,13 @@ func DeleteResourceFile(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid Resource Bucket ID."}
 	}
 
+	parsedUserID, err := uuid.Parse(c.GetRespHeader("orgMemberID"))
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid Member ID."}
+	}
+
 	var resourceFile models.ResourceFile
-	if err := initializers.DB.Where("id=?", parsedResourceFileID).First(&resourceFile).Error; err != nil {
+	if err := initializers.DB.Where("id=? AND user_id=?", parsedResourceFileID, parsedUserID).First(&resourceFile).Error; err != nil {
 		if err != gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Resource File does not exist."}
 		}

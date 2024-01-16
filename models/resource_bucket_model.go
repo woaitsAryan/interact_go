@@ -25,6 +25,7 @@ type ResourceFile struct {
 	ResourceBucketID uuid.UUID `gorm:"type:uuid;not null" json:"resourceBucketID"`
 	Title            string    `gorm:"type:text;not null" json:"title"`
 	Description      string    `gorm:"type:text" json:"description"`
+	Type             string    `gorm:"type:text" json:"type"`
 	Path             string    `gorm:"type:text;not null" json:"path"`
 	CreatedAt        time.Time `gorm:"default:current_timestamp" json:"createdAt"`
 }

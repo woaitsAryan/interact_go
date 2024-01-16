@@ -12,13 +12,13 @@ func ResourceRouter(app *fiber.App) {
 
 	resourceRoutes.Get("/", middlewares.OrgRoleAuthorization(models.Member), organization_controllers.GetOrgResourceBuckets)
 	resourceRoutes.Get("/:resourceBucketID", middlewares.OrgBucketAuthorization("view"), organization_controllers.GetResourceBucketFiles)
-	resourceRoutes.Post("/", middlewares.OrgRoleAuthorization(models.Manager), organization_controllers.AddResourceBucket)
-	resourceRoutes.Patch("/:resourceBucketID", middlewares.OrgBucketAuthorization("edit"), organization_controllers.EditResourceBucket)
-	resourceRoutes.Delete("/:resourceBucketID", middlewares.OrgRoleAuthorization(models.Manager), organization_controllers.DeleteResourceBucket)
+	resourceRoutes.Post("/", middlewares.OrgRoleAuthorization(models.Senior), organization_controllers.AddResourceBucket)
+	resourceRoutes.Patch("/:resourceBucketID", middlewares.OrgRoleAuthorization(models.Senior), organization_controllers.EditResourceBucket)
+	resourceRoutes.Delete("/:resourceBucketID", middlewares.OrgRoleAuthorization(models.Senior), organization_controllers.DeleteResourceBucket)
 
 	resourceFileRoutes := resourceRoutes.Group("/:resourceBucketID/file")
 
-	resourceFileRoutes.Post("/", middlewares.OrgBucketAuthorization("edit"), organization_controllers.AddResourceBucket)
-	resourceFileRoutes.Patch("/:resourceFileID", middlewares.OrgBucketAuthorization("edit"), organization_controllers.EditResourceBucket)
-	resourceFileRoutes.Delete("/:resourceFileID", middlewares.OrgBucketAuthorization("edit"), organization_controllers.DeleteResourceBucket)
+	resourceFileRoutes.Post("/", middlewares.OrgBucketAuthorization("edit"), organization_controllers.AddResourceFile)
+	resourceFileRoutes.Patch("/:resourceFileID", middlewares.OrgRoleAuthorization(models.Member), organization_controllers.EditResourceFile)
+	resourceFileRoutes.Delete("/:resourceFileID", middlewares.OrgRoleAuthorization(models.Member), organization_controllers.DeleteResourceFile)
 }

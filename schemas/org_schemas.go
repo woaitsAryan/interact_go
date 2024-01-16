@@ -25,7 +25,7 @@ type ResourceBucketCreateSchema struct {
 
 type ResourceBucketEditSchema struct {
 	Title       string                  `json:"title" validate:"max=50"`
-	Description string                  `json:"description" validate:"max=500"`
+	Description *string                 `json:"description" validate:"max=500"`
 	ViewAccess  models.OrganizationRole `json:"viewAccess"`
 	EditAccess  models.OrganizationRole `json:"editAccess"`
 }

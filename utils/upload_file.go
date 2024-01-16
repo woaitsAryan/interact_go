@@ -8,6 +8,7 @@ import (
 
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gosimple/slug"
 )
 
 func UploadImage(c *fiber.Ctx, fieldName string, client *helpers.BucketClient, width int, height int) (string, error) {
@@ -29,7 +30,7 @@ func UploadImage(c *fiber.Ctx, fieldName string, client *helpers.BucketClient, w
 	}
 
 	timestamp := time.Now().UTC().Format(time.RFC3339)
-	filePath := fmt.Sprintf("%s-%s-%s", c.GetRespHeader("loggedInUserID"), file.Filename, timestamp)
+	filePath := fmt.Sprintf("%s-%s-%s", c.GetRespHeader("loggedInUserID"), timestamp, file.Filename)
 	resizedPicPath := fmt.Sprintf("%s-resized.jpg", filePath)
 
 	err = client.UploadBucketFile(resizedImgBuffer, resizedPicPath)
@@ -65,7 +66,7 @@ func UploadResume(c *fiber.Ctx) (string, error) {
 	}
 
 	timestamp := time.Now().UTC().Format(time.RFC3339)
-	filePath := fmt.Sprintf("%s-%s-%s", c.GetRespHeader("loggedInUserID"), file.Filename, timestamp)
+	filePath := fmt.Sprintf("%s-%s-%s", c.GetRespHeader("loggedInUserID"), timestamp, file.Filename)
 
 	err = helpers.UserResumeClient.UploadBucketFile(&buffer, filePath)
 	if err != nil {
@@ -83,7 +84,7 @@ func UploadFile(c *fiber.Ctx) (string, error) {
 
 	files := form.File["file"]
 	if files == nil {
-		return "", nil
+		return "", fmt.Errorf("file not present")
 	}
 
 	file := files[0]
@@ -100,9 +101,9 @@ func UploadFile(c *fiber.Ctx) (string, error) {
 	}
 
 	timestamp := time.Now().UTC().Format(time.RFC3339)
-	filePath := fmt.Sprintf("%s-%s-%s", c.Params("orgID"), file.Filename, timestamp)
+	filePath := fmt.Sprintf("%s-%s-%s", c.Params("orgID"), timestamp, slug.Make(file.Filename))
 
-	err = helpers.UserResumeClient.UploadBucketFile(&buffer, filePath)
+	err = helpers.ResourceClient.UploadBucketFile(&buffer, filePath)
 	if err != nil {
 		return "", err
 	}
