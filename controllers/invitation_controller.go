@@ -188,7 +188,7 @@ func WithdrawInvitation(c *fiber.Ctx) error {
 		if err != nil {
 			return &fiber.Error{Code: 400, Message: "Invalid User ID."}
 		}
-		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 4, nil, nil, nil, nil, nil, nil, invitation.Title)
+		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 4, nil, nil, nil, nil, nil, nil,nil, invitation.Title)
 	}
 
 	return c.Status(204).JSON(fiber.Map{

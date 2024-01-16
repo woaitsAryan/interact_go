@@ -193,6 +193,55 @@ func DecrementEventLikes(eventID uuid.UUID) {
 	}
 }
 
+func IncrementAnnouncementLikesAndSendNotification(announcementID uuid.UUID, loggedInUserID uuid.UUID) {
+	var announcement models.Announcement
+	if err := initializers.DB.Preload("Organization").First(&announcement, "id = ?", announcementID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			helpers.LogDatabaseError("No Event of this ID found-IncrementAnnouncementLikesAndSendNotification.", err, "go_routine")
+		} else {
+			helpers.LogDatabaseError("Error while fetching Event-IncrementAnnouncementLikesAndSendNotification", err, "go_routine")
+		}
+	} else {
+		announcement.NoLikes++
+
+		result := initializers.DB.Save(&announcement)
+		if result.Error != nil {
+			helpers.LogDatabaseError("Error while updating Event-IncrementAnnouncementLikesAndSendNotification", result.Error, "go_routine")
+		}
+	}
+
+	if loggedInUserID != announcement.Organization.UserID {
+		notification := models.Notification{
+			NotificationType: 18,
+			UserID:           announcement.Organization.UserID,
+			SenderID:         loggedInUserID,
+			AnnouncementID:   &announcement.ID,
+		}
+
+		if err := initializers.DB.Create(&notification).Error; err != nil {
+			helpers.LogDatabaseError("Error while creating Notification-IncrementAnnouncementLikesAndSendNotification", err, "go_routine")
+		}
+	}
+}
+
+func DecrementAnnouncementLikes(announcementID uuid.UUID) {
+	var announcement models.Announcement
+	if err := initializers.DB.First(&announcement, "id = ?", announcementID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			helpers.LogDatabaseError("No Event of this ID found-DecrementAnnouncementLikes.", err, "go_routine")
+		} else {
+			helpers.LogDatabaseError("Error while fetching Event-DecrementAnnouncementLikes", err, "go_routine")
+		}
+	} else {
+		announcement.NoLikes--
+
+		result := initializers.DB.Save(&announcement)
+		if result.Error != nil {
+			helpers.LogDatabaseError("Error while updating Event-DecrementAnnouncementLikes", result.Error, "go_routine")
+		}
+	}
+}
+
 func IncrementReviewUpVotes(reviewID uuid.UUID, loggedInUserID uuid.UUID) {
 	var review models.Review
 	if err := initializers.DB.Preload("Organization").First(&review, "id = ?", reviewID).Error; err != nil {

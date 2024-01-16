@@ -7,21 +7,23 @@ import (
 )
 
 type Message struct {
-	ID        uuid.UUID  `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	ChatID    uuid.UUID  `gorm:"type:uuid;not null" json:"chatID"`
-	Chat      Chat       `gorm:"" json:"chat"`
-	UserID    uuid.UUID  `gorm:"type:uuid;not null" json:"userID"`
-	User      User       `gorm:"" json:"user"`
-	PostID    *uuid.UUID `gorm:"type:uuid" json:"postID"` // shared post
-	Post      Post       `json:"post"`
-	ProjectID *uuid.UUID `gorm:"type:uuid" json:"projectID"` // shared project
-	Project   Project    `json:"project"`
-	OpeningID *uuid.UUID `gorm:"type:uuid" json:"openingID"` // shared opening
-	Opening   Opening    `json:"opening"`
-	ProfileID *uuid.UUID `gorm:"type:uuid" json:"profileID"` // shared profile
-	Profile   User       `gorm:"" json:"profile"`
-	EventID   *uuid.UUID `gorm:"type:uuid" json:"eventID"` // shared event
-	Event     Event      `gorm:"" json:"event"`
+	ID             uuid.UUID    `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	ChatID         uuid.UUID    `gorm:"type:uuid;not null" json:"chatID"`
+	Chat           Chat         `gorm:"" json:"chat"`
+	UserID         uuid.UUID    `gorm:"type:uuid;not null" json:"userID"`
+	User           User         `gorm:"" json:"user"`
+	PostID         *uuid.UUID   `gorm:"type:uuid" json:"postID"` // shared post
+	Post           Post         `json:"post"`
+	ProjectID      *uuid.UUID   `gorm:"type:uuid" json:"projectID"` // shared project
+	Project        Project      `json:"project"`
+	OpeningID      *uuid.UUID   `gorm:"type:uuid" json:"openingID"` // shared opening
+	Opening        Opening      `json:"opening"`
+	ProfileID      *uuid.UUID   `gorm:"type:uuid" json:"profileID"` // shared profile
+	Profile        User         `gorm:"" json:"profile"`
+	EventID        *uuid.UUID   `gorm:"type:uuid" json:"eventID"` // shared event
+	Event          Event        `gorm:"" json:"event"`
+	AnnouncementID *uuid.UUID   `gorm:"type:uuid" json:"announcementID"` // shared announcement
+	Announcement   Announcement `gorm:"" json:"announcement"`
 	// MessageID *uuid.UUID `gorm:"type:uuid" json:"messageID"` // replied message
 	// Message   Message    `json:"message"`
 	Content   string    `gorm:"type:text;not null" json:"content"`
@@ -30,22 +32,24 @@ type Message struct {
 }
 
 type GroupChatMessage struct {
-	ID        uuid.UUID  `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	ChatID    uuid.UUID  `gorm:"type:uuid;not null" json:"chatID"`
-	Chat      GroupChat  `gorm:"" json:"chat"`
-	UserID    uuid.UUID  `gorm:"type:uuid;not null" json:"userID"`
-	User      User       `gorm:"" json:"user"`
-	Content   string     `gorm:"type:text;not null" json:"content"`
-	PostID    *uuid.UUID `gorm:"type:uuid" json:"postID"` // shared post
-	Post      Post       `json:"post"`
-	ProjectID *uuid.UUID `gorm:"type:uuid" json:"projectID"` // shared project
-	Project   Project    `json:"project"`
-	OpeningID *uuid.UUID `gorm:"type:uuid" json:"openingID"` // shared opening
-	Opening   Opening    `json:"opening"`
-	ProfileID *uuid.UUID `gorm:"type:uuid" json:"profileID"` // shared profile
-	Profile   User       `gorm:"foreignKey:ProfileID;" json:"profile"`
-	EventID   *uuid.UUID `gorm:"type:uuid" json:"eventID"` // shared event
-	Event     Event      `gorm:"" json:"event"`
+	ID             uuid.UUID    `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	ChatID         uuid.UUID    `gorm:"type:uuid;not null" json:"chatID"`
+	Chat           GroupChat    `gorm:"" json:"chat"`
+	UserID         uuid.UUID    `gorm:"type:uuid;not null" json:"userID"`
+	User           User         `gorm:"" json:"user"`
+	Content        string       `gorm:"type:text;not null" json:"content"`
+	PostID         *uuid.UUID   `gorm:"type:uuid" json:"postID"` // shared post
+	Post           Post         `json:"post"`
+	ProjectID      *uuid.UUID   `gorm:"type:uuid" json:"projectID"` // shared project
+	Project        Project      `json:"project"`
+	OpeningID      *uuid.UUID   `gorm:"type:uuid" json:"openingID"` // shared opening
+	Opening        Opening      `json:"opening"`
+	ProfileID      *uuid.UUID   `gorm:"type:uuid" json:"profileID"` // shared profile
+	Profile        User         `gorm:"foreignKey:ProfileID;" json:"profile"`
+	AnnouncementID *uuid.UUID   `gorm:"type:uuid" json:"announcementID"` // shared announcement
+	Announcement   Announcement `gorm:"" json:"announcement"`
+	EventID        *uuid.UUID   `gorm:"type:uuid" json:"eventID"` // shared event
+	Event          Event        `gorm:"" json:"event"`
 	// MessageID *uuid.UUID `gorm:"type:uuid" json:"messageID"` // replied message
 	// Message   Project    `json:"message"`
 	// Read      bool       `gorm:"default:false" json:"read"`

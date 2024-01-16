@@ -83,10 +83,11 @@ func AddComment(c *fiber.Ctx) error {
 	parsedUserID, _ := uuid.Parse(loggedInUserID)
 
 	var reqBody struct {
-		Content   string `json:"content"`
-		PostID    string `json:"postID"`
-		ProjectID string `json:"projectID"`
-		EventID   string `json:"eventID"`
+		Content        string `json:"content"`
+		PostID         string `json:"postID"`
+		ProjectID      string `json:"projectID"`
+		EventID        string `json:"eventID"`
+		AnnouncementID string `json:"announcementID"`
 	}
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
@@ -95,6 +96,7 @@ func AddComment(c *fiber.Ctx) error {
 	postID := reqBody.PostID
 	projectID := reqBody.ProjectID
 	eventID := reqBody.EventID
+	announcementID := reqBody.AnnouncementID
 
 	comment := models.Comment{
 		UserID:  parsedUserID,
@@ -108,6 +110,14 @@ func AddComment(c *fiber.Ctx) error {
 		}
 		comment.PostID = &parsedPostID
 		go routines.IncrementPostCommentsAndSendNotification(parsedPostID, parsedUserID)
+	} else if announcementID != ""{
+		parsedAnnouncementID, err := uuid.Parse(announcementID)
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid ID."}
+		}
+		comment.AnnouncementID = &parsedAnnouncementID
+		go routines.IncrementAnnouncementCommentsAndSendNotification(parsedAnnouncementID, parsedUserID)
+
 	} else if projectID != "" {
 		parsedProjectID, err := uuid.Parse(projectID)
 		if err != nil {

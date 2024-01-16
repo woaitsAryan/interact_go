@@ -17,13 +17,14 @@ func ShareItem(shareType string) func(c *fiber.Ctx) error {
 		parsedUserID, _ := uuid.Parse(loggedInUserID)
 
 		var reqBody struct {
-			Content   string         `json:"content"`
-			Chats     pq.StringArray `json:"chats"`
-			PostID    string         `json:"postID"`
-			ProjectID string         `json:"projectID"`
-			EventID   string         `json:"eventID"`
-			OpeningID string         `json:"openingID"`
-			ProfileID string         `json:"profileID"`
+			Content        string         `json:"content"`
+			Chats          pq.StringArray `json:"chats"`
+			PostID         string         `json:"postID"`
+			ProjectID      string         `json:"projectID"`
+			EventID        string         `json:"eventID"`
+			OpeningID      string         `json:"openingID"`
+			ProfileID      string         `json:"profileID"`
+			AnnouncementID string         `json:"announcementID"`
 		}
 		if err := c.BodyParser(&reqBody); err != nil {
 			return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
@@ -65,6 +66,13 @@ func ShareItem(shareType string) func(c *fiber.Ctx) error {
 				}
 				message.PostID = &parsedPostID
 				go routines.IncrementPostShare(parsedPostID)
+			case "announcement":
+				parsedAnnouncementID, err := uuid.Parse(reqBody.AnnouncementID)
+				if err != nil {
+					return &fiber.Error{Code: 400, Message: "Invalid Announcement ID."}
+				}
+				message.AnnouncementID = &parsedAnnouncementID
+				go routines.IncrementAnnouncementShare(parsedAnnouncementID)
 			case "project":
 				parsedProjectID, err := uuid.Parse(reqBody.ProjectID)
 				if err != nil {

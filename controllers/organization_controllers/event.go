@@ -101,7 +101,7 @@ func AddEvent(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
-	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 0, nil, nil, &event.ID, nil, nil, nil, "")
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 0, nil, nil, &event.ID, nil, nil, nil, nil, "")
 	go routines.IncrementOrgEvent(parsedOrgID)
 	routines.GetImageBlurHash(c, "coverPic", &event)
 
@@ -186,7 +186,7 @@ func UpdateEvent(c *fiber.Ctx) error {
 		go routines.DeleteFromBucket(helpers.EventClient, oldEventPic)
 	}
 
-	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 2, nil, nil, &event.ID, nil, nil, nil, "")
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 2, nil, nil, &event.ID, nil, nil, nil, nil, "")
 	routines.GetImageBlurHash(c, "coverPic", &event)
 	go cache.RemoveEvent(event.ID.String())
 
@@ -254,7 +254,7 @@ func AddEventCoordinators(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 16, nil, nil, &event.ID, nil, nil, nil, "")
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 16, nil, nil, &event.ID, nil, nil, nil, nil, "")
 	go cache.RemoveEvent(event.ID.String())
 
 	return c.Status(200).JSON(fiber.Map{
@@ -280,7 +280,7 @@ func RemoveEventCoordinators(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 17, nil, nil, &event.ID, nil, nil, nil, "")
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 17, nil, nil, &event.ID, nil, nil, nil, nil,"")
 	go cache.RemoveEvent(event.ID.String())
 
 	return c.Status(204).JSON(fiber.Map{
@@ -315,7 +315,7 @@ func DeleteEvent(c *fiber.Ctx) error {
 	}
 
 	go routines.DeleteFromBucket(helpers.EventClient, eventPic)
-	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 1, nil, nil, nil, nil, nil, nil, event.Title)
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 1, nil, nil, nil, nil, nil, nil, nil, event.Title)
 	go routines.DecrementOrgEvent(parsedOrgID)
 	go cache.RemoveEvent(event.ID.String())
 
