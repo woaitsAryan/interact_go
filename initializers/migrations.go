@@ -60,6 +60,9 @@ func AutoMigrate() {
 		&models.Review{},
 		&models.Poll{},
 		&models.Option{},
+		&models.ResourceBucket{},
+		&models.ResourceFile{},
+		&models.Announcement{},
 
 		&models.Report{},
 		&models.Notification{},

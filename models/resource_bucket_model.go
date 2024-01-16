@@ -21,6 +21,7 @@ type ResourceBucket struct { //TODO make a similar thing for projects
 type ResourceFile struct {
 	ID               uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	UserID           uuid.UUID `gorm:"type:uuid;not null" json:"userID"`
+	User             User      `json:"user"`
 	ResourceBucketID uuid.UUID `gorm:"type:uuid;not null" json:"resourceBucketID"`
 	Title            string    `gorm:"type:text;not null" json:"title"`
 	Description      string    `gorm:"type:text" json:"description"`

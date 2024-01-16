@@ -31,5 +31,7 @@ func (likeModel *Like) SetItemID(likeType string, itemID uuid.UUID) {
 		likeModel.EventID = &itemID
 	case "review":
 		likeModel.ReviewID = &itemID
+	case "announcement":
+		likeModel.AnnouncementID = &itemID
 	}
 }

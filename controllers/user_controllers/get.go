@@ -87,6 +87,8 @@ func GetMyLikes(c *fiber.Ctx) error {
 			likeIDs = append(likeIDs, like.EventID.String())
 		} else if like.ReviewID != nil {
 			likeIDs = append(likeIDs, like.ReviewID.String())
+		} else if like.AnnouncementID != nil {
+			likeIDs = append(likeIDs, like.AnnouncementID.String())
 		}
 	}
 
@@ -118,6 +120,8 @@ func GetMyDislikes(c *fiber.Ctx) error {
 			likeIDs = append(likeIDs, like.EventID.String())
 		} else if like.ReviewID != nil {
 			likeIDs = append(likeIDs, like.ReviewID.String())
+		} else if like.AnnouncementID != nil {
+			likeIDs = append(likeIDs, like.AnnouncementID.String())
 		}
 	}
 

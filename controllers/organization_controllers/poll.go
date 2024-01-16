@@ -7,6 +7,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/schemas"
+	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -27,7 +28,7 @@ func FetchPolls(c *fiber.Ctx) error {
 	parsedUserID, _ := uuid.Parse(c.GetRespHeader("loggedInUserID"))
 
 	var organization models.Organization
-	if err := initializers.DB.Preload("Memberships").First(&organization, "id = ?", orgID).Error; err != nil {
+	if err := initializers.DB.Preload("User").Preload("Memberships").First(&organization, "id = ?", orgID).Error; err != nil {
 		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid organization ID."}
 	}
 	isMember := false
@@ -43,15 +44,18 @@ func FetchPolls(c *fiber.Ctx) error {
 		}
 	}
 
-	// oneWeekAgo := time.Now().AddDate(0, 0, -7)
-	// db := initializers.DB.Preload("Options").Preload("Options.VotedBy", LimitedUsers).Where("organization_id = ? AND created_at >= ?", orgID, oneWeekAgo)
-	db := initializers.DB.Preload("Options", func(db *gorm.DB) *gorm.DB {
-		return db.Order("options.created_at DESC")
-	}).Preload("Options.VotedBy", LimitedUsers).Where("organization_id = ?", orgID)
+	paginatedDB := API.Paginator(c)(initializers.DB)
+
 	// If the user is not a member, only show open polls
 	if !isMember {
-		db = db.Where("is_open = ?", true)
+		paginatedDB = paginatedDB.Where("is_open = ?", true)
 	}
+
+	// oneWeekAgo := time.Now().AddDate(0, 0, -7)
+	// db := initializers.DB.Preload("Options").Preload("Options.VotedBy", LimitedUsers).Where("organization_id = ? AND created_at >= ?", orgID, oneWeekAgo)
+	db := paginatedDB.Preload("Options", func(db *gorm.DB) *gorm.DB {
+		return db.Order("options.created_at DESC")
+	}).Preload("Options.VotedBy", LimitedUsers).Where("organization_id = ?", orgID)
 
 	var polls []models.Poll
 	if err := db.Order("created_at DESC").Find(&polls).Error; err != nil {
@@ -319,7 +323,7 @@ func EditPoll(c *fiber.Ctx) error {
 	}
 	orgID := poll.OrganizationID
 
-	go routines.MarkOrganizationHistory(orgID, parsedUserID, 20, nil, nil, nil, nil, nil, &poll.ID,nil, "")
+	go routines.MarkOrganizationHistory(orgID, parsedUserID, 20, nil, nil, nil, nil, nil, &poll.ID, nil, "")
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status":  "success",

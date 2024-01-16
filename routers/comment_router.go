@@ -12,6 +12,7 @@ func CommentRouter(app *fiber.App) {
 	commentRoutes.Get("/post/:postID", controllers.GetPostComments)
 	commentRoutes.Get("/project/:projectID", controllers.GetProjectComments)
 	commentRoutes.Get("/event/:eventID", controllers.GetEventComments)
+	commentRoutes.Get("/announcement/:announcementID", controllers.GetAnnouncementComments)
 
 	commentRoutes.Post("/", controllers.AddComment)
 

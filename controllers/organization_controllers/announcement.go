@@ -22,7 +22,7 @@ func GetOrgAnnouncements(c *fiber.Ctx) error {
 	parsedUserID, _ := uuid.Parse(c.GetRespHeader("loggedInUserID"))
 
 	var organization models.Organization
-	if err := initializers.DB.Preload("Memberships").First(&organization, "id = ?", parsedOrgID).Error; err != nil {
+	if err := initializers.DB.Preload("User").Preload("Memberships").First(&organization, "id = ?", parsedOrgID).Error; err != nil {
 		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid organization ID."}
 	}
 	isMember := false
@@ -45,12 +45,13 @@ func GetOrgAnnouncements(c *fiber.Ctx) error {
 	}
 
 	var announcements []models.Announcement
-	if err := paginatedDB.Where("organization_id = ?", parsedOrgID).Order("created_at DESC").Find(&announcements).Error; err != nil {
+	if err := paginatedDB.Preload("TaggedUsers").Where("organization_id = ?", parsedOrgID).Order("created_at DESC").Find(&announcements).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":        "success",
+		"organization":  organization,
 		"announcements": announcements,
 	})
 }
