@@ -138,16 +138,24 @@ func AddResourceFile(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	link, err := utils.UploadFile(c)
-	if err != nil {
-		return helpers.AppError{Code: 500, Message: config.SERVER_ERROR, LogMessage: err.Error(), Err: err}
-	}
+	var fileExtension string
+	var link string
 
-	fileExtension := path.Ext(link)
+	if reqBody.Link == "" {
+		link, err = utils.UploadFile(c)
+		if err != nil {
+			return helpers.AppError{Code: 500, Message: config.SERVER_ERROR, LogMessage: err.Error(), Err: err}
+		}
 
-	if len(fileExtension) > 0 {
-		// Remove the leading dot from the extension
-		fileExtension = fileExtension[1:]
+		fileExtension = path.Ext(link)
+
+		if len(fileExtension) > 0 {
+			// Remove the leading dot from the extension
+			fileExtension = fileExtension[1:]
+		}
+	} else {
+		link = reqBody.Link
+		fileExtension = ""
 	}
 
 	resourceFile := models.ResourceFile{
@@ -157,6 +165,10 @@ func AddResourceFile(c *fiber.Ctx) error {
 		Description:      reqBody.Description,
 		Path:             link,
 		Type:             fileExtension,
+	}
+
+	if reqBody.Link == "" {
+		resourceFile.FileUploaded = true
 	}
 
 	if err := initializers.DB.Create(&resourceFile).Error; err != nil {

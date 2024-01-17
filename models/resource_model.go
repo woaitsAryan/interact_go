@@ -26,6 +26,7 @@ type ResourceFile struct {
 	Title            string    `gorm:"type:text;not null" json:"title"`
 	Description      string    `gorm:"type:text" json:"description"`
 	Type             string    `gorm:"type:text" json:"type"`
+	FileUploaded     bool      `gorm:"default:false" json:"isFileUploaded"`
 	Path             string    `gorm:"type:text;not null" json:"path"`
 	CreatedAt        time.Time `gorm:"default:current_timestamp" json:"createdAt"`
 }

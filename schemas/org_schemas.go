@@ -33,6 +33,7 @@ type ResourceBucketEditSchema struct {
 type ResourceFileCreateSchema struct {
 	Title       string `json:"title" validate:"required,max=50"`
 	Description string `json:"description" validate:"max=500"`
+	Link        string `json:"link"`
 }
 
 type ResourceFileEditSchema struct {

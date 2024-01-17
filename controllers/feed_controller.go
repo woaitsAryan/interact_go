@@ -134,6 +134,8 @@ func GetCombinedFeed(c *fiber.Ctx) error {
 
 	var announcements []models.Announcement
 	if err := paginatedDB.
+		Preload("Organization").
+		Preload("Organization.User").
 		Preload("TaggedUsers").
 		Where("(organization_id IN (?) OR (is_open=true AND organization_id IN (?)))", memberOrgIDs, followingOrgIDs).
 		Order("created_at DESC").
@@ -143,9 +145,13 @@ func GetCombinedFeed(c *fiber.Ctx) error {
 
 	paginatedDB = API.Paginator(c)(initializers.DB)
 
-	db := paginatedDB.Preload("Options", func(db *gorm.DB) *gorm.DB {
-		return db.Order("options.created_at DESC")
-	}).Preload("Options.VotedBy", LimitedUsers).
+	db := paginatedDB.
+		Preload("Organization").
+		Preload("Organization.User").
+		Preload("Options", func(db *gorm.DB) *gorm.DB {
+			return db.Order("options.created_at DESC")
+		}).
+		Preload("Options.VotedBy", LimitedUsers).
 		Where("(organization_id IN (?) OR (is_open=true AND organization_id IN (?)))", memberOrgIDs, followingOrgIDs)
 
 	var polls []models.Poll
@@ -173,8 +179,8 @@ func GetCombinedFeed(c *fiber.Ctx) error {
 	go routines.IncrementPostImpression(posts)
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"status":       "success",
-		"combinedFeed": combinedFeed,
+		"status": "success",
+		"feed":   combinedFeed,
 	})
 }
 
