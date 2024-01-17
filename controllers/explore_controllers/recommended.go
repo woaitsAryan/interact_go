@@ -28,6 +28,10 @@ func GetRecommendedPosts(c *fiber.Ctx) error {
 
 	if err := initializers.DB.
 		Preload("User").
+		Preload("RePost").
+		Preload("RePost.User").
+		Preload("RePost.TaggedUsers").
+		Preload("TaggedUsers").
 		Where("id IN ?", recommendations).
 		Find(&posts).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
