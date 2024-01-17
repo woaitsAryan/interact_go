@@ -208,3 +208,35 @@ func IncrementReposts(postID uuid.UUID) {
 		}
 	}
 }
+
+func IncrementResourceBucketFiles(resourceBucketID uuid.UUID) {
+	var resourceBucket models.ResourceBucket
+	if err := initializers.DB.First(&resourceBucket, "id = ?", resourceBucketID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			helpers.LogDatabaseError("No Resource Bucket of this ID found-IncrementResourceBucketFiles.", err, "go_routine")
+		} else {
+			helpers.LogDatabaseError("Error while fetching Resource Bucket-IncrementResourceBucketFiles", err, "go_routine")
+		}
+	} else {
+		resourceBucket.NumberOfFiles++
+		if err := initializers.DB.Save(&resourceBucket).Error; err != nil {
+			helpers.LogDatabaseError("Error while updating Resource Bucket-IncrementResourceBucketFiles", err, "go_routine")
+		}
+	}
+}
+
+func DecrementResourceBucketFiles(resourceBucketID uuid.UUID) {
+	var resourceBucket models.ResourceBucket
+	if err := initializers.DB.First(&resourceBucket, "id = ?", resourceBucketID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			helpers.LogDatabaseError("No Resource Bucket of this ID found-IncrementResourceBucketFiles.", err, "go_routine")
+		} else {
+			helpers.LogDatabaseError("Error while fetching Resource Bucket-IncrementResourceBucketFiles", err, "go_routine")
+		}
+	} else {
+		resourceBucket.NumberOfFiles--
+		if err := initializers.DB.Save(&resourceBucket).Error; err != nil {
+			helpers.LogDatabaseError("Error while updating Resource Bucket-IncrementResourceBucketFiles", err, "go_routine")
+		}
+	}
+}

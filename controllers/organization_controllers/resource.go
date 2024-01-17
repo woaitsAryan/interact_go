@@ -63,7 +63,7 @@ func GetResourceBucketFiles(c *fiber.Ctx) error {
 	}
 
 	var resourceBucket models.ResourceBucket
-	if err := initializers.DB.Preload("ResourceFiles").Where("id=? AND organization_id = ?", parsedResourceBucketID, parsedOrgID).First(&resourceBucket).Error; err != nil {
+	if err := initializers.DB.Preload("ResourceFiles").Preload("ResourceFiles.User").Where("id=? AND organization_id = ?", parsedResourceBucketID, parsedOrgID).First(&resourceBucket).Error; err != nil {
 		if err != gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Resource Bucket does not exist."}
 		}
@@ -145,8 +145,10 @@ func AddResourceFile(c *fiber.Ctx) error {
 
 	fileExtension := path.Ext(link)
 
-	// Remove the leading dot from the extension
-	fileExtension = fileExtension[1:]
+	if len(fileExtension) > 0 {
+		// Remove the leading dot from the extension
+		fileExtension = fileExtension[1:]
+	}
 
 	resourceFile := models.ResourceFile{
 		ResourceBucketID: resourceBucket.ID,
@@ -161,13 +163,10 @@ func AddResourceFile(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	//TODO make routine
-	resourceBucket.NumberOfFiles++
-	if err := initializers.DB.Save(&resourceBucket).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
-	}
-
+	go routines.IncrementResourceBucketFiles(resourceBucket.ID)
 	go cache.RemoveResourceBucket(resourceBucket.ID.String())
+
+	initializers.DB.Preload("User").First(&resourceFile)
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"status":       "success",
@@ -341,12 +340,7 @@ func DeleteResourceFile(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	//TODO make routine
-	resourceBucket.NumberOfFiles--
-	if err := initializers.DB.Save(&resourceBucket).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
-	}
-
+	go routines.DecrementResourceBucketFiles(resourceBucket.ID)
 	go routines.DeleteFromBucket(helpers.ResourceClient, path)
 	go cache.RemoveResourceBucket(resourceFile.ResourceBucketID.String())
 

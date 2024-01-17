@@ -8,7 +8,6 @@ import (
 
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gosimple/slug"
 )
 
 func UploadImage(c *fiber.Ctx, fieldName string, client *helpers.BucketClient, width int, height int) (string, error) {
@@ -101,7 +100,7 @@ func UploadFile(c *fiber.Ctx) (string, error) {
 	}
 
 	timestamp := time.Now().UTC().Format(time.RFC3339)
-	filePath := fmt.Sprintf("%s-%s-%s", c.Params("orgID"), timestamp, slug.Make(file.Filename))
+	filePath := fmt.Sprintf("%s-%s-%s", c.Params("orgID"), timestamp, SoftSlugify(file.Filename))
 
 	err = helpers.ResourceClient.UploadBucketFile(&buffer, filePath)
 	if err != nil {
