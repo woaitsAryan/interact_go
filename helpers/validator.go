@@ -9,7 +9,6 @@ import (
 )
 
 func Validate[T any](payload T) error {
-
 	validate := validator.New()
 
 	if err := validate.Struct(payload); err != nil {

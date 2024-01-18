@@ -26,26 +26,31 @@ notification type:
 *14 - Your post got x impressions
 *15 - Your project got x impressions
 *16 - Your event got x impressions
+*17 - Your announcement got x impressions
+*18 - User liked your announcement
+*19 - User commented on your announcement
 */
 
 type Notification struct {
-	ID               uuid.UUID   `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	NotificationType int         `json:"notificationType"`
-	UserID           uuid.UUID   `gorm:"type:uuid;not null" json:"userID"`
-	User             User        `json:"user"`
-	SenderID         uuid.UUID   `gorm:"type:uuid;not null" json:"senderID"`
-	Sender           User        `json:"sender"`
-	PostID           *uuid.UUID  `gorm:"type:uuid" json:"postID"`
-	Post             Post        `json:"post"`
-	ProjectID        *uuid.UUID  `gorm:"type:uuid" json:"projectID"`
-	Project          Project     `json:"project"`
-	EventID          *uuid.UUID  `gorm:"type:uuid" json:"eventID"`
-	Event            Event       `json:"event"`
-	OpeningID        *uuid.UUID  `gorm:"type:uuid" json:"openingID"`
-	Opening          Opening     `json:"opening"`
-	ApplicationID    *uuid.UUID  `gorm:"type:uuid" json:"applicationID"`
-	Application      Application `json:"application"`
-	ImpressionCount  int         `gorm:"default:0" json:"impressionCount"`
-	Read             bool        `gorm:"default:false" json:"isRead"`
-	CreatedAt        time.Time   `gorm:"default:current_timestamp" json:"createdAt"`
+	ID               uuid.UUID    `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	NotificationType int16        `json:"notificationType"`
+	UserID           uuid.UUID    `gorm:"type:uuid;not null" json:"userID"`
+	User             User         `json:"user"`
+	SenderID         uuid.UUID    `gorm:"type:uuid;not null" json:"senderID"`
+	Sender           User         `json:"sender"`
+	PostID           *uuid.UUID   `gorm:"type:uuid" json:"postID"`
+	Post             Post         `json:"post"`
+	ProjectID        *uuid.UUID   `gorm:"type:uuid" json:"projectID"`
+	Project          Project      `json:"project"`
+	EventID          *uuid.UUID   `gorm:"type:uuid" json:"eventID"`
+	Event            Event        `json:"event"`
+	AnnouncementID   *uuid.UUID   `gorm:"type:uuid" json:"announcementID"`
+	Announcement     Announcement `json:"announcement"`
+	OpeningID        *uuid.UUID   `gorm:"type:uuid" json:"openingID"`
+	Opening          Opening      `json:"opening"`
+	ApplicationID    *uuid.UUID   `gorm:"type:uuid" json:"applicationID"`
+	Application      Application  `json:"application"`
+	ImpressionCount  int          `gorm:"default:0" json:"impressionCount"`
+	Read             bool         `gorm:"default:false" json:"isRead"`
+	CreatedAt        time.Time    `gorm:"default:current_timestamp" json:"createdAt"`
 }

@@ -199,7 +199,7 @@ func AddPost(c *fiber.Ctx) error {
 		if err != nil {
 			return &fiber.Error{Code: 400, Message: "Invalid User ID."}
 		}
-		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 6, &newPost.ID, nil, nil, nil, nil, "")
+		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 6, &newPost.ID, nil, nil, nil, nil, nil, nil, "")
 	}
 	if reqBody.RePostID != "" {
 		go routines.IncrementReposts(*newPost.RePostID)
@@ -291,7 +291,7 @@ func UpdatePost(c *fiber.Ctx) error {
 		if err != nil {
 			return &fiber.Error{Code: 400, Message: "Invalid User ID."}
 		}
-		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 8, &post.ID, nil, nil, nil, nil, "")
+		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 8, &post.ID, nil, nil, nil, nil, nil, nil, "")
 	}
 
 	go cache.RemovePost(postID)
@@ -315,21 +315,6 @@ func DeletePost(c *fiber.Ctx) error {
 
 	orgMemberID := c.GetRespHeader("orgMemberID")
 	orgID := c.Params("orgID")
-
-	parsedOrgID := uuid.Nil
-	parsedOrgMemberID := uuid.Nil
-
-	if orgMemberID != "" && orgID != "" {
-		parsedOrgID, err = uuid.Parse(orgID)
-		if err != nil {
-			return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
-		}
-
-		parsedOrgMemberID, err = uuid.Parse(orgMemberID)
-		if err != nil {
-			return &fiber.Error{Code: 400, Message: "Invalid User ID."}
-		}
-	}
 
 	var post models.Post
 	if err := initializers.DB.Preload("User").First(&post, "id = ? AND user_id=?", parsedPostID, loggedInUserID).Error; err != nil {
@@ -397,7 +382,16 @@ func DeletePost(c *fiber.Ctx) error {
 	}
 
 	if orgMemberID != "" && orgID != "" {
-		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 7, nil, nil, nil, nil, nil, post.Content)
+		parsedOrgID, err := uuid.Parse(orgID)
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
+		}
+
+		parsedOrgMemberID, err := uuid.Parse(orgMemberID)
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid User ID."}
+		}
+		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 7, nil, nil, nil, nil, nil, nil, nil, post.Content)
 	}
 
 	return c.Status(204).JSON(fiber.Map{

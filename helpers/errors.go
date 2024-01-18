@@ -33,9 +33,9 @@ func ErrorHandler(c *fiber.Ctx, err error) error {
 	}
 
 	if Message == config.DATABASE_ERROR {
-		LogDatabaseError("Database Error", Error, c.Path())
+		go LogDatabaseError("Database Error", Error, c.Path())
 	} else if Code == 500 {
-		LogServerError("Server Error", Error, c.Path())
+		go LogServerError("Server Error", Error, c.Path())
 	}
 
 	return c.Status(Code).JSON(fiber.Map{

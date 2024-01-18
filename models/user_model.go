@@ -55,6 +55,7 @@ type User struct {
 	LastViewedProjects        []LastViewedProjects `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"lastViewedProjects"`
 	LastViewedOpenings        []LastViewedOpenings `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"lastViewedOpenings"`
 	Openings                  []Opening            `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"-"`
+	Reviews                   []Review             `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"-"`
 	SendNotifications         []Notification       `gorm:"foreignKey:SenderID;constraint:OnDelete:CASCADE" json:"-"`
 	Followers                 []FollowFollower     `gorm:"foreignKey:FollowerID;constraint:OnDelete:CASCADE" json:"-"`
 	Following                 []FollowFollower     `gorm:"foreignKey:FollowedID;constraint:OnDelete:CASCADE" json:"-"`

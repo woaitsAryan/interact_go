@@ -9,4 +9,5 @@ import (
 func FeedRouter(app *fiber.App) {
 	feedRoutes := app.Group("/feed", middlewares.Protect)
 	feedRoutes.Get("/", controllers.GetFeed)
+	feedRoutes.Get("/combined", controllers.GetCombinedFeed)
 }

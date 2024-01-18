@@ -5,15 +5,19 @@ import (
 )
 
 func Config(app *fiber.App) {
+	AnnouncementRouter(app)
 	AuthRouter(app)
 	ChatRouter(app)
 	EventRouter(app)
+	MembershipRouter(app)
+	MiscRouter(app)
+	PollRouter(app)
 	PostRouter(app)
-	ProjectRouter(app)
 	ProjectApplicationRouter(app)
 	ProjectMembershipRouter(app)
 	ProjectOpeningRouter(app)
-	MembershipRouter(app)
+	ProjectRouter(app)
+	ResourceRouter(app)
+	ReviewRouter(app)
 	TaskRouter(app)
-	MiscRouter(app)
 }

@@ -6,11 +6,11 @@ import (
 	"log"
 	"math/rand"
 	"os"
-	"regexp"
 	"strings"
 
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/Pratham-Mishra04/interact/utils"
 	"github.com/google/uuid"
 )
 
@@ -18,27 +18,6 @@ import (
 // 	initializers.LoadEnv()
 // 	initializers.ConnectToDB()
 // }
-
-func Slugify(s string) string {
-	// Convert to lowercase
-	s = strings.ToLower(s)
-
-	// Replace spaces with -
-	s = strings.ReplaceAll(s, " ", "-")
-
-	// Remove non-word characters except -
-	reg := regexp.MustCompile("[^a-zA-Z0-9-]")
-	s = reg.ReplaceAllString(s, "")
-
-	// Replace multiple - with single -
-	reg = regexp.MustCompile("-+")
-	s = reg.ReplaceAllString(s, "-")
-
-	// Remove leading and trailing -
-	s = strings.Trim(s, "-")
-
-	return s
-}
 
 func ToLowercaseArray(arr []string) []string {
 	result := make([]string, len(arr))
@@ -100,7 +79,7 @@ func PopulateProjects() {
 
 	for _, project := range projects {
 		project.UserID = getRandomUserID(userIDs)
-		project.Slug = Slugify(project.Title)
+		project.Slug = utils.SoftSlugify(project.Title)
 		project.Tags = ToLowercaseArray(project.Tags)
 		project.Links = RandomLinks()
 

@@ -2,6 +2,7 @@ package organization_controllers
 
 import (
 	"errors"
+	"sort"
 	"time"
 
 	"github.com/Pratham-Mishra04/interact/cache"
@@ -128,6 +129,7 @@ func GetOrganizationHistory(c *fiber.Ctx) error {
 		Preload("Event").
 		Preload("Project").
 		Preload("Task").
+		Preload("Announcement").
 		Preload("Invitation").
 		Preload("Invitation.User").
 		Where("organization_id=?", orgID).
@@ -138,6 +140,98 @@ func GetOrganizationHistory(c *fiber.Ctx) error {
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"history": history,
+	})
+}
+
+type NewsFeedItem interface {
+	GetCreatedAt() time.Time
+}
+
+// Announcement implements NewsFeedItem interface
+type AnnouncementAlias models.Announcement
+
+// GetCreatedAt is a method for AnnouncementAlias to satisfy the interface
+func (a AnnouncementAlias) GetCreatedAt() time.Time {
+	return a.CreatedAt
+}
+
+// Poll implements NewsFeedItem interface
+type PollAlias models.Poll
+
+// GetCreatedAt is a method for PollAlias to satisfy the interface
+func (p PollAlias) GetCreatedAt() time.Time {
+	return p.CreatedAt
+}
+
+func GetOrgNewsFeed(c *fiber.Ctx) error {
+	orgID, err := uuid.Parse(c.Params("orgID"))
+	if err != nil {
+		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid organization ID."}
+	}
+
+	parsedUserID, _ := uuid.Parse(c.GetRespHeader("loggedInUserID"))
+
+	var organization models.Organization
+	if err := initializers.DB.Preload("User").Preload("Memberships").First(&organization, "id = ?", orgID).Error; err != nil {
+		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid organization ID."}
+	}
+
+	isMember := false
+	if organization.UserID == parsedUserID {
+		isMember = true
+	} else {
+		for _, membership := range organization.Memberships {
+			if membership.UserID == parsedUserID {
+				isMember = true
+				break
+			}
+		}
+	}
+
+	paginatedDB := API.Paginator(c)(initializers.DB)
+
+	if !isMember {
+		paginatedDB = paginatedDB.Where("is_open = ?", true)
+	}
+
+	var announcements []models.Announcement
+	if err := paginatedDB.Preload("TaggedUsers").Where("organization_id = ?", orgID).Order("created_at DESC").Find(&announcements).Error; err != nil {
+		return helpers.AppError{Code: fiber.StatusInternalServerError, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	paginatedDB = API.Paginator(c)(initializers.DB)
+
+	if !isMember {
+		paginatedDB = paginatedDB.Where("is_open = ?", true)
+	}
+
+	db := paginatedDB.Preload("Options", func(db *gorm.DB) *gorm.DB {
+		return db.Order("options.created_at DESC")
+	}).Preload("Options.VotedBy", LimitedUsers).Where("organization_id = ?", orgID)
+
+	var polls []models.Poll
+	if err := db.Order("created_at DESC").Find(&polls).Error; err != nil {
+		return helpers.AppError{Code: fiber.StatusInternalServerError, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	// Combine announcements and polls, and sort them by created_at
+	var newsFeed []NewsFeedItem
+	for _, a := range announcements {
+		newsFeed = append(newsFeed, AnnouncementAlias(a))
+	}
+	for _, p := range polls {
+		newsFeed = append(newsFeed, PollAlias(p))
+	}
+
+	// Sort the combined news feed by created_at
+	sort.Slice(newsFeed, func(i, j int) bool {
+		return newsFeed[i].GetCreatedAt().After(newsFeed[j].GetCreatedAt())
+	})
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":       "success",
+		"newsFeed":     newsFeed,
+		"organization": organization,
 	})
 }
 
@@ -230,7 +324,7 @@ func UpdateOrg(c *fiber.Ctx) error {
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
 	}
-	go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 14, nil, nil, nil, nil, nil, "")
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 14, nil, nil, nil, nil, nil, nil, nil, "")
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",

@@ -27,6 +27,8 @@ func AddReport(c *fiber.Ctx) error {
 	var existingReport models.Report
 	if reqBody.UserID != "" {
 		initializers.DB.Where("reporter_id=? AND user_id=?", parsedLoggedInUserID, reqBody.UserID).First(&existingReport)
+	} else if reqBody.AnnouncementID != "" {
+		initializers.DB.Where("reporter_id=? AND announcement_id=?", parsedLoggedInUserID, reqBody.AnnouncementID).First(&existingReport)
 	} else if reqBody.PostID != "" {
 		initializers.DB.Where("reporter_id=? AND post_id=?", parsedLoggedInUserID, reqBody.PostID).First(&existingReport)
 	} else if reqBody.ProjectID != "" {
@@ -37,6 +39,8 @@ func AddReport(c *fiber.Ctx) error {
 		initializers.DB.Where("reporter_id=? AND opening_id=?", parsedLoggedInUserID, reqBody.OpeningID).First(&existingReport)
 	} else if reqBody.GroupChatID != "" {
 		initializers.DB.Where("reporter_id=? AND group_chat_id=?", parsedLoggedInUserID, reqBody.GroupChatID).First(&existingReport)
+	} else if reqBody.ReviewID != "" {
+		initializers.DB.Where("reporter_id=? AND review_id=?", parsedLoggedInUserID, reqBody.ReviewID).First(&existingReport)
 	}
 
 	if existingReport.ID != uuid.Nil {
@@ -70,6 +74,12 @@ func AddReport(c *fiber.Ctx) error {
 			return &fiber.Error{Code: 400, Message: "Invalid Project ID"}
 		}
 		report.ProjectID = &parsedProjectID
+	} else if reqBody.AnnouncementID != ""{
+		parsedAnnouncementID, err := uuid.Parse(reqBody.AnnouncementID)
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid Announcement ID"}
+		}
+		report.AnnouncementID = &parsedAnnouncementID
 	} else if reqBody.EventID != "" {
 		parsedEventID, err := uuid.Parse(reqBody.EventID)
 		if err != nil {
@@ -88,6 +98,12 @@ func AddReport(c *fiber.Ctx) error {
 			return &fiber.Error{Code: 400, Message: "Invalid Group Chat ID"}
 		}
 		report.GroupChatID = &parsedGroupChatID
+	} else if reqBody.ReviewID != "" {
+		parsedReviewID, err := uuid.Parse(reqBody.ReviewID)
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid Review ID"}
+		}
+		report.ReviewID = &parsedReviewID
 	}
 
 	result := initializers.DB.Create(&report)

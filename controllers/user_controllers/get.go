@@ -71,7 +71,7 @@ func GetMyLikes(c *fiber.Ctx) error {
 
 	var likes []models.Like
 	if err := initializers.DB.
-		Find(&likes, "user_id = ?", loggedInUserID).Error; err != nil {
+		Find(&likes, "user_id = ? AND status = 0", loggedInUserID).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
@@ -85,6 +85,10 @@ func GetMyLikes(c *fiber.Ctx) error {
 			likeIDs = append(likeIDs, like.CommentID.String())
 		} else if like.EventID != nil {
 			likeIDs = append(likeIDs, like.EventID.String())
+		} else if like.ReviewID != nil {
+			likeIDs = append(likeIDs, like.ReviewID.String())
+		} else if like.AnnouncementID != nil {
+			likeIDs = append(likeIDs, like.AnnouncementID.String())
 		}
 	}
 
@@ -92,6 +96,39 @@ func GetMyLikes(c *fiber.Ctx) error {
 		"status":  "success",
 		"message": "User Found",
 		"likes":   likeIDs,
+	})
+}
+
+func GetMyDislikes(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	var likes []models.Like
+	if err := initializers.DB.
+		Find(&likes, "user_id = ? AND status = -1", loggedInUserID).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	var likeIDs []string
+	for _, like := range likes {
+		if like.PostID != nil {
+			likeIDs = append(likeIDs, like.PostID.String())
+		} else if like.ProjectID != nil {
+			likeIDs = append(likeIDs, like.ProjectID.String())
+		} else if like.CommentID != nil {
+			likeIDs = append(likeIDs, like.CommentID.String())
+		} else if like.EventID != nil {
+			likeIDs = append(likeIDs, like.EventID.String())
+		} else if like.ReviewID != nil {
+			likeIDs = append(likeIDs, like.ReviewID.String())
+		} else if like.AnnouncementID != nil {
+			likeIDs = append(likeIDs, like.AnnouncementID.String())
+		}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":   "success",
+		"message":  "User Found",
+		"dislikes": likeIDs,
 	})
 }
 
@@ -120,5 +157,28 @@ func GetMyOrgMemberships(c *fiber.Ctx) error {
 		"status":      "success",
 		"message":     "User Found",
 		"memberships": memberships,
+	})
+}
+
+func GetMyVotedOptions(c *fiber.Ctx) error {
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	var options []models.Option
+	if err := initializers.DB.
+		Joins("JOIN voted_by ON voted_by.option_id = options.id").
+		Where("voted_by.user_id = ?", loggedInUserID).
+		Find(&options).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	var optionIDs []string
+	for _, option := range options {
+		optionIDs = append(optionIDs, option.ID.String())
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "User Found",
+		"options": optionIDs,
 	})
 }

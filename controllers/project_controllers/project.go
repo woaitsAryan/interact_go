@@ -381,7 +381,7 @@ func AddProject(c *fiber.Ctx) error {
 					parsedOrgMemberID, _ := uuid.Parse(orgMemberID)
 					parsedOrgID, _ := uuid.Parse(orgID)
 					go routines.MarkProjectHistory(newProject.ID, parsedOrgMemberID, -1, nil, nil, nil, nil, nil, "")
-					go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 9, nil, &newProject.ID, nil, nil, nil, "")
+					go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 9, nil, &newProject.ID, nil, nil, nil, nil, nil, "")
 					go routines.IncrementOrgProject(parsedOrgID)
 				} else {
 					go routines.MarkProjectHistory(newProject.ID, parsedID, -1, nil, nil, nil, nil, nil, "")
@@ -468,7 +468,7 @@ func UpdateProject(c *fiber.Ctx) error {
 		parsedOrgMemberID, _ := uuid.Parse(orgMemberID)
 		parsedOrgID, _ := uuid.Parse(orgID)
 		go routines.MarkProjectHistory(project.ID, parsedOrgMemberID, 2, nil, nil, nil, nil, nil, "")
-		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 11, nil, &project.ID, nil, nil, nil, "")
+		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 11, nil, &project.ID, nil, nil, nil, nil, nil, "")
 	} else {
 		go routines.MarkProjectHistory(project.ID, parsedID, 2, nil, nil, nil, nil, nil, "")
 	}
@@ -574,7 +574,7 @@ func DeleteProject(c *fiber.Ctx) error {
 		if err != nil {
 			return &fiber.Error{Code: 400, Message: "Invalid User ID."}
 		}
-		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 10, nil, nil, nil, nil, nil, project.Title)
+		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 10, nil, nil, nil, nil, nil, nil,nil, project.Title)
 		go routines.DecrementOrgProject(parsedOrgID)
 	}
 

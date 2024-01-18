@@ -21,6 +21,7 @@ func GetNotifications(c *fiber.Ctx) error {
 	if err := paginatedDB.
 		Preload("User").
 		Preload("Sender").
+		Preload("Announcement").
 		Preload("Post").
 		Preload("Project").
 		Preload("Event").
@@ -48,6 +49,7 @@ func GetUnreadNotifications(c *fiber.Ctx) error {
 		Preload("User").
 		Preload("Sender").
 		Preload("Post").
+		Preload("Announcement").
 		Preload("Project").
 		Preload("Event").
 		Preload("Opening").

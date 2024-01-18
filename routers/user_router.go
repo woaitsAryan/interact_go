@@ -22,7 +22,9 @@ func UserRouter(app *fiber.App) {
 	userRoutes := app.Group("/users", middlewares.Protect)
 	userRoutes.Get("/me", user_controllers.GetMe)
 	userRoutes.Get("/me/likes", user_controllers.GetMyLikes)
+	userRoutes.Get("/me/dislikes", user_controllers.GetMyDislikes)
 	userRoutes.Get("/me/organization/memberships", user_controllers.GetMyOrgMemberships)
+	userRoutes.Get("/me/polls/options", user_controllers.GetMyVotedOptions)
 	userRoutes.Get("/views", user_controllers.GetViews)
 
 	userRoutes.Patch("/update_password", user_controllers.UpdatePassword)

@@ -15,9 +15,11 @@ type Organization struct {
 	Invitations       []Invitation             `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE" json:"invitations"`
 	History           []OrganizationHistory    `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE" json:"history"`
 	Events            []Event                  `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE" json:"events"`
-	NumberOfMembers   int                      `gorm:"default:0" json:"noMembers"`
-	NumberOfEvents    int                      `gorm:"default:0" json:"noEvents"`
-	NumberOfProjects  int                      `gorm:"default:0" json:"noProjects"`
+	Reviews           []Review                 `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE" json:"-"`
+	ResourceBucket    []ResourceBucket         `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE" json:"-"`
+	NumberOfMembers   int16                    `gorm:"default:0" json:"noMembers"`
+	NumberOfEvents    int16                    `gorm:"default:0" json:"noEvents"`
+	NumberOfProjects  int16                    `gorm:"default:0" json:"noProjects"`
 	CreatedAt         time.Time                `gorm:"default:current_timestamp" json:"createdAt"`
 }
 
@@ -66,24 +68,34 @@ history type:
 *15 - Member left Org
 *16 - Event coordinators added
 *17 - Event coordinators removed
+*18 - User added a poll
+*19 - User deleted a poll
+*20 - User edited a poll
+*21 - User added an announcement
+*22 - User deleted an announcement
+*23 - User edited an announcement
 */
 
 type OrganizationHistory struct {
-	ID             uuid.UUID  `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	OrganizationID uuid.UUID  `gorm:"type:uuid;not null" json:"orgID"`
-	HistoryType    int        `json:"historyType"`
-	UserID         uuid.UUID  `gorm:"type:uuid;not null" json:"userID"`
-	User           User       `json:"user"`
-	PostID         *uuid.UUID `gorm:"type:uuid" json:"postID"`
-	Post           Post       `json:"post"`
-	EventID        *uuid.UUID `gorm:"type:uuid" json:"eventID"`
-	Event          Event      `json:"event"`
-	ProjectID      *uuid.UUID `gorm:"type:uuid" json:"projectID"`
-	Project        Project    `json:"project"`
-	TaskID         *uuid.UUID `gorm:"type:uuid" json:"taskID"`
-	Task           Task       `json:"task"`
-	InvitationID   *uuid.UUID `gorm:"type:uuid" json:"invitationID"`
-	Invitation     Invitation `json:"invitation"`
-	DeletedText    string     `gorm:"type:text" json:"deletedText"`
-	CreatedAt      time.Time  `gorm:"default:current_timestamp" json:"createdAt"`
+	ID             uuid.UUID    `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	OrganizationID uuid.UUID    `gorm:"type:uuid;not null" json:"orgID"`
+	HistoryType    int8         `json:"historyType"`
+	UserID         uuid.UUID    `gorm:"type:uuid;not null" json:"userID"`
+	User           User         `json:"user"`
+	PostID         *uuid.UUID   `gorm:"type:uuid" json:"postID"`
+	Post           Post         `json:"post"`
+	EventID        *uuid.UUID   `gorm:"type:uuid" json:"eventID"`
+	Event          Event        `json:"event"`
+	ProjectID      *uuid.UUID   `gorm:"type:uuid" json:"projectID"`
+	Project        Project      `json:"project"`
+	TaskID         *uuid.UUID   `gorm:"type:uuid" json:"taskID"`
+	Task           Task         `json:"task"`
+	InvitationID   *uuid.UUID   `gorm:"type:uuid" json:"invitationID"`
+	Invitation     Invitation   `json:"invitation"`
+	AnnouncementID *uuid.UUID   `gorm:"type:uuid" json:"announcementID"`
+	Announcement   Announcement `json:"announcement"`
+	PollID         *uuid.UUID   `gorm:"type:uuid" json:"pollID"`
+	Poll           Poll         `json:"poll"`
+	DeletedText    string       `gorm:"type:text" json:"deletedText"`
+	CreatedAt      time.Time    `gorm:"default:current_timestamp" json:"createdAt"`
 }

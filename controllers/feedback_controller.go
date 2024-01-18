@@ -15,7 +15,7 @@ func AddFeedback(c *fiber.Ctx) error {
 	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
 	type ReqBody struct {
-		Type    int    `json:"type" validate:"required"`
+		Type    int8   `json:"type" validate:"required"`
 		Content string `json:"content" validate:"max=1000"`
 	}
 

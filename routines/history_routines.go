@@ -63,7 +63,7 @@ func UpdateLastViewedOpening(userID uuid.UUID, openingID uuid.UUID) {
 func MarkProjectHistory(
 	projectID uuid.UUID,
 	senderID uuid.UUID,
-	historyType int,
+	historyType int8,
 	userID *uuid.UUID,
 	openingID *uuid.UUID,
 	applicationID *uuid.UUID,
@@ -104,18 +104,20 @@ func MarkProjectHistory(
 func MarkOrganizationHistory(
 	orgID uuid.UUID,
 	userID uuid.UUID,
-	historyType int,
+	historyType int8,
 	postID *uuid.UUID,
 	projectID *uuid.UUID,
 	eventID *uuid.UUID,
 	taskID *uuid.UUID,
 	invitationID *uuid.UUID,
+	pollID *uuid.UUID,
+	announcementID *uuid.UUID,
 	deletedText string) {
-	
+
 	organizationHistory := models.OrganizationHistory{
-		HistoryType: historyType,
+		HistoryType:    historyType,
 		OrganizationID: orgID,
-		UserID: userID,
+		UserID:         userID,
 	}
 
 	if postID != nil {
@@ -133,7 +135,13 @@ func MarkOrganizationHistory(
 	if invitationID != nil {
 		organizationHistory.InvitationID = invitationID
 	}
-	if(deletedText != "") {
+	if announcementID != nil {
+		organizationHistory.AnnouncementID = announcementID
+	}
+	if pollID != nil{
+		organizationHistory.PollID = pollID
+	}
+	if deletedText != "" {
 		organizationHistory.DeletedText = deletedText
 	}
 	if err := initializers.DB.Create(&organizationHistory).Error; err != nil {
