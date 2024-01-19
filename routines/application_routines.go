@@ -25,7 +25,7 @@ func IncrementOpeningApplicationsAndSendNotification(openingID uuid.UUID, applic
 			SenderID:         userID,
 			OpeningID:        &opening.ID,
 			ApplicationID:    &applicationID,
-			ProjectID:        &opening.ProjectID,
+			ProjectID:        opening.ProjectID,
 		}
 
 		if err := initializers.DB.Create(&notification).Error; err != nil {
@@ -52,7 +52,7 @@ func DecrementOpeningApplications(openingID uuid.UUID) {
 
 func CreateMembershipAndSendNotification(application *models.Application) {
 	membership := models.Membership{
-		ProjectID: application.Opening.ProjectID,
+		ProjectID: *application.Opening.ProjectID,
 		UserID:    application.UserID,
 		Role:      models.ProjectMember,
 		Title:     application.Opening.Title,

@@ -93,7 +93,7 @@ func AddAnnouncement(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	go routines.MarkOrganizationHistory(parsedOrgID, parsedLoggedInUserID, 21, nil, nil, nil, nil, nil, nil, &announcement.ID, "")
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedLoggedInUserID, 21, nil, nil, nil, nil, nil, nil, &announcement.ID, nil, "")
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"status":       "success",
@@ -141,7 +141,7 @@ func EditAnnouncement(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	go routines.MarkOrganizationHistory(parsedOrgID, parsedLoggedInUserID, 23, nil, nil, nil, nil, nil, nil, &announcement.ID, "")
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedLoggedInUserID, 23, nil, nil, nil, nil, nil, nil, &announcement.ID,nil, "")
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":       "success",
@@ -175,7 +175,7 @@ func DeleteAnnouncement(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	go routines.MarkOrganizationHistory(parsedOrgID, parsedLoggedInUserID, 22, nil, nil, nil, nil, nil, nil, nil, announcement.Title)
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedLoggedInUserID, 22, nil, nil, nil, nil, nil, nil, nil, nil, announcement.Title)
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",
