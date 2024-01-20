@@ -74,3 +74,54 @@ func CreateMembershipAndSendNotification(application *models.Application) {
 		helpers.LogDatabaseError("Error while creating Notification-CreateMembershipAndSendNotification", err, "go_routine")
 	}
 }
+
+func IncrementOrgOpeningApplicationsAndSendNotification(openingID uuid.UUID, applicationID uuid.UUID, userID uuid.UUID) {
+	var opening models.Opening
+	if err := initializers.DB.First(&opening, "id=?", openingID).Error; err != nil {
+		helpers.LogDatabaseError("No Opening of this ID found-IncrementOrgOpeningApplicationsAndSendNotification.", err, "go_routine")
+	} else {
+		opening.NoOfApplications++
+		result := initializers.DB.Save(&opening)
+
+		if result.Error != nil {
+			helpers.LogDatabaseError("Error while updating Opening-IncrementOrgOpeningApplicationsAndSendNotification", err, "go_routine")
+		}
+
+		notification := models.Notification{
+			NotificationType: 20,
+			UserID:           opening.UserID,
+			SenderID:         userID,
+			OpeningID:        &opening.ID,
+			ApplicationID:    &applicationID,
+		}
+
+		if err := initializers.DB.Create(&notification).Error; err != nil {
+			helpers.LogDatabaseError("Error while creating Notification-IncrementOrgOpeningApplicationsAndSendNotification", err, "go_routine")
+		}
+	}
+}
+
+func CreateOrgMembershipAndSendNotification(application *models.Application) {
+	membership := models.OrganizationMembership{
+		OrganizationID: *application.Opening.OrganizationID,
+		UserID:    application.UserID,
+		Role:      models.Member,
+		Title:     application.Opening.Title,
+	}
+
+	result := initializers.DB.Create(&membership)
+
+	if result.Error != nil {
+		helpers.LogDatabaseError("Error while creating Membership-CreateOrgMembershipAndSendNotification", result.Error, "go_routine")
+	}
+
+	notification := models.Notification{
+		NotificationType: 21,
+		UserID:           application.UserID,
+		OpeningID:        &application.OpeningID,
+	}
+
+	if err := initializers.DB.Create(&notification).Error; err != nil {
+		helpers.LogDatabaseError("Error while creating Notification-CreateOrgMembershipAndSendNotification", err, "go_routine")
+	}
+}

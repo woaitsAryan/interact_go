@@ -13,7 +13,7 @@ func OrgOpeningRouter(app *fiber.App) {
 
 	orgOpeningRouter := app.Group("/org/:orgID/openings", middlewares.Protect)
 	orgOpeningRouter.Get("/", organization_controllers.GetAllOpeningsOfOrganization)
-	orgOpeningRouter.Get("/applications/:openingID", middlewares.OrgRoleAuthorization(models.Senior), organization_controllers.GetOpening)
+	orgOpeningRouter.Get("/applications/:openingID", organization_controllers.GetOpening)
 	orgOpeningRouter.Post("/", middlewares.OrgRoleAuthorization(models.Manager), organization_controllers.AddOpening)
 	orgOpeningRouter.Patch("/:openingID", middlewares.OrgRoleAuthorization(models.Manager), organization_controllers.EditOpening)
 	orgOpeningRouter.Delete("/:openingID", middlewares.OrgRoleAuthorization(models.Manager), organization_controllers.DeleteOpening)

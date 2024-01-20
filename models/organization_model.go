@@ -77,6 +77,8 @@ history type:
 *24 - User added an opening
 *25 - User deleted an opening
 *26 - User edited an opening
+*27 - User accepted an invitation
+*28 - User rejected application
 */
 
 type OrganizationHistory struct {
