@@ -1,7 +1,6 @@
-package project_controllers
+package organization_controllers
 
 import (
-	"github.com/Pratham-Mishra04/interact/cache"
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
@@ -22,7 +21,7 @@ func GetOpening(c *fiber.Ctx) error {
 	}
 
 	var opening models.Opening
-	if err := initializers.DB.Preload("Project").First(&opening, "id = ?", parsedOpeningID).Error; err != nil {
+	if err := initializers.DB.Preload("Organization").First(&opening, "id = ?", parsedOpeningID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Opening of this ID found."}
 		}
@@ -32,7 +31,7 @@ func GetOpening(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedLoggedInUserID, err := uuid.Parse(loggedInUserID)
 
-	if err == nil && parsedLoggedInUserID != opening.UserID && parsedLoggedInUserID != opening.Project.UserID {
+	if err == nil && parsedLoggedInUserID != opening.UserID && parsedLoggedInUserID != opening.Organization.UserID {
 		go routines.UpdateLastViewedOpening(parsedLoggedInUserID, opening.ID)
 	}
 
@@ -43,16 +42,11 @@ func GetOpening(c *fiber.Ctx) error {
 	})
 }
 
-func GetAllOpeningsOfProject(c *fiber.Ctx) error {
-	projectID := c.Params("projectID")
-
-	var project models.Project
-	if err := initializers.DB.Where("id=?", projectID).First(&project).Error; err != nil {
-		return &fiber.Error{Code: 500, Message: "Cannot perform this action"}
-	}
+func GetAllOpeningsOfOrganization(c *fiber.Ctx) error {
+	orgID := c.Params("orgID")
 
 	var openings []models.Opening
-	if err := initializers.DB.Where("project_id=?", projectID).Order("created_at DESC").Find(&openings).Error; err != nil {
+	if err := initializers.DB.Where("organization_id=?", orgID).Order("created_at DESC").Find(&openings).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
@@ -64,23 +58,23 @@ func GetAllOpeningsOfProject(c *fiber.Ctx) error {
 }
 
 func AddOpening(c *fiber.Ctx) error {
-	projectID := c.Params("projectID")
-	userID := c.GetRespHeader("loggedInUserID")
+	orgID := c.Params("orgID")
+	orgMemberID := c.GetRespHeader("orgMemberID")
 
-	parsedProjectID, err := uuid.Parse(projectID)
+	parsedOrgMemberID, err := uuid.Parse(orgMemberID)
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid User ID."}
+	}
+	parsedOrgID, err := uuid.Parse(orgID)
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
 	}
 
-	parsedUserID, err := uuid.Parse(userID)
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid ID"}
-	}
 
-	var project models.Project
-	if err := initializers.DB.First(&project, "id = ? AND user_id=?", parsedProjectID, parsedUserID).Error; err != nil {
+	var organization models.Organization
+	if err := initializers.DB.First(&organization, "id = ?", parsedOrgID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return &fiber.Error{Code: 400, Message: "No Project of this ID found."}
+			return &fiber.Error{Code: 400, Message: "No Organization of this ID found."}
 		}
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
@@ -95,11 +89,11 @@ func AddOpening(c *fiber.Ctx) error {
 	}
 
 	newOpening := models.Opening{
-		ProjectID:   &parsedProjectID,
-		Title:       reqBody.Title,
-		Description: reqBody.Description,
-		Tags:        reqBody.Tags,
-		UserID:      parsedUserID,
+		OrganizationID: &parsedOrgID,
+		Title:          reqBody.Title,
+		Description:    reqBody.Description,
+		Tags:           reqBody.Tags,
+		UserID:         parsedOrgMemberID,
 	}
 
 	result := initializers.DB.Create(&newOpening)
@@ -108,12 +102,7 @@ func AddOpening(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
-	projectMemberID := c.GetRespHeader("projectMemberID")
-	parsedID, _ := uuid.Parse(projectMemberID)
-	go routines.MarkProjectHistory(project.ID, parsedID, 3, nil, &newOpening.ID, nil, nil, nil, "")
-
-	go cache.RemoveProject(project.Slug)
-	go cache.RemoveProject("-workspace--" + project.Slug)
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 24, nil, nil, nil, nil, nil, nil, nil, &newOpening.ID, "")
 
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",
@@ -124,14 +113,16 @@ func AddOpening(c *fiber.Ctx) error {
 
 func EditOpening(c *fiber.Ctx) error {
 	openingID := c.Params("openingID")
-	userID := c.GetRespHeader("loggedInUserID")
+	orgMemberID := c.GetRespHeader("orgMemberID")
+	orgID := c.Params("orgID")
+	parsedOrgID, _ := uuid.Parse(orgID)
 
-	parsedOpeningID, err := uuid.Parse(openingID)
+	parsedOrgMemberID, err := uuid.Parse(orgMemberID)
 	if err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid ID"}
+		return &fiber.Error{Code: 400, Message: "Invalid User ID."}
 	}
 
-	parsedUserID, err := uuid.Parse(userID)
+	parsedOpeningID, err := uuid.Parse(openingID)
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
 	}
@@ -146,7 +137,7 @@ func EditOpening(c *fiber.Ctx) error {
 	}
 
 	var opening models.Opening
-	if err := initializers.DB.Preload("Project").First(&opening, "id = ? AND user_id=?", parsedOpeningID, parsedUserID).Error; err != nil {
+	if err := initializers.DB.Preload("Organization").First(&opening, "id = ?", parsedOpeningID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Opening of this ID found."}
 		}
@@ -182,12 +173,7 @@ func EditOpening(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
-	projectMemberID := c.GetRespHeader("projectMemberID")
-	parsedID, _ := uuid.Parse(projectMemberID)
-	go routines.MarkProjectHistory(*opening.ProjectID, parsedID, 4, nil, &opening.ID, nil, nil, nil, "")
-
-	go cache.RemoveProject(opening.Project.Slug)
-	go cache.RemoveProject("-workspace--" + opening.Project.Slug)
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 26, nil, nil, nil, nil, nil, nil, nil, &opening.ID, "")
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
@@ -197,28 +183,23 @@ func EditOpening(c *fiber.Ctx) error {
 
 func DeleteOpening(c *fiber.Ctx) error {
 	openingID := c.Params("openingID")
-	userID := c.GetRespHeader("loggedInUserID")
+	orgID := c.Params("orgID")
+	parsedOrgID, _ := uuid.Parse(orgID)
+	orgMemberID := c.GetRespHeader("orgMemberID")
+	parsedOrgMemberID, _ := uuid.Parse(orgMemberID)
 
 	parsedOpeningID, err := uuid.Parse(openingID)
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
 	}
 
-	parsedUserID, err := uuid.Parse(userID)
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid ID"}
-	}
-
 	var opening models.Opening
-	if err := initializers.DB.Preload("Project").First(&opening, "id = ? AND user_id=?", parsedOpeningID, parsedUserID).Error; err != nil {
+	if err := initializers.DB.Preload("Organization").First(&opening, "id = ?", parsedOpeningID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Opening of this ID found."}
 		}
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
-
-	projectID := opening.ProjectID
-	projectSlug := opening.Project.Slug
 
 	result := initializers.DB.Delete(&opening)
 
@@ -226,12 +207,7 @@ func DeleteOpening(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	projectMemberID := c.GetRespHeader("projectMemberID")
-	parsedID, _ := uuid.Parse(projectMemberID)
-	go routines.MarkProjectHistory(*projectID, parsedID, 5, nil, nil, nil, nil, nil, opening.Title)
-
-	go cache.RemoveProject(projectSlug)
-	go cache.RemoveProject("-workspace--" + projectSlug)
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 25, nil, nil, nil, nil, nil, nil, nil, nil, opening.Title)
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",

@@ -29,6 +29,8 @@ notification type:
 *17 - Your announcement got x impressions
 *18 - User liked your announcement
 *19 - User commented on your announcement
+*20 - User applied for your organization's opening
+*21 - You got selected for the organization's opening
 */
 
 type Notification struct {

@@ -74,6 +74,11 @@ history type:
 *21 - User added an announcement
 *22 - User deleted an announcement
 *23 - User edited an announcement
+*24 - User added an opening
+*25 - User deleted an opening
+*26 - User edited an opening
+*27 - User accepted an invitation
+*28 - User rejected application
 */
 
 type OrganizationHistory struct {
@@ -94,6 +99,8 @@ type OrganizationHistory struct {
 	Invitation     Invitation   `json:"invitation"`
 	AnnouncementID *uuid.UUID   `gorm:"type:uuid" json:"announcementID"`
 	Announcement   Announcement `json:"announcement"`
+	OpeningID      *uuid.UUID   `gorm:"type:uuid" json:"openingID"`
+	Opening        Opening      `json:"opening"`
 	PollID         *uuid.UUID   `gorm:"type:uuid" json:"pollID"`
 	Poll           Poll         `json:"poll"`
 	DeletedText    string       `gorm:"type:text" json:"deletedText"`
