@@ -159,8 +159,9 @@ func PopulateOpenings() {
 	}
 
 	for _, opening := range openings {
-		opening.ProjectID = getRandomProjectID(projectIDs)
-
+		projectID := getRandomProjectID(projectIDs)
+		opening.ProjectID = &projectID
+		
 		var project models.Project
 		initializers.DB.First(&project, "id=?", opening.ProjectID)
 

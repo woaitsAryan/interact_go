@@ -9,7 +9,9 @@ import (
 
 type Opening struct {
 	ID                   uuid.UUID             `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	ProjectID            uuid.UUID             `gorm:"type:uuid;not null" json:"projectID"`
+	OrganizationID       *uuid.UUID            `gorm:"type:uuid;" json:"organizationID"`
+	Organization         Organization          `gorm:"" json:"organization"`
+	ProjectID            *uuid.UUID            `gorm:"type:uuid;" json:"projectID"`
 	Project              Project               `gorm:"" json:"project"`
 	Title                string                `gorm:"type:text;not null" json:"title"`
 	Description          string                `gorm:"type:text;not null" json:"description"`

@@ -1,4 +1,4 @@
-package project_controllers
+package organization_controllers
 
 import (
 	"github.com/Pratham-Mishra04/interact/config"
@@ -14,6 +14,8 @@ import (
 func AcceptApplication(c *fiber.Ctx) error {
 	applicationID := c.Params("applicationID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
+	orgMemberID := c.GetRespHeader("orgMemberID")
+	parsedOrgMemberID, _ := uuid.Parse(orgMemberID)
 
 	parsedApplicationID, err := uuid.Parse(applicationID)
 	if err != nil {
@@ -21,7 +23,7 @@ func AcceptApplication(c *fiber.Ctx) error {
 	}
 
 	var application models.Application
-	if err := initializers.DB.Preload("Opening").Preload("Opening.Project").First(&application, "id = ?", parsedApplicationID).Error; err != nil {
+	if err := initializers.DB.Preload("Opening").Preload("Opening.Organization").First(&application, "id = ?", parsedApplicationID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Application of this ID found."}
 		}
@@ -43,24 +45,22 @@ func AcceptApplication(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	membership := models.Membership{
-		ProjectID: *application.Opening.ProjectID,
+	membership := models.OrganizationMembership{
+		OrganizationID: *application.Opening.OrganizationID,
 		UserID:    application.UserID,
-		Role:      models.ProjectMember,
+		Role:      models.Member,
 		Title:     application.Opening.Title,
 	}
 
 	result = initializers.DB.Create(&membership)
 
 	if result.Error != nil {
-		helpers.LogDatabaseError("Error while creating Membership-CreateMembershipAndSendNotification", result.Error, "go_routine")
+		helpers.LogDatabaseError("Error while creating Membership-CreateOrgMembershipAndSendNotification", result.Error, "go_routine")
 	}
 
-	go routines.ProjectMembershipSendNotification(&application)
+	go routines.OrgMembershipSendNotification(&application)
 
-	projectMemberID := c.GetRespHeader("projectMemberID")
-	parsedID, _ := uuid.Parse(projectMemberID)
-	go routines.MarkProjectHistory(*application.ProjectID, parsedID, 6, &application.UserID, nil, &application.ID, nil, nil, "")
+	go routines.MarkOrganizationHistory(*application.ProjectID, parsedOrgMemberID, 27, &application.UserID, nil, nil, nil, nil, nil, nil, &application.OpeningID, "")
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
@@ -72,6 +72,8 @@ func RejectApplication(c *fiber.Ctx) error {
 	applicationID := c.Params("applicationID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
+	orgMemberID := c.GetRespHeader("orgMemberID")
+	parsedOrgMemberID, _ := uuid.Parse(orgMemberID)
 
 	parsedApplicationID, err := uuid.Parse(applicationID)
 	if err != nil {
@@ -112,9 +114,7 @@ func RejectApplication(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	projectMemberID := c.GetRespHeader("projectMemberID")
-	parsedID, _ := uuid.Parse(projectMemberID)
-	go routines.MarkProjectHistory(*application.ProjectID, parsedID, 7, &application.UserID, nil, &application.ID, nil, nil, application.Content)
+	go routines.MarkOrganizationHistory(*application.OrganizationID, parsedOrgMemberID, 28, nil, nil, nil, nil, nil, nil, nil, nil, application.Opening.Title)
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",

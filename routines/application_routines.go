@@ -25,7 +25,7 @@ func IncrementOpeningApplicationsAndSendNotification(openingID uuid.UUID, applic
 			SenderID:         userID,
 			OpeningID:        &opening.ID,
 			ApplicationID:    &applicationID,
-			ProjectID:        &opening.ProjectID,
+			ProjectID:        opening.ProjectID,
 		}
 
 		if err := initializers.DB.Create(&notification).Error; err != nil {
@@ -50,19 +50,7 @@ func DecrementOpeningApplications(openingID uuid.UUID) {
 
 }
 
-func CreateMembershipAndSendNotification(application *models.Application) {
-	membership := models.Membership{
-		ProjectID: application.Opening.ProjectID,
-		UserID:    application.UserID,
-		Role:      models.ProjectMember,
-		Title:     application.Opening.Title,
-	}
-
-	result := initializers.DB.Create(&membership)
-
-	if result.Error != nil {
-		helpers.LogDatabaseError("Error while creating Membership-CreateMembershipAndSendNotification", result.Error, "go_routine")
-	}
+func ProjectMembershipSendNotification(application *models.Application) {
 
 	notification := models.Notification{
 		NotificationType: 6,
@@ -72,5 +60,44 @@ func CreateMembershipAndSendNotification(application *models.Application) {
 
 	if err := initializers.DB.Create(&notification).Error; err != nil {
 		helpers.LogDatabaseError("Error while creating Notification-CreateMembershipAndSendNotification", err, "go_routine")
+	}
+}
+
+func IncrementOrgOpeningApplicationsAndSendNotification(openingID uuid.UUID, applicationID uuid.UUID, userID uuid.UUID) {
+	var opening models.Opening
+	if err := initializers.DB.First(&opening, "id=?", openingID).Error; err != nil {
+		helpers.LogDatabaseError("No Opening of this ID found-IncrementOrgOpeningApplicationsAndSendNotification.", err, "go_routine")
+	} else {
+		opening.NoOfApplications++
+		result := initializers.DB.Save(&opening)
+
+		if result.Error != nil {
+			helpers.LogDatabaseError("Error while updating Opening-IncrementOrgOpeningApplicationsAndSendNotification", err, "go_routine")
+		}
+
+		notification := models.Notification{
+			NotificationType: 20,
+			UserID:           opening.UserID,
+			SenderID:         userID,
+			OpeningID:        &opening.ID,
+			ApplicationID:    &applicationID,
+		}
+
+		if err := initializers.DB.Create(&notification).Error; err != nil {
+			helpers.LogDatabaseError("Error while creating Notification-IncrementOrgOpeningApplicationsAndSendNotification", err, "go_routine")
+		}
+	}
+}
+
+func OrgMembershipSendNotification(application *models.Application) {
+	
+	notification := models.Notification{
+		NotificationType: 21,
+		UserID:           application.UserID,
+		OpeningID:        &application.OpeningID,
+	}
+
+	if err := initializers.DB.Create(&notification).Error; err != nil {
+		helpers.LogDatabaseError("Error while creating Notification-CreateOrgMembershipAndSendNotification", err, "go_routine")
 	}
 }

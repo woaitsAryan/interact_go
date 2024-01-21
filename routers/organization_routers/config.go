@@ -20,4 +20,6 @@ func Config(app *fiber.App) {
 	ResourceRouter(app)
 	ReviewRouter(app)
 	TaskRouter(app)
+	OrgOpeningRouter(app)
+	OrgApplicationRouter(app)
 }
