@@ -50,19 +50,7 @@ func DecrementOpeningApplications(openingID uuid.UUID) {
 
 }
 
-func CreateMembershipAndSendNotification(application *models.Application) {
-	membership := models.Membership{
-		ProjectID: *application.Opening.ProjectID,
-		UserID:    application.UserID,
-		Role:      models.ProjectMember,
-		Title:     application.Opening.Title,
-	}
-
-	result := initializers.DB.Create(&membership)
-
-	if result.Error != nil {
-		helpers.LogDatabaseError("Error while creating Membership-CreateMembershipAndSendNotification", result.Error, "go_routine")
-	}
+func ProjectMembershipSendNotification(application *models.Application) {
 
 	notification := models.Notification{
 		NotificationType: 6,
@@ -101,20 +89,8 @@ func IncrementOrgOpeningApplicationsAndSendNotification(openingID uuid.UUID, app
 	}
 }
 
-func CreateOrgMembershipAndSendNotification(application *models.Application) {
-	membership := models.OrganizationMembership{
-		OrganizationID: *application.Opening.OrganizationID,
-		UserID:    application.UserID,
-		Role:      models.Member,
-		Title:     application.Opening.Title,
-	}
-
-	result := initializers.DB.Create(&membership)
-
-	if result.Error != nil {
-		helpers.LogDatabaseError("Error while creating Membership-CreateOrgMembershipAndSendNotification", result.Error, "go_routine")
-	}
-
+func OrgMembershipSendNotification(application *models.Application) {
+	
 	notification := models.Notification{
 		NotificationType: 21,
 		UserID:           application.UserID,

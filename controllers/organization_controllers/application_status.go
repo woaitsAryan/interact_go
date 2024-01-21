@@ -45,7 +45,20 @@ func AcceptApplication(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	go routines.CreateOrgMembershipAndSendNotification(&application)
+	membership := models.OrganizationMembership{
+		OrganizationID: *application.Opening.OrganizationID,
+		UserID:    application.UserID,
+		Role:      models.Member,
+		Title:     application.Opening.Title,
+	}
+
+	result = initializers.DB.Create(&membership)
+
+	if result.Error != nil {
+		helpers.LogDatabaseError("Error while creating Membership-CreateOrgMembershipAndSendNotification", result.Error, "go_routine")
+	}
+
+	go routines.OrgMembershipSendNotification(&application)
 
 	go routines.MarkOrganizationHistory(*application.ProjectID, parsedOrgMemberID, 27, &application.UserID, nil, nil, nil, nil, nil, nil, &application.OpeningID, "")
 
