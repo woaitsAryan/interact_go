@@ -73,6 +73,22 @@ func AcceptInvitation(c *fiber.Ctx) error {
 		go routines.MarkProjectHistory(*invitation.ProjectID, parsedLoggedInUserID, 1, nil, nil, nil, nil, nil, "")
 		go cache.RemoveProject(invitation.Project.Slug)
 		go cache.RemoveProject("-workspace--" + invitation.Project.Slug)
+	} else if invitation.EventID != nil {
+		var event models.Event
+		if err := initializers.DB.First(&event, "id=?", invitation.EventID).Error; err != nil {
+			return &fiber.Error{Code: 400, Message: "No Event of this ID found."}
+		}
+
+		var CoOwnOrganization models.Organization
+		if err := initializers.DB.First(&CoOwnOrganization, "id=?", event.OrganizationID).Error; err != nil {
+			return &fiber.Error{Code: 400, Message: "No Organization of this ID found."}
+		}
+		event.CoOwnedBy = append(event.CoOwnedBy, CoOwnOrganization)
+		result := initializers.DB.Save(&event)
+		if result.Error != nil {
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
+		}
+
 	} else if invitation.OrganizationID != nil {
 		membership := models.OrganizationMembership{
 			UserID:         invitation.UserID,
@@ -188,7 +204,7 @@ func WithdrawInvitation(c *fiber.Ctx) error {
 		if err != nil {
 			return &fiber.Error{Code: 400, Message: "Invalid User ID."}
 		}
-		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 4, nil, nil, nil, nil, nil, nil,nil, nil, invitation.Title)
+		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 4, nil, nil, nil, nil, nil, nil, nil, nil, invitation.Title)
 	}
 
 	return c.Status(204).JSON(fiber.Map{

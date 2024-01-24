@@ -27,3 +27,7 @@ type EventUpdateSchema struct {
 	StartTime   string         `json:"startTime"`
 	EndTime     string         `json:"endTime"`
 }
+
+type CoHostEventSchema struct {
+	OrganizationID string `json:"organizationID" validate:"required"`
+}
