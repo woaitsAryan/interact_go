@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Pratham-Mishra04/interact/cache/subscribers"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -12,7 +13,7 @@ var RedisClient *redis.Client
 
 var ctx = context.TODO()
 
-var CacheExpirationTime = time.Minute * 2
+var CacheExpirationTime = time.Second * 10
 var CacheExpirationTimeLong = time.Hour * 24
 
 func ConnectToCache() {
@@ -27,5 +28,17 @@ func ConnectToCache() {
 		fmt.Printf("Redis connection Error:\n %v", err)
 	} else {
 		fmt.Println("Connected to redis!")
+
+		RedisExpirationSub := RedisClient.Subscribe(ctx, "__keyevent@0__:expired")
+		defer RedisExpirationSub.Close()
+
+		// Wait for confirmation that subscription is created before publishing anything
+		_, err := RedisExpirationSub.Receive(ctx)
+		if err != nil {
+			fmt.Println("Error Subscribing to Redis Expiration Event: ", err)
+		} else {
+			fmt.Println("Subscribed to Redis Expiration Event")
+			go subscribers.ImpressionsDumpSub(RedisExpirationSub, DB)
+		}
 	}
 }

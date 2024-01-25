@@ -12,6 +12,12 @@ func MembershipRouter(app *fiber.App) {
 	app.Get("/org/:orgID/membership/delete", middlewares.Protect, middlewares.OrgRoleAuthorization(models.Member), organization_controllers.SendLeaveOrgVerificationCode)
 	app.Delete("/org/:orgID/membership", middlewares.Protect, middlewares.OrgRoleAuthorization(models.Member), organization_controllers.LeaveOrganization)
 
+	app.Get("/org/:orgID/is_member", middlewares.Protect, middlewares.OrgRoleAuthorization(models.Member), func(c *fiber.Ctx) error {
+		return c.Status(200).JSON(fiber.Map{
+			"status": "success",
+		})
+	})
+
 	app.Get("/org/:orgID/membership", middlewares.Protect, middlewares.OrgRoleAuthorization(models.Member), organization_controllers.GetMemberships)
 	app.Get("/org/:orgID/explore_membership", middlewares.Protect, organization_controllers.GetExploreMemberships)
 

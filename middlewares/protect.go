@@ -171,3 +171,21 @@ func ProtectRedirect(c *fiber.Ctx) error {
 
 	return c.Next()
 }
+
+func ResourceFileProtect(c *fiber.Ctx) error {
+	tokenString := c.Query("token", "")
+
+	if tokenString == "" {
+		return &fiber.Error{Code: 401, Message: "You are Not Logged In."}
+	}
+
+	var user *models.User
+	user, err := verifyToken(tokenString, user, false)
+	if err != nil {
+		return err
+	}
+
+	c.Set("loggedInUserID", user.ID.String())
+
+	return c.Next()
+}

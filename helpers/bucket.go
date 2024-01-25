@@ -31,32 +31,39 @@ var UserResumeClient *BucketClient
 
 var ResourceClient *BucketClient
 
-func createNewBucketClient(uploadPath string) *BucketClient {
-	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "bucket-key.json") // FILE PATH
+func createNewBucketClient(uploadPath string, private bool) *BucketClient {
+	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", initializers.CONFIG.GCP_CREDS)
 	client, err := storage.NewClient(context.Background())
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
 	}
 
+	if private {
+		return &BucketClient{
+			cl:         client,
+			bucketName: initializers.CONFIG.GCP_PRIVATE_BUCKET,
+			projectID:  initializers.CONFIG.GCP_PROJECT,
+			uploadPath: uploadPath,
+		}
+	}
+
 	return &BucketClient{
 		cl:         client,
-		bucketName: initializers.CONFIG.GCP_BUCKET,
+		bucketName: initializers.CONFIG.GCP_PUBLIC_BUCKET,
 		projectID:  initializers.CONFIG.GCP_PROJECT,
 		uploadPath: uploadPath,
 	}
 }
 
 func InitializeBucketClients() {
-	ProjectClient = createNewBucketClient("projects/")
-	EventClient = createNewBucketClient("events/")
-	PostClient = createNewBucketClient("posts/")
-	ChatClient = createNewBucketClient("chats/")
-	UserProfileClient = createNewBucketClient("users/profilePics/")
-	UserCoverClient = createNewBucketClient("users/coverPics/")
-	UserResumeClient = createNewBucketClient("users/resumes/")
-
-	//TODO make a private client for this
-	ResourceClient = createNewBucketClient("resources/")
+	ProjectClient = createNewBucketClient("projects/", false)
+	EventClient = createNewBucketClient("events/", false)
+	PostClient = createNewBucketClient("posts/", false)
+	ChatClient = createNewBucketClient("chats/", false)
+	UserProfileClient = createNewBucketClient("users/profilePics/", false)
+	UserCoverClient = createNewBucketClient("users/coverPics/", false)
+	UserResumeClient = createNewBucketClient("users/resumes/", false)
+	ResourceClient = createNewBucketClient("resources/", initializers.CONFIG.ENV == initializers.ProductionEnv)
 }
 
 func (c *BucketClient) UploadBucketFile(buffer *bytes.Buffer, object string) error {
@@ -89,4 +96,24 @@ func (c *BucketClient) DeleteBucketFile(fileName string) error {
 	}
 
 	return nil
+}
+
+func (c *BucketClient) GetBucketFile(fileName string) (*bytes.Buffer, error) {
+	ctx := context.Background()
+
+	ctx, cancel := context.WithTimeout(ctx, time.Second*50)
+	defer cancel()
+
+	rc, err := c.cl.Bucket(c.bucketName).Object(c.uploadPath + fileName).NewReader(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create reader: %v", err)
+	}
+	defer rc.Close()
+
+	var buffer bytes.Buffer
+	if _, err := io.Copy(&buffer, rc); err != nil {
+		return nil, fmt.Errorf("io.Copy: %v", err)
+	}
+
+	return &buffer, nil
 }
