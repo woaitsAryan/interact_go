@@ -8,6 +8,8 @@ import (
 )
 
 func ResourceRouter(app *fiber.App) {
+	app.Get("resources/:orgID/serve/:resourceFileID", middlewares.ResourceFileProtect, middlewares.OrgRoleAuthorization(models.Member), organization_controllers.ServeResourceFile)
+
 	resourceRoutes := app.Group("/org/:orgID/resource", middlewares.Protect)
 
 	resourceRoutes.Get("/", middlewares.OrgRoleAuthorization(models.Member), organization_controllers.GetOrgResourceBuckets)

@@ -75,7 +75,7 @@ func UploadResume(c *fiber.Ctx) (string, error) {
 	return filePath, nil
 }
 
-func UploadFile(c *fiber.Ctx) (string, error) {
+func UploadResourceFile(c *fiber.Ctx) (string, error) {
 	form, err := c.MultipartForm()
 	if err != nil {
 		return "", err
@@ -87,6 +87,12 @@ func UploadFile(c *fiber.Ctx) (string, error) {
 	}
 
 	file := files[0]
+
+	maxFileSize := int64(5 * 1024 * 1024)
+
+	if file.Size > maxFileSize {
+		return "", fmt.Errorf("size-exceeded")
+	}
 
 	fileContent, err := file.Open()
 	if err != nil {

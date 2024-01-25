@@ -1,6 +1,9 @@
 package organization_controllers
 
 import (
+	"fmt"
+	"log"
+	"net/http"
 	"path"
 
 	"github.com/Pratham-Mishra04/interact/cache"
@@ -79,6 +82,35 @@ func GetResourceBucketFiles(c *fiber.Ctx) error {
 	})
 }
 
+func ServeResourceFile(c *fiber.Ctx) error {
+	parsedResourceFileID, err := uuid.Parse(c.Params("resourceFileID"))
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid Resource File ID."}
+	}
+
+	var resourceFile models.ResourceFile
+	if err := initializers.DB.Where("id=?", parsedResourceFileID).First(&resourceFile).Error; err != nil {
+		if err != gorm.ErrRecordNotFound {
+			return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Resource File does not exist."}
+		}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	buffer, err := helpers.ResourceClient.GetBucketFile(resourceFile.Path)
+	if err != nil {
+		log.Printf("Failed to download file from GCS: %v", err)
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to download file"})
+	}
+
+	c.Set("Content-Type", "application/octet-stream")
+
+	// Set the Content-Disposition header to prompt the user to download the file
+	c.Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", resourceFile.Path))
+
+	// Send the file content to the frontend
+	return c.Send(buffer.Bytes())
+}
+
 func AddResourceBucket(c *fiber.Ctx) error {
 	var reqBody schemas.ResourceBucketCreateSchema
 	if err := c.BodyParser(&reqBody); err != nil {
@@ -142,8 +174,11 @@ func AddResourceFile(c *fiber.Ctx) error {
 	var link string
 
 	if reqBody.Link == "" {
-		link, err = utils.UploadFile(c)
+		link, err = utils.UploadResourceFile(c)
 		if err != nil {
+			if err.Error() == "size-exceeded" {
+				return &fiber.Error{Code: 400, Message: "File too large"}
+			}
 			return helpers.AppError{Code: 500, Message: config.SERVER_ERROR, LogMessage: err.Error(), Err: err}
 		}
 
