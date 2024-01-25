@@ -28,6 +28,9 @@ func IncrementImpressions(items interface{}, getModelID func(interface{}) string
 	for i := 0; i < itemsValue.Len(); i++ {
 		item := itemsValue.Index(i).Interface()
 		key := getModelID(item)
+		suffix := getModelTypeStr(item)
+		key = suffix + "_" + key
+
 		impressionCount, err := cache.GetImpression(key)
 		if err != nil {
 			return
@@ -73,55 +76,45 @@ func incrementDBImpressions(modelType interface{}, itemID string, ch chan<- uint
 func IncrementPostImpression(posts []models.Post) {
 	IncrementImpressions(posts, func(item interface{}) string {
 		return item.(models.Post).ID.String()
-	}, incrementDBPostImpressions, &models.Post{})
-}
-
-func incrementDBPostImpressions(postID string, ch chan<- uint) {
-	incrementDBImpressions(&models.Post{}, postID, ch)
+	}, func(postID string, ch chan<- uint) {
+		incrementDBImpressions(&models.Post{}, postID, ch)
+	}, &models.Post{})
 }
 
 // Projects
 func IncrementProjectImpression(projects []models.Project) {
 	IncrementImpressions(projects, func(item interface{}) string {
 		return item.(models.Project).ID.String()
-	}, incrementDBProjectImpressions, &models.Project{})
-}
-
-func incrementDBProjectImpressions(projectID string, ch chan<- uint) {
-	incrementDBImpressions(&models.Project{}, projectID, ch)
+	}, func(projectID string, ch chan<- uint) {
+		incrementDBImpressions(&models.Project{}, projectID, ch)
+	}, &models.Project{})
 }
 
 // Events
 func IncrementEventImpression(events []models.Event) {
 	IncrementImpressions(events, func(item interface{}) string {
 		return item.(models.Event).ID.String()
-	}, incrementDBEventImpressions, &models.Event{})
-}
-
-func incrementDBEventImpressions(eventID string, ch chan<- uint) {
-	incrementDBImpressions(&models.Event{}, eventID, ch)
+	}, func(eventID string, ch chan<- uint) {
+		incrementDBImpressions(&models.Event{}, eventID, ch)
+	}, &models.Event{})
 }
 
 // Openings
 func IncrementOpeningImpression(openings []models.Opening) {
 	IncrementImpressions(openings, func(item interface{}) string {
 		return item.(models.Opening).ID.String()
-	}, incrementDBOpeningImpressions, &models.Opening{})
-}
-
-func incrementDBOpeningImpressions(openingID string, ch chan<- uint) {
-	incrementDBImpressions(&models.Opening{}, openingID, ch)
+	}, func(openingID string, ch chan<- uint) {
+		incrementDBImpressions(&models.Opening{}, openingID, ch)
+	}, &models.Opening{})
 }
 
 // Users
 func IncrementUserImpression(users []models.User) {
 	IncrementImpressions(users, func(item interface{}) string {
 		return item.(models.User).ID.String()
-	}, incrementDBUserImpressions, &models.User{})
-}
-
-func incrementDBUserImpressions(userID string, ch chan<- uint) {
-	incrementDBImpressions(&models.User{}, userID, ch)
+	}, func(userID string, ch chan<- uint) {
+		incrementDBImpressions(&models.User{}, userID, ch)
+	}, &models.User{})
 }
 
 func checkForNotification(item interface{}, modelType interface{}, cacheImpressionCount int) {
@@ -136,4 +129,20 @@ func checkForNotification(item interface{}, modelType interface{}, cacheImpressi
 		event := item.(models.Event)
 		sendImpressionNotification(event.Organization.UserID, event.Organization.UserID, nil, nil, &event.ID, event.Impressions+cacheImpressionCount+1)
 	}
+}
+
+func getModelTypeStr(modelType interface{}) string {
+	switch modelType.(type) {
+	case *models.Post:
+		return "post"
+	case *models.Project:
+		return "project"
+	case *models.Event:
+		return "event"
+	case *models.Opening:
+		return "opening"
+	case *models.User:
+		return "user"
+	}
+	return ""
 }

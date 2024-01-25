@@ -10,7 +10,7 @@ import (
 )
 
 func GetOtpFromCache(key string) (string, error) {
-	data, err := initializers.RedisClient.Get(ctx, "otp-" + key).Result()
+	data, err := initializers.RedisClient.Get(ctx, "otp-"+key).Result()
 	if err != nil {
 		if err == redis.Nil {
 			return "", fmt.Errorf("OTP not found in cache")
@@ -22,7 +22,7 @@ func GetOtpFromCache(key string) (string, error) {
 }
 
 func SetOtpToCache(key string, data []byte) error {
-	if err := initializers.RedisClient.Set(ctx, "otp-" + key, data, config.VERIFICATION_OTP_EXPIRATION_TIME).Err(); err != nil {
+	if err := initializers.RedisClient.Set(ctx, "otp-"+key, data, config.VERIFICATION_OTP_EXPIRATION_TIME).Err(); err != nil {
 		helpers.LogServerError("Error setting OTP to cache", err, "")
 		return fmt.Errorf("error setting OTP to cache")
 	}
