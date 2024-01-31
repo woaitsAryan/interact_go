@@ -13,6 +13,8 @@ type Invitation struct { //TODO add accepting project invitations field on user 
 	User                User                  `gorm:"" json:"user"`
 	OrganizationID      *uuid.UUID            `gorm:"type:uuid;" json:"organizationID"`
 	Organization        Organization          `gorm:"" json:"organization"`
+	EventID             *uuid.UUID            `gorm:"type:uuid;" json:"eventID"`
+	Event               Event                 `gorm:"" json:"event"`
 	ProjectID           *uuid.UUID            `gorm:"type:uuid;" json:"projectID"`
 	Project             Project               `gorm:"" json:"project"`
 	GroupChatID         *uuid.UUID            `gorm:"type:uuid;" json:"chatID"`

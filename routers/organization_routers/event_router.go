@@ -13,12 +13,15 @@ func EventRouter(app *fiber.App) {
 	app.Get("/events/like/:eventID", middlewares.Protect, controllers.LikeItem("event"))
 	app.Get("/events/dislike/:eventID", middlewares.Protect, controllers.DislikeItem("event"))
 
-	eventRoutes := app.Group("/org/:orgID/events", middlewares.Protect, middlewares.OrgRoleAuthorization(models.Senior))
-	eventRoutes.Post("/", organization_controllers.AddEvent)
+	eventRoutesOrg := app.Group("/org/:orgID/events", middlewares.Protect, middlewares.OrgRoleAuthorization(models.Senior))
+	eventRoutesOrg.Post("/",organization_controllers.AddEvent)
+	eventRoutesOrg.Delete("/:eventID", organization_controllers.DeleteEvent)
+	eventRoutesOrg.Post("/cohost", organization_controllers.AddOtherOrg)
+	eventRoutesOrg.Delete("/cohost", organization_controllers.RemoveOtherOrg)
 
-	eventRoutes.Post("/coordinators/:eventID", organization_controllers.AddEventCoordinators)
-	eventRoutes.Delete("/coordinators/:eventID", organization_controllers.RemoveEventCoordinators)
-
-	eventRoutes.Patch("/:eventID", organization_controllers.UpdateEvent)
-	eventRoutes.Delete("/:eventID", organization_controllers.DeleteEvent)
+	eventRoutesOrgCoOwn := app.Group("/org/:orgID/events", middlewares.Protect, middlewares.OrgEventRoleAuthorization(models.Senior))
+	eventRoutesOrgCoOwn.Post("/coordinators/:eventID", organization_controllers.AddEventCoordinators)
+	eventRoutesOrgCoOwn.Delete("/coordinators/:eventID", organization_controllers.RemoveEventCoordinators)
+	eventRoutesOrgCoOwn.Patch("/:eventID",organization_controllers.UpdateEvent)
+	
 }
