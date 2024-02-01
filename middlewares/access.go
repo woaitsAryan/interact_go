@@ -93,10 +93,10 @@ func OrgEventRoleAuthorization(Role models.OrganizationRole) func(*fiber.Ctx) er
 
 		var event models.Event
 		if err := initializers.DB.Preload("Organization").
-				  Preload("Organization.Memberships").
-				  Preload("CoOwnedBy").
-				  Preload("CoOwnedBy.Memberships").
-				  First(&event, "id = ?", eventID).Error; err != nil {
+			Preload("Organization.Memberships").
+			Preload("CoOwnedBy").
+			Preload("CoOwnedBy.Memberships").
+			First(&event, "id = ?", eventID).Error; err != nil {
 			return &fiber.Error{Code: 400, Message: "No Event of this id found."}
 		}
 

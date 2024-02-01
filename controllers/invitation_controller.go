@@ -73,21 +73,25 @@ func AcceptInvitation(c *fiber.Ctx) error {
 		go routines.MarkProjectHistory(*invitation.ProjectID, parsedLoggedInUserID, 1, nil, nil, nil, nil, nil, "")
 		go cache.RemoveProject(invitation.Project.Slug)
 		go cache.RemoveProject("-workspace--" + invitation.Project.Slug)
+
 	} else if invitation.EventID != nil {
 		var event models.Event
 		if err := initializers.DB.First(&event, "id=?", invitation.EventID).Error; err != nil {
 			return &fiber.Error{Code: 400, Message: "No Event of this ID found."}
 		}
 
-		var CoOwnOrganization models.Organization
-		if err := initializers.DB.First(&CoOwnOrganization, "id=?", event.OrganizationID).Error; err != nil {
+		var organization models.Organization
+		if err := initializers.DB.First(&organization, "id=?", c.Get("orgID")).Error; err != nil {
 			return &fiber.Error{Code: 400, Message: "No Organization of this ID found."}
 		}
-		event.CoOwnedBy = append(event.CoOwnedBy, CoOwnOrganization)
+		event.CoOwnedBy = append(event.CoOwnedBy, organization)
+
 		result := initializers.DB.Save(&event)
 		if result.Error != nil {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 		}
+
+		go routines.IncrementOrgEvent(organization.ID)
 
 	} else if invitation.OrganizationID != nil {
 		membership := models.OrganizationMembership{
@@ -101,6 +105,7 @@ func AcceptInvitation(c *fiber.Ctx) error {
 		if result.Error != nil {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 		}
+
 	} else if invitation.GroupChatID != nil {
 		membership := models.GroupChatMembership{
 			UserID:      invitation.UserID,
@@ -163,6 +168,7 @@ func RejectInvitation(c *fiber.Ctx) error {
 }
 
 func WithdrawInvitation(c *fiber.Ctx) error {
+	//TODO add user_id to invitation fetching
 	invitationID := c.Params("invitationID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 

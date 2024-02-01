@@ -14,14 +14,15 @@ func EventRouter(app *fiber.App) {
 	app.Get("/events/dislike/:eventID", middlewares.Protect, controllers.DislikeItem("event"))
 
 	eventRoutesOrg := app.Group("/org/:orgID/events", middlewares.Protect, middlewares.OrgRoleAuthorization(models.Senior))
-	eventRoutesOrg.Post("/",organization_controllers.AddEvent)
+	eventRoutesOrg.Post("/", organization_controllers.AddEvent)
 	eventRoutesOrg.Delete("/:eventID", organization_controllers.DeleteEvent)
-	eventRoutesOrg.Post("/cohost", organization_controllers.AddOtherOrg)
-	eventRoutesOrg.Delete("/cohost", organization_controllers.RemoveOtherOrg)
+	eventRoutesOrg.Post("/cohost", organization_controllers.AddCoHostOrg)
+	eventRoutesOrg.Delete("/cohost", organization_controllers.RemoveCoHostOrg)
+	eventRoutesOrg.Patch("/cohost", organization_controllers.LeaveCoHostOrg)
 
 	eventRoutesOrgCoOwn := app.Group("/org/:orgID/events", middlewares.Protect, middlewares.OrgEventRoleAuthorization(models.Senior))
 	eventRoutesOrgCoOwn.Post("/coordinators/:eventID", organization_controllers.AddEventCoordinators)
 	eventRoutesOrgCoOwn.Delete("/coordinators/:eventID", organization_controllers.RemoveEventCoordinators)
-	eventRoutesOrgCoOwn.Patch("/:eventID",organization_controllers.UpdateEvent)
-	
+	eventRoutesOrgCoOwn.Patch("/:eventID", organization_controllers.UpdateEvent)
+
 }
