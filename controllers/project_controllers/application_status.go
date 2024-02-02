@@ -144,7 +144,7 @@ func SetApplicationReviewStatus(c *fiber.Ctx) error {
 	}
 
 	if application.Status != 0 && application.Status != 1 {
-		return &fiber.Error{Code: 400, Message: "Cannot perform this action now Now."}
+		return &fiber.Error{Code: 400, Message: "Cannot perform this action now."}
 	}
 
 	if application.Status == 0 {
