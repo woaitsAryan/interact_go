@@ -28,6 +28,10 @@ type EventUpdateSchema struct {
 	EndTime     string         `json:"endTime"`
 }
 
+type AddCoHostEventSchema struct {
+	OrganizationIDs pq.StringArray `json:"organizationIDs" validate:"required"`
+}
+
 type CoHostEventSchema struct {
 	OrganizationID string `json:"organizationID" validate:"required"`
 }

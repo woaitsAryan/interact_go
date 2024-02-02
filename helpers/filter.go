@@ -7,7 +7,6 @@ import (
 )
 
 func Filter(model interface{}, fields []string) (interface{}, error) {
-
 	requiredFields := make(map[string]bool)
 	for _, field := range fields {
 		requiredFields[field] = true

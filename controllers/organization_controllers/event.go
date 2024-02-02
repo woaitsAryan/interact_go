@@ -326,7 +326,7 @@ func DeleteEvent(c *fiber.Ctx) error {
 }
 
 func AddCoHostOrg(c *fiber.Ctx) error {
-	var reqBody schemas.CoHostEventSchema
+	var reqBody schemas.AddCoHostEventSchema
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
 	}
@@ -341,32 +341,31 @@ func AddCoHostOrg(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	parsedCoOwnOrgID, err := uuid.Parse(reqBody.OrganizationID)
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid Co own organization ID."}
-	}
-
-	var CoOwnOrganization models.Organization
-	if err := initializers.DB.Where("id = ?", parsedCoOwnOrgID).First(&CoOwnOrganization).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return &fiber.Error{Code: 400, Message: "No co own organization of this ID found"}
+	//TODO change to a transaction
+	for _, orgID := range reqBody.OrganizationIDs {
+		parsedCoOwnOrgID, err := uuid.Parse(orgID)
+		if err != nil {
+			continue
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
-	}
 
-	invitation := models.Invitation{
-		UserID:  CoOwnOrganization.UserID,
-		Title:   "Your organization has been invited to cohost an event!",
-		EventID: &event.ID,
-	}
+		var CoOwnOrganization models.Organization
+		if err := initializers.DB.Where("id = ?", parsedCoOwnOrgID).First(&CoOwnOrganization).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				continue
+			}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+		}
 
-	result := initializers.DB.Create(&invitation)
-	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
-	}
+		invitation := models.Invitation{
+			UserID:  CoOwnOrganization.UserID,
+			Title:   "Your organization has been invited to cohost an event!",
+			EventID: &event.ID,
+		}
 
-	if err := initializers.DB.Save(&event).Error; err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+		result := initializers.DB.Create(&invitation)
+		if result.Error != nil {
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
+		}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
