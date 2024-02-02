@@ -19,9 +19,11 @@ func GetInvitations(c *fiber.Ctx) error {
 	if err := initializers.DB.
 		Preload("GroupChat").
 		Preload("Project").
+		Preload("Event").
+		Preload("Event.Organization").
+		Preload("Event.Organization.User").
 		Preload("Organization").
 		Preload("Organization.User").
-		Preload("Event").
 		Where("user_id = ? ", loggedInUserID).Order("created_at DESC").Find(&invitations).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}

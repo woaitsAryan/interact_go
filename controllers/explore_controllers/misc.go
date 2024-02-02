@@ -126,7 +126,10 @@ func GetOrgEvents(c *fiber.Ctx) error {
 	var events []models.Event
 	if err := paginatedDB.
 		Preload("Organization").
-		Where("organization_id = ?", orgID).
+		Preload("Organization.User").
+		Preload("CoOwnedBy").
+		Preload("CoOwnedBy.User").
+		Where("organization_id = ? OR ? = ANY(co_owned_by)", orgID, orgID).
 		Order("created_at DESC").
 		Find(&events).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}

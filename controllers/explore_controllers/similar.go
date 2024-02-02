@@ -119,6 +119,8 @@ func GetSimilarEvents(c *fiber.Ctx) error {
 		if err := paginatedDB.
 			Preload("Organization").
 			Preload("Organization.User").
+			Preload("CoOwnedBy").
+			Preload("CoOwnedBy.User").
 			Where("id <> ?", event.ID).
 			Where("category = ? OR tags && ?", event.Category, pq.StringArray(event.Tags)).
 			Order("no_views DESC").

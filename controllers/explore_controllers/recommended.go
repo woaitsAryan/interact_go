@@ -159,6 +159,8 @@ func GetRecommendedEvents(c *fiber.Ctx) error {
 	if err := initializers.DB.
 		Preload("Organization").
 		Preload("Organization.User").
+		Preload("CoOwnedBy").
+		Preload("CoOwnedBy.User").
 		Where("id IN ?", recommendations).
 		Find(&events).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}

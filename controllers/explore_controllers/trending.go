@@ -210,6 +210,8 @@ func GetTrendingEvents(c *fiber.Ctx) error {
 	if err := filteredDB.
 		Preload("Organization").
 		Preload("Organization.User").
+		Preload("CoOwnedBy").
+		Preload("CoOwnedBy.User").
 		Select("*, (no_views + 3 * no_likes + 2 * no_comments + 5 * no_shares) AS weighted_average").
 		Order("weighted_average DESC").
 		Find(&events).Error; err != nil {

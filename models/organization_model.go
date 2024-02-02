@@ -47,6 +47,8 @@ type OrganizationMembership struct {
 	CreatedAt      time.Time        `gorm:"default:current_timestamp" json:"createdAt"`
 }
 
+//TODO add last edited n all fields on models
+
 /*
 history type:
 *-1 - Organization created

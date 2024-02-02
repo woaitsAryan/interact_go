@@ -34,6 +34,8 @@ func GetEvent(c *fiber.Ctx) error {
 		Preload("Organization").
 		Preload("Organization.User").
 		Preload("Coordinators").
+		Preload("CoOwnedBy").
+		Preload("CoOwnedBy.User").
 		Where("id = ?", eventID).
 		First(&event).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
@@ -325,7 +327,7 @@ func DeleteEvent(c *fiber.Ctx) error {
 	})
 }
 
-func AddCoHostOrg(c *fiber.Ctx) error {
+func AddCoHostOrgs(c *fiber.Ctx) error {
 	var reqBody schemas.AddCoHostEventSchema
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
@@ -341,7 +343,18 @@ func AddCoHostOrg(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	//TODO change to a transaction
+	tx := initializers.DB.Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	defer func() {
+		if tx.Error != nil {
+			tx.Rollback()
+			go helpers.LogDatabaseError("Transaction rolled back due to error", tx.Error, "AddCoHostOrg")
+		}
+	}()
+
 	for _, orgID := range reqBody.OrganizationIDs {
 		parsedCoOwnOrgID, err := uuid.Parse(orgID)
 		if err != nil {
@@ -349,7 +362,7 @@ func AddCoHostOrg(c *fiber.Ctx) error {
 		}
 
 		var CoOwnOrganization models.Organization
-		if err := initializers.DB.Where("id = ?", parsedCoOwnOrgID).First(&CoOwnOrganization).Error; err != nil {
+		if err := tx.Where("id = ?", parsedCoOwnOrgID).First(&CoOwnOrganization).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
 				continue
 			}
@@ -362,10 +375,14 @@ func AddCoHostOrg(c *fiber.Ctx) error {
 			EventID: &event.ID,
 		}
 
-		result := initializers.DB.Create(&invitation)
+		result := tx.Create(&invitation)
 		if result.Error != nil {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
