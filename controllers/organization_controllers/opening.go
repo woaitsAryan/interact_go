@@ -70,7 +70,6 @@ func AddOpening(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid ID"}
 	}
 
-
 	var organization models.Organization
 	if err := initializers.DB.First(&organization, "id = ?", parsedOrgID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -202,9 +201,8 @@ func DeleteOpening(c *fiber.Ctx) error {
 	}
 
 	result := initializers.DB.Delete(&opening)
-
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 25, nil, nil, nil, nil, nil, nil, nil, nil, opening.Title)

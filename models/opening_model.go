@@ -30,4 +30,5 @@ type Opening struct {
 	Messages             []Message             `gorm:"foreignKey:OpeningID;constraint:OnDelete:CASCADE" json:"-"`
 	GroupChatMessages    []GroupChatMessage    `gorm:"foreignKey:OpeningID;constraint:OnDelete:CASCADE" json:"-"`
 	Reports              []Report              `gorm:"foreignKey:OpeningID;constraint:OnDelete:CASCADE" json:"-"`
+	OrganizationHistory  []OrganizationHistory `gorm:"foreignKey:OpeningID;constraint:OnDelete:CASCADE" json:"-"`
 }

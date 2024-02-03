@@ -116,7 +116,7 @@ func AddMember(c *fiber.Ctx) error {
 	}
 
 	var user models.User
-	if err := initializers.DB.First(&user, "id = ?", reqBody.UserID).Error; err != nil {
+	if err := initializers.DB.First(&user, "id = ? AND organization_status=false", reqBody.UserID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No User of this ID found."}
 		}
