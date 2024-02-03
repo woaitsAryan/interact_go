@@ -21,7 +21,11 @@ func GetOpening(c *fiber.Ctx) error {
 	}
 
 	var opening models.Opening
-	if err := initializers.DB.Preload("Organization").First(&opening, "id = ?", parsedOpeningID).Error; err != nil {
+	if err := initializers.DB.
+		Preload("Project").
+		Preload("Organization").
+		Preload("Organization.User").
+		First(&opening, "id = ?", parsedOpeningID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Opening of this ID found."}
 		}
@@ -46,7 +50,13 @@ func GetAllOpeningsOfOrganization(c *fiber.Ctx) error {
 	orgID := c.Params("orgID")
 
 	var openings []models.Opening
-	if err := initializers.DB.Where("organization_id=?", orgID).Order("created_at DESC").Find(&openings).Error; err != nil {
+	if err := initializers.DB.
+		Preload("Organization").
+		Preload("Organization.User").
+		Where("active=true").
+		Where("organization_id=?", orgID).
+		Order("created_at DESC").
+		Find(&openings).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 

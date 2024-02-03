@@ -22,7 +22,11 @@ func GetOpening(c *fiber.Ctx) error {
 	}
 
 	var opening models.Opening
-	if err := initializers.DB.Preload("Project").First(&opening, "id = ?", parsedOpeningID).Error; err != nil {
+	if err := initializers.DB.
+		Preload("Project").
+		Preload("Organization").
+		Preload("Organization.User").
+		First(&opening, "id = ?", parsedOpeningID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Opening of this ID found."}
 		}

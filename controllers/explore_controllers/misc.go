@@ -129,7 +129,8 @@ func GetOrgEvents(c *fiber.Ctx) error {
 		Preload("Organization.User").
 		Preload("CoOwnedBy").
 		Preload("CoOwnedBy.User").
-		Where("organization_id = ? OR ? = ANY(co_owned_by)", orgID, orgID).
+		Joins("LEFT JOIN co_owned_events ON co_owned_events.event_id = events.id").
+		Where("events.organization_id = ? OR co_owned_events.organization_id = ?", orgID, orgID).
 		Order("created_at DESC").
 		Find(&events).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}

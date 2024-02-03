@@ -94,10 +94,12 @@ func GetTrendingOpenings(c *fiber.Ctx) error {
 
 		filteredDB := API.Filter(c, 4)(paginatedDB)
 
-		if err := filteredDB.Preload("Project").
-			Joins("JOIN projects ON openings.project_id = projects.id").
-			Where("openings.active=true").
-			Select("openings.*, (projects.total_no_views * 0.5 + openings.no_of_applications * 0.3) / (1 + EXTRACT(EPOCH FROM age(NOW(), openings.created_at)) / 3600 / 24 / 15) AS t_ratio").
+		if err := filteredDB.
+			Preload("Project").
+			Preload("Organization").
+			Preload("Organization.User").
+			Where("active=true").
+			Select("openings.*, (no_of_applications * 0.3) / (1 + EXTRACT(EPOCH FROM age(NOW(), openings.created_at)) / 3600 / 24 / 15) AS t_ratio").
 			Order("t_ratio DESC").
 			Find(&openings).Error; err != nil {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
@@ -107,9 +109,12 @@ func GetTrendingOpenings(c *fiber.Ctx) error {
 
 		filteredDB := API.Filter(c, 4)(searchedDB)
 
-		if err := filteredDB.Preload("Project").
-			Where("openings.active=true").
-			Select("openings.*, (projects.total_no_views * 0.5 + openings.no_of_applications * 0.3) / (1 + EXTRACT(EPOCH FROM age(NOW(), openings.created_at)) / 3600 / 24 / 15) AS t_ratio").
+		if err := filteredDB.
+			Preload("Project").
+			Preload("Organization").
+			Preload("Organization.User").
+			Where("active=true").
+			Select("openings.*, (no_of_applications * 0.3) / (1 + EXTRACT(EPOCH FROM age(NOW(), openings.created_at)) / 3600 / 24 / 15) AS t_ratio").
 			Order("t_ratio DESC").
 			Find(&openings).Error; err != nil {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}

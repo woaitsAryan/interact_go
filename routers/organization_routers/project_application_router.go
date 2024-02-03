@@ -16,6 +16,4 @@ func ProjectApplicationRouter(app *fiber.App) {
 	applicationRoutes.Get("/accept/:applicationID", project_controllers.AcceptApplication)
 	applicationRoutes.Get("/reject/:applicationID", project_controllers.RejectApplication)
 	applicationRoutes.Get("/review/:applicationID", project_controllers.SetApplicationReviewStatus)
-
-	applicationRoutes.Post("/:openingID", controllers.AddApplication("project"))
 }
