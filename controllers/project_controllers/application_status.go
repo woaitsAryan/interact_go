@@ -152,10 +152,10 @@ func SetApplicationReviewStatus(c *fiber.Ctx) error {
 	} else {
 		application.Status = 0
 	}
-	result := initializers.DB.Save(&application)
 
+	result := initializers.DB.Save(&application)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	return c.Status(200).JSON(fiber.Map{

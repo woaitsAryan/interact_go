@@ -14,8 +14,8 @@ import (
 func AcceptApplication(c *fiber.Ctx) error {
 	applicationID := c.Params("applicationID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
-	orgMemberID := c.GetRespHeader("orgMemberID")
-	parsedOrgMemberID, _ := uuid.Parse(orgMemberID)
+	// orgMemberID := c.GetRespHeader("orgMemberID")
+	// parsedOrgMemberID, _ := uuid.Parse(orgMemberID)
 
 	parsedApplicationID, err := uuid.Parse(applicationID)
 	if err != nil {
@@ -39,10 +39,10 @@ func AcceptApplication(c *fiber.Ctx) error {
 	}
 
 	application.Status = 2
-	result := initializers.DB.Save(&application)
 
+	result := initializers.DB.Save(&application)
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	membership := models.OrganizationMembership{
@@ -60,7 +60,7 @@ func AcceptApplication(c *fiber.Ctx) error {
 
 	go routines.OrgMembershipSendNotification(&application)
 
-	go routines.MarkOrganizationHistory(*application.ProjectID, parsedOrgMemberID, 27, &application.UserID, nil, nil, nil, nil, nil, nil, &application.OpeningID, "")
+	// go routines.MarkOrganizationHistory(*application.OrganizationID, parsedOrgMemberID, 27, &application.UserID, nil, nil, nil, nil, nil, nil, &application.OpeningID, "")
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",

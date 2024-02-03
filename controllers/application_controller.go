@@ -66,35 +66,35 @@ func GetApplication(applicationType string) func(*fiber.Ctx) error {
 	}
 }
 
-func GetAllApplicationsOfOpening(applicationType string) func(c *fiber.Ctx) error {
-	return func(c *fiber.Ctx) error {
-		openingID := c.Params("openingID")
+func GetAllApplicationsOfOpening(c *fiber.Ctx) error {
 
-		parsedOpeningID, err := uuid.Parse(openingID)
-		if err != nil {
-			return &fiber.Error{Code: 400, Message: "Invalid ID"}
-		}
+	openingID := c.Params("openingID")
 
-		var applications []models.Application
-		if err := initializers.DB.Preload("User").Where("opening_id=?", parsedOpeningID).Order("created_at DESC").Find(&applications).Error; err != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
-		}
-
-		for i, application := range applications {
-			if application.IncludeEmail {
-				applications[i].Email = application.User.Email
-			}
-			if application.IncludeResume {
-				applications[i].Resume = application.User.Resume
-			}
-		}
-
-		return c.Status(200).JSON(fiber.Map{
-			"status":       "success",
-			"message":      "",
-			"applications": applications,
-		})
+	parsedOpeningID, err := uuid.Parse(openingID)
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid ID"}
 	}
+
+	var applications []models.Application
+	if err := initializers.DB.Preload("User").Where("opening_id=?", parsedOpeningID).Order("created_at DESC").Find(&applications).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	for i, application := range applications {
+		if application.IncludeEmail {
+			applications[i].Email = application.User.Email
+		}
+		if application.IncludeResume {
+			applications[i].Resume = application.User.Resume
+		}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":       "success",
+		"message":      "",
+		"applications": applications,
+	})
+
 }
 
 func AddApplication(applicationType string) func(c *fiber.Ctx) error {
