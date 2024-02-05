@@ -29,6 +29,7 @@ type EventUpdateSchema struct {
 }
 
 type AddCoHostEventSchema struct {
+	//TODO add req schema validators everywhere
 	OrganizationIDs pq.StringArray `json:"organizationIDs" validate:"required"`
 }
 

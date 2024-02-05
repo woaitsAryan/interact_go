@@ -371,7 +371,7 @@ func AddCoHostOrgs(c *fiber.Ctx) error {
 
 		invitation := models.Invitation{
 			UserID:  CoOwnOrganization.UserID,
-			Title:   "Your organization has been invited to cohost an event!",
+			Title:   event.Title,
 			EventID: &event.ID,
 		}
 

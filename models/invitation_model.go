@@ -19,7 +19,7 @@ type Invitation struct { //TODO add accepting project invitations field on user 
 	Project             Project               `gorm:"" json:"project"`
 	GroupChatID         *uuid.UUID            `gorm:"type:uuid;" json:"chatID"`
 	GroupChat           GroupChat             `gorm:"" json:"chat"`
-	Title               string                `gorm:"type:varchar(25);not null" json:"title"`
+	Title               string                `gorm:"not null" json:"title"`
 	Status              int                   `gorm:"default:0" json:"status"`     //* -1 for reject, 0 for waiting and, 1 for accept
 	Read                bool                  `gorm:"default:false" json:"isRead"` //TODO remove this, not needed
 	CreatedAt           time.Time             `gorm:"default:current_timestamp" json:"createdAt"`

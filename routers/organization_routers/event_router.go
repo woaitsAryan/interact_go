@@ -16,6 +16,7 @@ func EventRouter(app *fiber.App) {
 	eventRoutesOrg.Get("/invitations", controllers.GetInvitations)
 	eventRoutesOrg.Post("/", organization_controllers.AddEvent)
 	eventRoutesOrg.Delete("/:eventID", organization_controllers.DeleteEvent)
+
 	eventRoutesOrg.Post("/:eventID/cohost", organization_controllers.AddCoHostOrgs)
 	eventRoutesOrg.Delete("/:eventID/cohost", organization_controllers.RemoveCoHostOrg)
 
