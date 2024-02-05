@@ -189,7 +189,7 @@ func GetRecommendedOrganizationalUsers(c *fiber.Ctx) error {
 	if err := searchedDB.
 		Preload("Profile").
 		Joins("LEFT JOIN organizations ON users.id = organizations.user_id").
-		Where("users.active=?", true).
+		Where("users.active=? AND users.onboarding_completed=?", true, true).
 		Where("users.organization_status=?", true).
 		Where("users.verified=?", true).
 		Where("users.id <> ?", loggedInUserID).

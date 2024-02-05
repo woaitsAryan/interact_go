@@ -18,11 +18,10 @@ func EventRouter(app *fiber.App) {
 	eventRoutesOrg.Delete("/:eventID", organization_controllers.DeleteEvent)
 	eventRoutesOrg.Post("/:eventID/cohost", organization_controllers.AddCoHostOrgs)
 	eventRoutesOrg.Delete("/:eventID/cohost", organization_controllers.RemoveCoHostOrg)
-	eventRoutesOrg.Patch("/:eventID/cohost", organization_controllers.LeaveCoHostOrg)
 
-	eventRoutesOrgCoOwn := app.Group("/org/:orgID/events", middlewares.Protect, middlewares.OrgEventRoleAuthorization(models.Senior))
-	eventRoutesOrgCoOwn.Post("/coordinators/:eventID", organization_controllers.AddEventCoordinators)
-	eventRoutesOrgCoOwn.Delete("/coordinators/:eventID", organization_controllers.RemoveEventCoordinators)
-	eventRoutesOrgCoOwn.Patch("/:eventID", organization_controllers.UpdateEvent)
+	eventRoutesOrg.Patch("/:eventID", middlewares.OrgEventCoHostAuthorization, organization_controllers.UpdateEvent)
+	eventRoutesOrg.Patch("/:eventID/cohost", middlewares.OrgEventCoHostAuthorization, organization_controllers.LeaveCoHostOrg)
 
+	eventRoutesOrg.Post("/coordinators/:eventID", middlewares.OrgEventCoHostAuthorization, organization_controllers.AddEventCoordinators)
+	eventRoutesOrg.Delete("/coordinators/:eventID", middlewares.OrgEventCoHostAuthorization, organization_controllers.RemoveEventCoordinators)
 }
