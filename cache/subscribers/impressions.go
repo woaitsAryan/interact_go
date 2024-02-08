@@ -1,6 +1,7 @@
 package subscribers
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -10,31 +11,52 @@ import (
 	"gorm.io/gorm"
 )
 
-func ImpressionsDumpSub(sub *redis.PubSub, db *gorm.DB) {
-	// Listen for expired events
-	if sub == nil {
+var ctx = context.Background()
+
+// TODO check if this works
+func ImpressionsDumpSub(client *redis.Client, db *gorm.DB) { //TODO add logger here for errors
+	if client == nil {
+		fmt.Println("Error Subscribing to Redis Expiration Event for Impressions Dump: ", "redis client is nil")
 		return
 	}
-	ch := sub.Channel() //TODO not listening for events
+	if db == nil {
+		fmt.Println("Error Subscribing to Redis Expiration Event for Impressions Dump: ", "gorm db is nil")
+		return
+	}
 
-	for msg := range ch {
-		modelName := extractModelDataFromKey(msg.Payload, 1)
-		modelID := extractModelDataFromKey(msg.Payload, 2)
+	RedisExpirationSub := client.Subscribe(ctx, "__keyevent@0__:expired")
 
-		if modelName == "" || modelID == "" {
+	// Wait for confirmation that subscription is created before publishing anything
+	_, err := RedisExpirationSub.Receive(ctx)
+	if err != nil {
+		fmt.Println("Error Subscribing to Redis Expiration Event for Impressions Dump: ", err)
+	} else {
+		if RedisExpirationSub == nil {
+			fmt.Println("Error Subscribing to Redis Expiration Event for Impressions Dump: ", "redis subscriber is nil")
 			return
 		}
 
-		model := getModelFromStr(modelName)
+		fmt.Println("Subscribed to Redis Expiration Event for Impressions Dump!")
 
-		if err := db.Model(model).Where("id = ?", modelID).UpdateColumn("Impressions", gorm.Expr("Impressions + ?", rand.Intn(5)+3)).Error; err != nil {
-			fmt.Printf("\n Error dumping impressions of key:%s, error:%e", msg.Payload, err)
-		} else {
-			fmt.Printf("\nKey %s dumped\n", msg.Payload)
+		ch := RedisExpirationSub.Channel()
+
+		for msg := range ch {
+			modelName := extractModelDataFromKey(msg.Payload, 1)
+			modelID := extractModelDataFromKey(msg.Payload, 2)
+
+			if modelName == "" || modelID == "" {
+				return
+			}
+
+			model := getModelFromStr(modelName)
+
+			if err := db.Model(model).Where("id = ?", modelID).UpdateColumn("Impressions", gorm.Expr("Impressions + ?", rand.Intn(5)+3)).Error; err != nil {
+				fmt.Printf("\n Error dumping impressions of key:%s, error:%e", msg.Payload, err)
+			} else {
+				fmt.Printf("\nKey %s dumped\n", msg.Payload)
+			}
 		}
 	}
-
-	fmt.Println("Impressions Dump Listener added to Redis")
 }
 
 func extractModelDataFromKey(key string, index int) string {

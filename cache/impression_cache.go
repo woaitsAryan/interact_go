@@ -10,7 +10,7 @@ import (
 )
 
 func SetImpression(key string, data int) error {
-	if err := initializers.RedisClient.Set(ctx, "impressions_"+key, data, initializers.CacheExpirationTime).Err(); err != nil {
+	if err := initializers.RedisClient.Set(ctx, "impressions_"+key, data, initializers.CacheExpirationTimeLong).Err(); err != nil {
 		go helpers.LogServerError("Error Setting to impressions cache", err, "")
 		return fmt.Errorf("error setting to impression cache")
 	}

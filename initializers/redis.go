@@ -13,8 +13,8 @@ var RedisClient *redis.Client
 
 var ctx = context.TODO()
 
-var CacheExpirationTime = time.Second * 10
-var CacheExpirationTimeLong = time.Hour * 24
+var CacheExpirationTime = time.Minute * 2
+var CacheExpirationTimeLong = time.Second * 5
 
 func ConnectToCache() {
 	RedisClient = redis.NewClient(&redis.Options{
@@ -29,16 +29,6 @@ func ConnectToCache() {
 	} else {
 		fmt.Println("Connected to redis!")
 
-		RedisExpirationSub := RedisClient.Subscribe(ctx, "__keyevent@0__:expired")
-		defer RedisExpirationSub.Close()
-
-		// Wait for confirmation that subscription is created before publishing anything
-		_, err := RedisExpirationSub.Receive(ctx)
-		if err != nil {
-			fmt.Println("Error Subscribing to Redis Expiration Event: ", err)
-		} else {
-			fmt.Println("Subscribed to Redis Expiration Event")
-			go subscribers.ImpressionsDumpSub(RedisExpirationSub, DB)
-		}
+		go subscribers.ImpressionsDumpSub(RedisClient, DB)
 	}
 }
