@@ -38,9 +38,21 @@ func AcceptApplication(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Application is already Rejected."}
 	}
 
+	tx := initializers.DB.Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	defer func() {
+		if tx.Error != nil {
+			tx.Rollback()
+			go helpers.LogDatabaseError("Transaction rolled back due to error", tx.Error, "AcceptApplication")
+		}
+	}()
+
 	application.Status = 2
 
-	result := initializers.DB.Save(&application)
+	result := tx.Save(&application)
 	if result.Error != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
@@ -52,10 +64,18 @@ func AcceptApplication(c *fiber.Ctx) error {
 		Title:          application.Opening.Title,
 	}
 
-	result = initializers.DB.Create(&membership)
+	result = tx.Create(&membership)
 
 	if result.Error != nil {
-		helpers.LogDatabaseError("Error while creating Membership-CreateOrgMembershipAndSendNotification", result.Error, "go_routine")
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	if err := tx.Model(&models.Organization{}).Where("id = ?", application.OrganizationID).Update("number_of_members", gorm.Expr("number_of_members + ?", 1)).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	go routines.OrgMembershipSendNotification(&application)

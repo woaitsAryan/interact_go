@@ -105,9 +105,29 @@ func AcceptInvitation(c *fiber.Ctx) error {
 			Title:          invitation.Title,
 		}
 
-		result := initializers.DB.Create(&membership)
+		tx := initializers.DB.Begin()
+		if tx.Error != nil {
+			return tx.Error
+		}
+
+		defer func() {
+			if tx.Error != nil {
+				tx.Rollback()
+				go helpers.LogDatabaseError("Transaction rolled back due to error", tx.Error, "AcceptApplication")
+			}
+		}()
+
+		result := tx.Create(&membership)
 		if result.Error != nil {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
+		}
+
+		if err := tx.Model(&models.Organization{}).Where("id = ?", *invitation.OrganizationID).Update("number_of_members", gorm.Expr("number_of_members + ?", 1)).Error; err != nil {
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+		}
+
+		if err := tx.Commit().Error; err != nil {
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 
 	} else if invitation.GroupChatID != nil {
