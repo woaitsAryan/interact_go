@@ -12,6 +12,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
+	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -21,23 +22,21 @@ type Response struct {
 	DataURL string `json:"data_url"`
 }
 
-func GetImageBlurHash(c *fiber.Ctx, fieldName string, model interface{}) {
+func processCtx(c *fiber.Ctx, fieldName string) ([]*multipart.FileHeader, error) {
 	if c == nil {
-		return
+		return nil, fmt.Errorf("ctx is nil")
 	}
 
 	form, err := c.MultipartForm()
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	files := form.File[fieldName]
-	if files == nil {
-		return
-	}
+	return files, nil
+}
 
-	file := files[0]
-
+func makeBlurHashReq(file *multipart.FileHeader) (*Response, error) {
 	// Create a buffer to store the file content
 	var buffer bytes.Buffer
 	writer := multipart.NewWriter(&buffer)
@@ -45,22 +44,19 @@ func GetImageBlurHash(c *fiber.Ctx, fieldName string, model interface{}) {
 	// Create a form file field
 	fileWriter, err := writer.CreateFormFile("image", file.Filename)
 	if err != nil {
-		helpers.LogDatabaseError("Error Getting Image Hash", err, "go_routine")
-		return
+		return nil, err
 	}
 
 	// Open the file and copy its content to the form file field
 	src, err := file.Open()
 	if err != nil {
-		helpers.LogDatabaseError("Error Getting Image Hash", err, "go_routine")
-		return
+		return nil, err
 	}
 	defer src.Close()
 
 	_, err = io.Copy(fileWriter, src)
 	if err != nil {
-		helpers.LogDatabaseError("Error Getting Image Hash", err, "go_routine")
-		return
+		return nil, err
 	}
 
 	// Close the multipart writer
@@ -71,8 +67,7 @@ func GetImageBlurHash(c *fiber.Ctx, fieldName string, model interface{}) {
 	// Create a POST request to the ml URL
 	request, err := http.NewRequest("POST", URL, &buffer)
 	if err != nil {
-		helpers.LogDatabaseError("Error Getting Image Hash", err, "go_routine")
-		return
+		return nil, err
 	}
 
 	request.Header.Set("Content-Type", writer.FormDataContentType())
@@ -80,13 +75,32 @@ func GetImageBlurHash(c *fiber.Ctx, fieldName string, model interface{}) {
 	client := http.DefaultClient
 	response, err := client.Do(request)
 	if err != nil {
-		helpers.LogDatabaseError("Error Getting Image Hash", err, "go_routine")
-		return
+		return nil, err
 	}
 	defer response.Body.Close()
 
 	var pythonResponse Response
 	if err := json.NewDecoder(response.Body).Decode(&pythonResponse); err != nil {
+		return nil, err
+	}
+
+	return &pythonResponse, nil
+}
+
+func GetImageBlurHash(c *fiber.Ctx, fieldName string, model interface{}) {
+	files, err := processCtx(c, fieldName)
+	if err != nil {
+		helpers.LogDatabaseError("Error Getting Image Hash", err, "go_routine")
+		return
+	}
+	if files == nil {
+		return
+	}
+
+	file := files[0]
+
+	pythonResponse, err := makeBlurHashReq(file)
+	if err != nil {
 		helpers.LogDatabaseError("Error Getting Image Hash", err, "go_routine")
 		return
 	}
@@ -107,5 +121,38 @@ func GetImageBlurHash(c *fiber.Ctx, fieldName string, model interface{}) {
 		}
 	} else {
 		helpers.LogDatabaseError(fmt.Sprintf("Error Getting Image Hash - Error from Python Server %s", pythonResponse.Message), nil, "go_routine")
+	}
+}
+
+func GetBlurHashesForPost(c *fiber.Ctx, fieldName string, post *models.Post) {
+	files, err := processCtx(c, fieldName)
+	if err != nil {
+		helpers.LogDatabaseError("Error Getting Image Hash", err, "go_routine")
+		return
+	}
+	if files == nil {
+		return
+	}
+
+	var hashes []string
+	for _, file := range files {
+		pythonResponse, err := makeBlurHashReq(file)
+		if err != nil {
+			helpers.LogDatabaseError("Error Getting Image Hash", err, "go_routine")
+			return
+		}
+
+		if pythonResponse.Status == "success" {
+			hashes = append(hashes, pythonResponse.DataURL)
+		} else {
+			helpers.LogDatabaseError(fmt.Sprintf("Error Getting Image Hash - Error from Python Server %s", pythonResponse.Message), nil, "go_routine")
+		}
+	}
+
+	post.Hashes = hashes
+
+	result := initializers.DB.Save(post)
+	if result.Error != nil {
+		helpers.LogDatabaseError(fmt.Sprintf("Error while updating model - GetBlurHashesForPost: %v", result.Error), nil, "go_routine")
 	}
 }

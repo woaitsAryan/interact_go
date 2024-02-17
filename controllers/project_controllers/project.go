@@ -574,7 +574,7 @@ func DeleteProject(c *fiber.Ctx) error {
 		if err != nil {
 			return &fiber.Error{Code: 400, Message: "Invalid User ID."}
 		}
-		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 10, nil, nil, nil, nil, nil, nil,nil, nil, project.Title)
+		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 10, nil, nil, nil, nil, nil, nil, nil, nil, project.Title)
 		go routines.DecrementOrgProject(parsedOrgID)
 	}
 
