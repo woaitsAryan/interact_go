@@ -2,8 +2,6 @@ package organization_controllers
 
 import (
 	"fmt"
-	"log"
-	"net/http"
 	"path"
 
 	"github.com/Pratham-Mishra04/interact/cache"
@@ -98,8 +96,7 @@ func ServeResourceFile(c *fiber.Ctx) error {
 
 	buffer, err := helpers.ResourceClient.GetBucketFile(resourceFile.Path)
 	if err != nil {
-		log.Printf("Failed to download file from GCS: %v", err)
-		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to download file"})
+		return helpers.AppError{Code: fiber.StatusInternalServerError, Message: config.SERVER_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	c.Set("Content-Type", "application/octet-stream")

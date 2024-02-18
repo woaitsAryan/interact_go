@@ -59,6 +59,7 @@ func GetUserPosts(c *fiber.Ctx) error {
 	if err := paginatedDB.
 		Preload("RePost").
 		Preload("RePost.User").
+		Preload("RePost.TaggedUsers").
 		Preload("User").
 		Preload("TaggedUsers").
 		Where("user_id = ?", userID).
@@ -307,7 +308,6 @@ func UpdatePost(c *fiber.Ctx) error {
 }
 
 func DeletePost(c *fiber.Ctx) error {
-	//TODO Handle what happens when the post to be deleted is a post of a repost
 	postID := c.Params("postID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 

@@ -127,7 +127,7 @@ func GetRecommendedUsers(c *fiber.Ctx) error {
 		Where("username != email").
 		Omit("phone_no").
 		Omit("email").
-		Select("*, (0.6 * no_followers - 0.4 * no_following + 0.3 * total_no_views) / (1 + EXTRACT(EPOCH FROM age(NOW(), created_at)) / 3600 / 24 / 21) AS weighted_average"). //! 21 days
+		Select("*, (0.6 * no_followers - 0.4 * no_following + 0.3 * total_no_views) / (1 + EXTRACT(EPOCH FROM age(NOW(), created_at)) / 3600 / 24 / 21) AS weighted_average"). //* 21 days
 		Order("weighted_average DESC, created_at ASC").
 		Where("id <> ? AND organization_status = ?", loggedInUserID, false).
 		Find(&users).Error; err != nil {

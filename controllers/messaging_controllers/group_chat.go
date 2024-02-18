@@ -496,7 +496,7 @@ func DeleteGroupChat(c *fiber.Ctx) error {
 	})
 }
 
-func LeaveGroupChat(c *fiber.Ctx) error { //! when no admin left then make the first joined member admin
+func LeaveGroupChat(c *fiber.Ctx) error {
 	chatID := c.Params("chatID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 

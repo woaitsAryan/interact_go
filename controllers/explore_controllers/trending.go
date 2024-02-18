@@ -53,7 +53,7 @@ func GetTrendingPosts(c *fiber.Ctx) error {
 			Preload("RePost.TaggedUsers").
 			Preload("TaggedUsers").
 			Joins("JOIN users ON posts.user_id = users.id AND users.active = ?", true).
-			Select("*, posts.id, posts.created_at, (2 * no_likes + no_comments + 5 * no_shares) / (1 + EXTRACT(EPOCH FROM age(NOW(), posts.created_at)) / 3600 / 24 / 7) AS weighted_average"). //! 7 days
+			Select("*, posts.id, posts.created_at, (2 * no_likes + no_comments + 5 * no_shares) / (1 + EXTRACT(EPOCH FROM age(NOW(), posts.created_at)) / 3600 / 24 / 7) AS weighted_average"). //* 7 days
 			Order("weighted_average DESC, posts.created_at ASC").
 			Find(&posts).Error; err != nil {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
@@ -67,7 +67,7 @@ func GetTrendingPosts(c *fiber.Ctx) error {
 			Preload("TaggedUsers").
 			Where("user_id <> ?", loggedInUserID).
 			Joins("JOIN users ON posts.user_id = users.id AND users.active = ?", true).
-			Select("*, posts.id, posts.created_at, (2 * no_likes + no_comments + 5 * no_shares) / (1 + EXTRACT(EPOCH FROM age(NOW(), posts.created_at)) / 3600 / 24 / 7) AS weighted_average"). //! 7 days
+			Select("*, posts.id, posts.created_at, (2 * no_likes + no_comments + 5 * no_shares) / (1 + EXTRACT(EPOCH FROM age(NOW(), posts.created_at)) / 3600 / 24 / 7) AS weighted_average"). //* 7 days
 			Order("weighted_average DESC, posts.created_at ASC").
 			Find(&posts).Error; err != nil {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
@@ -190,7 +190,7 @@ func GetTrendingUsers(c *fiber.Ctx) error {
 		Where("username != users.email").
 		Omit("phone_no").
 		Omit("users.email").
-		Select("*, (0.6 * no_followers - 0.4 * no_following + 0.3 * total_no_views) / (1 + EXTRACT(EPOCH FROM age(NOW(), created_at)) / 3600 / 24 / 21) AS weighted_average"). //! 21 days
+		Select("*, (0.6 * no_followers - 0.4 * no_following + 0.3 * total_no_views) / (1 + EXTRACT(EPOCH FROM age(NOW(), created_at)) / 3600 / 24 / 21) AS weighted_average"). //* 21 days
 		Order("weighted_average DESC, created_at ASC").
 		Find(&users).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
