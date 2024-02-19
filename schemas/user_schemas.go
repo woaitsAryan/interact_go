@@ -35,6 +35,26 @@ type ProfileUpdateSchema struct {
 	Location    *string         `json:"location"`
 }
 
+type UserAndProfileUpdateSchema struct {
+	Name        *string         `json:"name" validate:"max=25"`
+	ProfilePic  *string         `json:"profilePic" validate:"image"`
+	CoverPic    *string         `json:"coverPic" validate:"image"`
+	Bio         *string         `json:"bio" validate:"max=500"`
+	Title       *string         `json:"title"`
+	Tagline     *string         `json:"tagline" validate:"max=25"`
+	Tags        *pq.StringArray `json:"tags"`
+	Links       *pq.StringArray `json:"links"`
+	School      *string         `json:"school" validate:"max=150"`
+	Degree      *string         `json:"degree" validate:"max=25"`
+	YOG         *string         `json:"yog"`
+	Description *string         `json:"description" validate:"max=1500"`
+	Hobbies     *pq.StringArray `json:"hobbies"`
+	Areas       *pq.StringArray `json:"areas"`
+	Email       *string         `json:"email"`
+	PhoneNo     *string         `json:"phoneNo"`
+	Location    *string         `json:"location"`
+}
+
 type AchievementCreateSchema struct {
 	Achievements []AchievementSchema `json:"achievements"`
 }

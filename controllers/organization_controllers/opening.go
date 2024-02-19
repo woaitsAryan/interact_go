@@ -7,6 +7,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/schemas"
+	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -49,8 +50,10 @@ func GetOpening(c *fiber.Ctx) error {
 func GetAllOpeningsOfOrganization(c *fiber.Ctx) error {
 	orgID := c.Params("orgID")
 
+	paginatedDB := API.Paginator(c)(initializers.DB)
+
 	var openings []models.Opening
-	if err := initializers.DB.
+	if err := paginatedDB.
 		Preload("Organization").
 		Preload("Organization.User").
 		Where("active=true").

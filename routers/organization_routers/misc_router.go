@@ -13,7 +13,7 @@ func MiscRouter(app *fiber.App) {
 
 	miscRouter.Get("/", middlewares.OrgRoleAuthorization(models.Member), organization_controllers.GetOrganization)
 	miscRouter.Patch("/", middlewares.OrgRoleAuthorization(models.Senior), organization_controllers.UpdateOrg)
-	miscRouter.Patch("/profile", middlewares.OrgRoleAuthorization(models.Senior), user_controllers.EditProfile)
+	miscRouter.Patch("/me", middlewares.OrgRoleAuthorization(models.Senior), user_controllers.UpdateMe)
 	miscRouter.Get("/history", middlewares.OrgRoleAuthorization(models.Member), organization_controllers.GetOrganizationHistory)
 
 	miscRouter.Get("/newsfeed", organization_controllers.GetOrgNewsFeed)

@@ -217,10 +217,16 @@ func GetOrganizationalUser(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
+	var profile models.Profile
+	if err := initializers.DB.First(&profile, "user_id = ?", user.ID).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
 	return c.Status(200).JSON(fiber.Map{
 		"status":       "success",
 		"message":      "",
 		"user":         user,
 		"organization": organization,
+		"profile":      profile,
 	})
 }

@@ -37,10 +37,16 @@ func GetMe(c *fiber.Ctx) error {
 		Preload("Profile.Achievements").
 		First(&user, "id = ?", userID)
 
+	var profile models.Profile
+	if err := initializers.DB.First(&profile, "user_id = ?", userID).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "",
 		"user":    user,
+		"profile": profile,
 	})
 }
 
@@ -48,11 +54,17 @@ func GetUser(c *fiber.Ctx) error {
 	username := c.Params("username")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
+	//TODO add error handing here
 	var user models.User
 	initializers.DB.Preload("Profile").First(&user, "username = ?", username)
 
 	if user.ID == uuid.Nil {
 		return &fiber.Error{Code: 400, Message: "No user of this username found."}
+	}
+
+	var profile models.Profile
+	if err := initializers.DB.First(&profile, "user_id = ?", user.ID).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if user.ID.String() != loggedInUserID {
@@ -63,6 +75,7 @@ func GetUser(c *fiber.Ctx) error {
 		"status":  "success",
 		"message": "User Found",
 		"user":    user,
+		"profile": profile,
 	})
 }
 

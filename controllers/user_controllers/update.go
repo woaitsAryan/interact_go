@@ -2,6 +2,7 @@ package user_controllers
 
 import (
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/Pratham-Mishra04/interact/config"
@@ -13,6 +14,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/schemas"
 	"github.com/Pratham-Mishra04/interact/utils"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -27,7 +29,12 @@ func UpdateMe(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	var reqBody schemas.UserUpdateSchema
+	var profile models.Profile
+	if err := initializers.DB.First(&profile, "user_id = ?", userID).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	var reqBody schemas.UserAndProfileUpdateSchema
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Request Body."}
 	}
@@ -90,8 +97,44 @@ func UpdateMe(c *fiber.Ctx) error {
 		user.Links = *reqBody.Links
 	}
 
+	if reqBody.School != nil {
+		profile.School = *reqBody.School
+	}
+	if reqBody.Description != nil {
+		profile.Description = *reqBody.Description
+	}
+	if reqBody.Areas != nil {
+		profile.AreasOfCollaboration = *reqBody.Areas
+	}
+	if reqBody.Degree != nil {
+		profile.Degree = *reqBody.Degree
+	}
+	if reqBody.Hobbies != nil {
+		profile.Hobbies = *reqBody.Hobbies
+	}
+	if reqBody.YOG != nil {
+		year, err := strconv.Atoi(*reqBody.YOG)
+		if err == nil {
+			profile.YearOfGraduation = year
+		}
+	}
+	if reqBody.Email != nil {
+		profile.Email = *reqBody.Email
+	}
+	if reqBody.PhoneNo != nil {
+		profile.PhoneNo = *reqBody.PhoneNo
+	}
+	if reqBody.Location != nil {
+		profile.Location = *reqBody.Location
+	}
+
 	if err := initializers.DB.Save(&user).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	result := initializers.DB.Save(&profile)
+	if result.Error != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	if *reqBody.ProfilePic != "" {
@@ -100,6 +143,22 @@ func UpdateMe(c *fiber.Ctx) error {
 
 	if *reqBody.CoverPic != "" {
 		go routines.DeleteFromBucket(helpers.UserCoverClient, oldCoverPic)
+	}
+
+	orgID := c.GetRespHeader("orgID")
+	orgMemberID := c.GetRespHeader("orgMemberID")
+
+	if orgID != "" && orgMemberID != "" {
+		parsedOrgMemberID, err := uuid.Parse(orgMemberID)
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid User ID."}
+		}
+
+		parsedOrgID, err := uuid.Parse(orgID)
+		if err != nil {
+			return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
+		}
+		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 14, nil, nil, nil, nil, nil, nil, nil, nil, "")
 	}
 
 	if c.Query("action", "") == "onboarding" && !user.OnboardingCompleted {
@@ -115,6 +174,7 @@ func UpdateMe(c *fiber.Ctx) error {
 		"status":  "success",
 		"message": "User updated successfully",
 		"user":    user,
+		"profile": profile,
 	})
 }
 
