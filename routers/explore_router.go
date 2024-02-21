@@ -22,6 +22,7 @@ func ExploreRouter(app *fiber.App) {
 
 	exploreRoutes.Get("/openings/recommended", explore_controllers.GetRecommendedOpenings)
 	exploreRoutes.Get("/openings/trending", explore_controllers.GetTrendingOpenings)
+	exploreRoutes.Get("/openings/org/:orgID", organization_controllers.GetAllOpeningsOfOrganization)
 	exploreRoutes.Get("/openings/:slug", explore_controllers.GetProjectOpenings)
 
 	exploreRoutes.Get("/projects/trending", explore_controllers.GetTrendingProjects)

@@ -19,7 +19,7 @@ func MembershipRouter(app *fiber.App) {
 	})
 
 	app.Get("/org/:orgID/membership", middlewares.Protect, middlewares.OrgRoleAuthorization(models.Member), organization_controllers.GetMemberships)
-	app.Get("/org/:orgID/explore_memberships", middlewares.Protect, organization_controllers.GetExploreMemberships)
+	app.Get("/org/:orgID/explore_memberships", middlewares.PartialProtect, organization_controllers.GetExploreMemberships)
 
 	membershipRoutes := app.Group("/org/:orgID/membership", middlewares.Protect, middlewares.OrgRoleAuthorization(models.Manager))
 	membershipRoutes.Get("/non_members", organization_controllers.GetNonMembers)

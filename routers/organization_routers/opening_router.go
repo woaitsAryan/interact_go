@@ -9,11 +9,10 @@ import (
 )
 
 func OrgOpeningRouter(app *fiber.App) {
-
 	app.Get("/org_openings/:openingID", middlewares.PartialProtect, organization_controllers.GetOpening)
+	app.Get("/org/:orgID/org_openings", middlewares.PartialProtect, organization_controllers.GetAllOpeningsOfOrganization)
 
 	orgOpeningRouter := app.Group("/org/:orgID/org_openings", middlewares.Protect)
-	orgOpeningRouter.Get("/", organization_controllers.GetAllOpeningsOfOrganization)
 
 	orgOpeningRouter.Get("/applications/:openingID", middlewares.OrgRoleAuthorization(models.Manager), controllers.GetAllApplicationsOfOpening)
 
