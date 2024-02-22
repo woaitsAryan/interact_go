@@ -15,6 +15,8 @@ var (
 		Endpoint:     google.Endpoint,
 	}
 	GoogleOAuthState = ""
+	VALID_DOMAINS    = []string{"vitstudent.ac.in", "vit.ac.in"}
+	NAME_REGEX       = `[1,2][0-9][A-Za-z]{3}[0-9]{4}`
 )
 
 func InitializeOAuthGoogle() {

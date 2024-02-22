@@ -53,8 +53,8 @@ func UpdateMe(c *fiber.Ctx) error {
 	}
 	reqBody.ProfilePic = &picName
 
-	// coverName, err := utils.SaveFile(c, "coverPic", "user/coverPics", true, 900, 400)
-	coverName, err := utils.UploadImage(c, "coverPic", helpers.UserCoverClient, 900, 400)
+	// coverName, err := utils.SaveFile(c, "coverPic", "user/coverPics", true, 900, 300)
+	coverName, err := utils.UploadImage(c, "coverPic", helpers.UserCoverClient, 900, 300)
 	if err != nil {
 		return err
 	}

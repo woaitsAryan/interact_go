@@ -3,10 +3,10 @@ package auth_controllers
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
@@ -14,6 +14,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/Pratham-Mishra04/interact/validators"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
@@ -30,8 +31,7 @@ func RedirectToSignUp(c *fiber.Ctx, user models.User) error {
 
 	sign_up_token, err := sign_up_token_claim.SignedString([]byte(initializers.CONFIG.JWT_SECRET))
 	if err != nil {
-		go helpers.LogServerError("Error while decrypting JWT Token.", err, c.Path())
-		return err
+		return &helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: "Error while decrypting JWT Token", Err: err}
 	}
 
 	return c.Redirect(initializers.CONFIG.FRONTEND_URL+"/signup/callback?token="+sign_up_token, fiber.StatusTemporaryRedirect)
@@ -47,8 +47,7 @@ func RedirectToLogin(c *fiber.Ctx, user models.User) error {
 
 	login_token, err := login_token_claim.SignedString([]byte(initializers.CONFIG.JWT_SECRET))
 	if err != nil {
-		go helpers.LogServerError("Error while decrypting JWT Token.", err, c.Path())
-		return err
+		return &helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: "Error while decrypting JWT Token", Err: err}
 	}
 
 	loginURL := "login"
@@ -62,7 +61,7 @@ func RedirectToLogin(c *fiber.Ctx, user models.User) error {
 func GoogleRedirect(c *fiber.Ctx) error {
 	URL, err := url.Parse(config.GoogleOAuthConfig.Endpoint.AuthURL)
 	if err != nil {
-		fmt.Printf("parse: %e", err)
+		return &helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 	parameters := url.Values{}
 	parameters.Add("client_id", config.GoogleOAuthConfig.ClientID)
@@ -70,6 +69,7 @@ func GoogleRedirect(c *fiber.Ctx) error {
 	parameters.Add("redirect_uri", config.GoogleOAuthConfig.RedirectURL)
 	parameters.Add("response_type", "code")
 	parameters.Add("state", config.GoogleOAuthState)
+	parameters.Add("hd", config.VALID_DOMAINS[0])
 	URL.RawQuery = parameters.Encode()
 	url := URL.String()
 	return c.Redirect(url, fiber.StatusTemporaryRedirect)
@@ -93,18 +93,18 @@ func GoogleCallback(c *fiber.Ctx) error {
 	} else {
 		token, err := config.GoogleOAuthConfig.Exchange(context.Background(), code)
 		if err != nil {
-			return err
+			return &helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 
 		resp, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + url.QueryEscape(token.AccessToken))
 		if err != nil {
-			return err
+			return &helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 		defer resp.Body.Close()
 
 		response, err := io.ReadAll(resp.Body)
 		if err != nil {
-			return err
+			return &helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 
 		type GoogleUserInfo struct {
@@ -121,16 +121,28 @@ func GoogleCallback(c *fiber.Ctx) error {
 		var userInfo GoogleUserInfo
 		err = json.Unmarshal(response, &userInfo)
 		if err != nil {
+			return &helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+		}
+
+		if err := validators.EmailValidator(userInfo.Email); err != nil {
 			return err
 		}
 
 		var user models.User
 		if err := initializers.DB.Session(&gorm.Session{SkipHooks: true}).Preload("OAuth").First(&user, "email = ?", userInfo.Email).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
+
+				extractedName := userInfo.Name
+
+				re := regexp.MustCompile(config.NAME_REGEX)
+				if re.MatchString(userInfo.Name) {
+					extractedName = re.ReplaceAllString(userInfo.Name, "")
+				}
+
 				newUser := models.User{
-					Name:              userInfo.Name,
+					Name:              extractedName,
 					Email:             userInfo.Email,
-					Username:          userInfo.Email,
+					Username:          strings.Split(userInfo.Email, "@")[0], //* all emails are unique for a college
 					PasswordChangedAt: time.Now(),
 				}
 
@@ -152,7 +164,7 @@ func GoogleCallback(c *fiber.Ctx) error {
 
 				return RedirectToSignUp(c, newUser)
 			} else {
-				return &fiber.Error{Code: 500, Message: config.DATABASE_ERROR}
+				return &helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 			}
 		}
 

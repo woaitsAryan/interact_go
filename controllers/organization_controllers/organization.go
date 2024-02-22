@@ -250,7 +250,7 @@ func UpdateOrg(c *fiber.Ctx) error {
 	}
 	reqBody.ProfilePic = &picName
 
-	coverName, err := utils.UploadImage(c, "coverPic", helpers.UserCoverClient, 900, 400)
+	coverName, err := utils.UploadImage(c, "coverPic", helpers.UserCoverClient, 900, 300)
 	if err != nil {
 		return err
 	}
