@@ -17,7 +17,7 @@ func ConnectToDB() {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
 		CONFIG.DB_HOST, CONFIG.DB_USER, CONFIG.DB_PASSWORD, CONFIG.DB_NAME, CONFIG.DB_PORT)
 
-	if CONFIG.ENV == ProductionEnv {
+	if CONFIG.ENV == ProductionENV {
 		DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
 			Logger: logger.Default.LogMode(logger.Silent),
 		})

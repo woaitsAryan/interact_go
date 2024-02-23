@@ -34,7 +34,7 @@ func verifyToken(tokenString string, user *models.User, checkRedirect bool) (*mo
 		if checkRedirect {
 			rdt, ok := claims["rdt"].(bool)
 			if !ok {
-				if initializers.CONFIG.ENV == initializers.DevelopmentEnv {
+				if initializers.CONFIG.ENV == initializers.DevelopmentENV {
 					return nil, &fiber.Error{Code: 403, Message: "Not a redirect Token."}
 				} else {
 					return nil, &fiber.Error{Code: 403, Message: "Connection Timeout, Login again"}
@@ -42,7 +42,7 @@ func verifyToken(tokenString string, user *models.User, checkRedirect bool) (*mo
 			}
 
 			if !rdt {
-				if initializers.CONFIG.ENV == initializers.DevelopmentEnv {
+				if initializers.CONFIG.ENV == initializers.DevelopmentENV {
 					return nil, &fiber.Error{Code: 403, Message: "Not a redirect Token."}
 				} else {
 					return nil, &fiber.Error{Code: 403, Message: "Connection Timeout, Login again"}

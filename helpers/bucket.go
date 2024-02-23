@@ -63,7 +63,7 @@ func InitializeBucketClients() {
 	UserProfileClient = createNewBucketClient("users/profilePics/", false)
 	UserCoverClient = createNewBucketClient("users/coverPics/", false)
 	UserResumeClient = createNewBucketClient("users/resumes/", false)
-	ResourceClient = createNewBucketClient("resources/", initializers.CONFIG.ENV == initializers.ProductionEnv)
+	ResourceClient = createNewBucketClient("resources/", initializers.CONFIG.ENV == initializers.ProductionENV)
 }
 
 func (c *BucketClient) UploadBucketFile(buffer *bytes.Buffer, object string) error {

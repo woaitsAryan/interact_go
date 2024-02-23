@@ -178,6 +178,45 @@ func UpdateMe(c *fiber.Ctx) error {
 	})
 }
 
+func SetupPassword(c *fiber.Ctx) error {
+	var reqBody struct {
+		Password        string `json:"password"`
+		ConfirmPassword string `json:"confirmPassword"`
+	}
+
+	if err := c.BodyParser(&reqBody); err != nil {
+		return &fiber.Error{Code: 400, Message: "Validation Failed"}
+	}
+
+	if reqBody.Password != reqBody.ConfirmPassword {
+		return &fiber.Error{Code: 400, Message: "Passwords do not match."}
+	}
+
+	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	var user models.User
+	initializers.DB.First(&user, "id = ?", loggedInUserID)
+
+	if user.Password != "" {
+		return &fiber.Error{Code: 400, Message: "Password is already set up."}
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(reqBody.Password), 10)
+
+	if err != nil {
+		return helpers.AppError{Code: 500, Message: config.SERVER_ERROR, Err: err}
+	}
+
+	user.Password = string(hash)
+	user.PasswordChangedAt = time.Now()
+
+	if err := initializers.DB.Save(&user).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	return auth_controllers.CreateSendToken(c, user, 200, "Password updated successfully")
+}
+
 func UpdatePassword(c *fiber.Ctx) error {
 	var reqBody struct {
 		Password        string `json:"password"`

@@ -87,7 +87,6 @@ func AddEvent(c *fiber.Ctx) error {
 	event := models.Event{
 		Title:          reqBody.Title,
 		Tagline:        reqBody.Tagline,
-		CoverPic:       picName,
 		Description:    reqBody.Description,
 		Tags:           reqBody.Tags,
 		Category:       reqBody.Category,
@@ -96,6 +95,10 @@ func AddEvent(c *fiber.Ctx) error {
 		StartTime:      startTime,
 		EndTime:        endTime,
 		Location:       reqBody.Location,
+	}
+
+	if picName != "" {
+		event.CoverPic = picName
 	}
 
 	result := initializers.DB.Create(&event)

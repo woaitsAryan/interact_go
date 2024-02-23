@@ -40,7 +40,7 @@ func main() {
 	// app.Use(config.RATE_LIMITER())
 	// app.Use(config.API_CHECKER)
 
-	// if initializers.CONFIG.ENV == initializers.DevelopmentEnv {
+	// if initializers.CONFIG.ENV == initializers.DevelopmentENV {
 	// 	app.Use(logger.New())
 	// }
 

@@ -52,14 +52,20 @@ func CreateSendToken(c *fiber.Ctx, user models.User, statusCode int, message str
 		Secure:   true,
 	})
 
+	isPasswordSetupComplete := false
+	if user.Password != "" {
+		isPasswordSetupComplete = true
+	}
+
 	return c.Status(statusCode).JSON(fiber.Map{
-		"status":  "success",
-		"message": message,
-		"token":   access_token,
-		"user":    user,
-		"email":   user.Email,
-		"phoneNo": user.PhoneNo,
-		"resume":  user.Resume,
+		"status":                  "success",
+		"message":                 message,
+		"token":                   access_token,
+		"user":                    user,
+		"email":                   user.Email,
+		"phoneNo":                 user.PhoneNo,
+		"resume":                  user.Resume,
+		"isPasswordSetupComplete": isPasswordSetupComplete,
 	})
 }
 

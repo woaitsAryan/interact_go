@@ -11,8 +11,8 @@ import (
 type Environment string
 
 const (
-	DevelopmentEnv Environment = "development"
-	ProductionEnv  Environment = "production"
+	DevelopmentENV Environment = "development"
+	ProductionENV  Environment = "production"
 )
 
 type Config struct {
@@ -67,7 +67,7 @@ func LoadEnv() {
 		log.Fatal(err)
 	}
 
-	if CONFIG.ENV != DevelopmentEnv && CONFIG.ENV != ProductionEnv {
+	if CONFIG.ENV != DevelopmentENV && CONFIG.ENV != ProductionENV {
 		err := fmt.Errorf("invalid ENV value: %s", CONFIG.ENV)
 		log.Fatal(err)
 	}

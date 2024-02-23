@@ -28,7 +28,8 @@ func UserRouter(app *fiber.App) {
 	userRoutes.Get("/views", user_controllers.GetViews)
 
 	userRoutes.Patch("/update_password", user_controllers.UpdatePassword)
-	userRoutes.Patch("/update_email", user_controllers.UpdateEmail)
+	userRoutes.Patch("/setup_password", user_controllers.SetupPassword)
+	// userRoutes.Patch("/update_email", user_controllers.UpdateEmail)
 	userRoutes.Patch("/update_phone_number", user_controllers.UpdatePhoneNo)
 	userRoutes.Patch("/update_resume", user_controllers.UpdateResume)
 
