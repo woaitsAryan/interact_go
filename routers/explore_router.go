@@ -55,6 +55,8 @@ func ExploreRouter(app *fiber.App) {
 	exploreRoutes.Get("/users/:username", user_controllers.GetUser)
 	exploreRoutes.Get("/projects/:slug", project_controllers.GetProject)
 
+	exploreRoutes.Get("/announcements/:announcementID", middlewares.Protect, organization_controllers.GetAnnouncement)
+
 	exploreRoutes.Get("/colleges", explore_controllers.GetColleges)
 	exploreRoutes.Post("/colleges", explore_controllers.AddCollege)
 }

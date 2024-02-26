@@ -13,6 +13,51 @@ import (
 	"gorm.io/gorm"
 )
 
+func GetAnnouncement(c *fiber.Ctx) error {
+	parsedUserID, _ := uuid.Parse(c.GetRespHeader("loggedInUserID"))
+
+	parsedAnnouncementID, err := uuid.Parse(c.Params("announcementID"))
+	if err != nil {
+		return &fiber.Error{Code: 400, Message: "Invalid Announcement ID."}
+	}
+
+	var announcement models.Announcement
+	if err := initializers.DB.Preload("TaggedUsers").Where("id=?", parsedAnnouncementID).First(&announcement).Error; err != nil {
+		if err != gorm.ErrRecordNotFound {
+			return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Announcement does not exist."}
+		}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	var organization models.Organization
+	if err := initializers.DB.Preload("User").Preload("Memberships").First(&organization, "id = ?", announcement.OrganizationID).Error; err != nil {
+		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid organization ID."}
+	}
+	isMember := false
+
+	if organization.UserID == parsedUserID {
+		isMember = true
+	} else {
+		for _, membership := range organization.Memberships {
+			if membership.UserID == parsedUserID {
+				isMember = true
+				break
+			}
+		}
+	}
+
+	if !announcement.IsOpen && !isMember {
+		return &fiber.Error{Code: 401, Message: "Cannot access this Announcement."}
+	}
+
+	announcement.Organization = organization
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":       "success",
+		"announcement": announcement,
+	})
+}
+
 func GetOrgAnnouncements(c *fiber.Ctx) error {
 	parsedOrgID, err := uuid.Parse(c.Params("orgID"))
 	if err != nil {
@@ -141,7 +186,7 @@ func EditAnnouncement(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	go routines.MarkOrganizationHistory(parsedOrgID, parsedLoggedInUserID, 23, nil, nil, nil, nil, nil, nil, &announcement.ID,nil, "")
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedLoggedInUserID, 23, nil, nil, nil, nil, nil, nil, &announcement.ID, nil, "")
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":       "success",
