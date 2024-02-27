@@ -81,6 +81,7 @@ history type:
 *26 - User edited an opening
 *27 - User accepted an invitation
 *28 - User rejected application
+*29 - User withdraw an invitation for event cohost //TODO have to implement
 */
 
 type OrganizationHistory struct {

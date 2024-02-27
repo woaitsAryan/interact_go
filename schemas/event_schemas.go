@@ -28,11 +28,7 @@ type EventUpdateSchema struct {
 	EndTime     string         `json:"endTime"`
 }
 
-type AddCoHostEventSchema struct {
-	//TODO add req schema validators everywhere
-	OrganizationIDs pq.StringArray `json:"organizationIDs" validate:"required"`
-}
-
 type CoHostEventSchema struct {
-	OrganizationID string `json:"organizationID" validate:"required"`
+	//TODO add req schema validators everywhere
+	UserIDs pq.StringArray `json:"userIDs" validate:"required"`
 }

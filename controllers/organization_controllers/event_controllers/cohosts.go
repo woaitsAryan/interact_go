@@ -7,6 +7,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/schemas"
+	"github.com/Pratham-Mishra04/interact/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -37,13 +38,13 @@ func GetEventCoHosts(c *fiber.Ctx) error {
 	return c.Status(200).JSON(fiber.Map{
 		"status":      "success",
 		"message":     "",
-		"cohosts":     event.CoOwnedBy,
+		"coHosts":     event.CoOwnedBy,
 		"invitations": invitations,
 	})
 }
 
 func AddCoHostOrgs(c *fiber.Ctx) error {
-	var reqBody schemas.AddCoHostEventSchema
+	var reqBody schemas.CoHostEventSchema
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
 	}
@@ -51,11 +52,16 @@ func AddCoHostOrgs(c *fiber.Ctx) error {
 	orgID := c.Params("orgID")
 
 	var event models.Event
-	if err := initializers.DB.Where("id = ? AND organization_id=?", eventID, orgID).First(&event).Error; err != nil {
+	if err := initializers.DB.Preload("CoOwnedBy").Where("id = ? AND organization_id=?", eventID, orgID).First(&event).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Event of this ID found."}
 		}
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	coOwnedOrgIDs := []string{}
+	for _, coHostOrg := range event.CoOwnedBy {
+		coOwnedOrgIDs = append(coOwnedOrgIDs, coHostOrg.ID.String())
 	}
 
 	tx := initializers.DB.Begin()
@@ -70,21 +76,21 @@ func AddCoHostOrgs(c *fiber.Ctx) error {
 		}
 	}()
 
-	for _, orgID := range reqBody.OrganizationIDs {
-		parsedCoOwnOrgID, err := uuid.Parse(orgID)
-		if err != nil {
-			continue
-		}
-
+	for _, userID := range reqBody.UserIDs {
 		var CoOwnOrganization models.Organization
-		if err := tx.Where("id = ?", parsedCoOwnOrgID).First(&CoOwnOrganization).Error; err != nil {
+		if err := tx.Where("user_id = ?", userID).First(&CoOwnOrganization).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
-				continue
+				return &fiber.Error{Code: 400, Message: "No co own organization of this ID found"}
 			}
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 
-		if CoOwnOrganization.ID == event.OrganizationID {
+		if CoOwnOrganization.ID == event.OrganizationID || utils.Contains(coOwnedOrgIDs, orgID) {
+			continue
+		}
+
+		var existingInvitation models.Invitation
+		if err := initializers.DB.First(&existingInvitation, "event_id=? AND user_id=? AND status=0", event.ID, CoOwnOrganization.UserID).Error; err == nil {
 			continue
 		}
 
@@ -110,7 +116,8 @@ func AddCoHostOrgs(c *fiber.Ctx) error {
 	})
 }
 
-func RemoveCoHostOrg(c *fiber.Ctx) error {
+// TODO test this
+func RemoveCoHostOrgs(c *fiber.Ctx) error {
 	var reqBody schemas.CoHostEventSchema
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
@@ -127,41 +134,40 @@ func RemoveCoHostOrg(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	parsedCoOwnOrgId, err := uuid.Parse(reqBody.OrganizationID)
-	if err != nil {
-		return &fiber.Error{Code: 400, Message: "Invalid Co own organization ID."}
-	}
+	coHostOrgs := event.CoOwnedBy
 
-	var CoOwnOrganization models.Organization
-	if err := initializers.DB.Where("id = ?", parsedCoOwnOrgId).First(&CoOwnOrganization).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return &fiber.Error{Code: 400, Message: "No co own organization of this ID found"}
+	toRemoveOrgIDs := []uuid.UUID{}
+
+	for _, userID := range reqBody.UserIDs {
+		var CoOwnOrganization models.Organization
+		if err := initializers.DB.Where("user_id = ?", userID).First(&CoOwnOrganization).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return &fiber.Error{Code: 400, Message: "No co own organization of this ID found"}
+			}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
-	}
 
-	found := false
-	for i, coOwner := range event.CoOwnedBy {
-		if coOwner.ID == CoOwnOrganization.ID {
-			event.CoOwnedBy = append(event.CoOwnedBy[:i], event.CoOwnedBy[i+1:]...)
-			found = true
-			break
+		for i, coOwner := range coHostOrgs {
+			if coOwner.ID == CoOwnOrganization.ID {
+				coHostOrgs = append(coHostOrgs[:i], coHostOrgs[i+1:]...)
+				toRemoveOrgIDs = append(toRemoveOrgIDs, coOwner.ID)
+				break
+			}
 		}
 	}
 
-	if !found {
-		return &fiber.Error{Code: 400, Message: "No co own organization of this ID found"}
-	}
-
+	event.CoOwnedBy = coHostOrgs
 	if err := initializers.DB.Save(&event).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	go routines.DecrementOrgEvent(parsedCoOwnOrgId)
+	for _, toRemoveOrgID := range toRemoveOrgIDs {
+		go routines.DecrementOrgEvent(toRemoveOrgID)
+	}
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
-		"message": "Organization removed as a cohost",
+		"message": "Organizations removed as from cohosts",
 	})
 }
 

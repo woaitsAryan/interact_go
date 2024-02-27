@@ -16,12 +16,13 @@ func EventRouter(app *fiber.App) {
 	eventRoutesOrg.Get("/", event_controllers.GetPopulatedOrgEvents)
 	eventRoutesOrg.Get("/invitations", controllers.GetInvitations)
 	eventRoutesOrg.Get("/invitations/count", controllers.GetUnreadInvitationCount)
+	eventRoutesOrg.Delete("/invitations/:invitationID", controllers.WithdrawInvitation)
 	eventRoutesOrg.Post("/", event_controllers.AddEvent)
 	eventRoutesOrg.Delete("/:eventID", event_controllers.DeleteEvent)
 
 	eventRoutesOrg.Get("/:eventID/cohost", event_controllers.GetEventCoHosts)
 	eventRoutesOrg.Post("/:eventID/cohost", event_controllers.AddCoHostOrgs)
-	eventRoutesOrg.Delete("/:eventID/cohost", event_controllers.RemoveCoHostOrg)
+	eventRoutesOrg.Delete("/:eventID/cohost", event_controllers.RemoveCoHostOrgs)
 
 	eventRoutesOrg.Patch("/:eventID", middlewares.OrgEventCoHostAuthorization, event_controllers.UpdateEvent)
 	eventRoutesOrg.Patch("/:eventID/cohost", middlewares.OrgEventCoHostAuthorization, event_controllers.LeaveCoHostOrg)
