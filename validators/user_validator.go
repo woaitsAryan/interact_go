@@ -36,8 +36,10 @@ func UserCreateValidator(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "User with this Username already exists"}
 	}
 
-	if err := EmailValidator(reqBody.Email); err != nil {
-		return err
+	if initializers.CONFIG.ENV == initializers.ProductionENV {
+		if err := EmailValidator(reqBody.Email); err != nil {
+			return err
+		}
 	}
 
 	return c.Next()

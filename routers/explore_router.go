@@ -4,6 +4,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/controllers"
 	"github.com/Pratham-Mishra04/interact/controllers/explore_controllers"
 	"github.com/Pratham-Mishra04/interact/controllers/organization_controllers"
+	"github.com/Pratham-Mishra04/interact/controllers/organization_controllers/event_controllers"
 	"github.com/Pratham-Mishra04/interact/controllers/project_controllers"
 	"github.com/Pratham-Mishra04/interact/controllers/user_controllers"
 	"github.com/Pratham-Mishra04/interact/middlewares"
@@ -31,7 +32,7 @@ func ExploreRouter(app *fiber.App) {
 	exploreRoutes.Get("/events/trending", explore_controllers.GetTrendingEvents)
 	exploreRoutes.Get("/events/recommended", explore_controllers.GetRecommendedEvents)
 	exploreRoutes.Get("/events/org/:orgID", explore_controllers.GetOrgEvents)
-	exploreRoutes.Get("/events/:eventID", organization_controllers.GetEvent)
+	exploreRoutes.Get("/events/:eventID", event_controllers.GetEvent)
 
 	exploreRoutes.Get("/projects/most_liked", explore_controllers.GetMostLikedProjects)
 	exploreRoutes.Get("/projects/recently_added", middlewares.Protect, explore_controllers.GetLatestProjects)

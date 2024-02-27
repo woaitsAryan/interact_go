@@ -2,7 +2,7 @@ package organization_routers
 
 import (
 	"github.com/Pratham-Mishra04/interact/controllers"
-	"github.com/Pratham-Mishra04/interact/controllers/organization_controllers"
+	"github.com/Pratham-Mishra04/interact/controllers/organization_controllers/event_controllers"
 	"github.com/Pratham-Mishra04/interact/middlewares"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/gofiber/fiber/v2"
@@ -13,16 +13,19 @@ func EventRouter(app *fiber.App) {
 	app.Get("/events/dislike/:eventID", middlewares.Protect, controllers.DislikeItem("event"))
 
 	eventRoutesOrg := app.Group("/org/:orgID/events", middlewares.Protect, middlewares.OrgRoleAuthorization(models.Senior))
+	eventRoutesOrg.Get("/", event_controllers.GetPopulatedOrgEvents)
 	eventRoutesOrg.Get("/invitations", controllers.GetInvitations)
-	eventRoutesOrg.Post("/", organization_controllers.AddEvent)
-	eventRoutesOrg.Delete("/:eventID", organization_controllers.DeleteEvent)
+	eventRoutesOrg.Get("/invitations/count", controllers.GetUnreadInvitationCount)
+	eventRoutesOrg.Post("/", event_controllers.AddEvent)
+	eventRoutesOrg.Delete("/:eventID", event_controllers.DeleteEvent)
 
-	eventRoutesOrg.Post("/:eventID/cohost", organization_controllers.AddCoHostOrgs)
-	eventRoutesOrg.Delete("/:eventID/cohost", organization_controllers.RemoveCoHostOrg)
+	eventRoutesOrg.Get("/:eventID/cohost", event_controllers.GetEventCoHosts)
+	eventRoutesOrg.Post("/:eventID/cohost", event_controllers.AddCoHostOrgs)
+	eventRoutesOrg.Delete("/:eventID/cohost", event_controllers.RemoveCoHostOrg)
 
-	eventRoutesOrg.Patch("/:eventID", middlewares.OrgEventCoHostAuthorization, organization_controllers.UpdateEvent)
-	eventRoutesOrg.Patch("/:eventID/cohost", middlewares.OrgEventCoHostAuthorization, organization_controllers.LeaveCoHostOrg)
+	eventRoutesOrg.Patch("/:eventID", middlewares.OrgEventCoHostAuthorization, event_controllers.UpdateEvent)
+	eventRoutesOrg.Patch("/:eventID/cohost", middlewares.OrgEventCoHostAuthorization, event_controllers.LeaveCoHostOrg)
 
-	eventRoutesOrg.Post("/coordinators/:eventID", middlewares.OrgEventCoHostAuthorization, organization_controllers.AddEventCoordinators)
-	eventRoutesOrg.Delete("/coordinators/:eventID", middlewares.OrgEventCoHostAuthorization, organization_controllers.RemoveEventCoordinators)
+	eventRoutesOrg.Post("/coordinators/:eventID", middlewares.OrgEventCoHostAuthorization, event_controllers.AddEventCoordinators)
+	eventRoutesOrg.Delete("/coordinators/:eventID", middlewares.OrgEventCoHostAuthorization, event_controllers.RemoveEventCoordinators)
 }

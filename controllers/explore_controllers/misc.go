@@ -129,6 +129,7 @@ func GetOrgEvents(c *fiber.Ctx) error {
 		Preload("Organization.User").
 		Preload("CoOwnedBy").
 		Preload("CoOwnedBy.User").
+		Preload("Coordinators").
 		Joins("LEFT JOIN co_owned_events ON co_owned_events.event_id = events.id").
 		Where("events.organization_id = ? OR co_owned_events.organization_id = ?", orgID, orgID).
 		Order("created_at DESC").

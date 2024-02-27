@@ -85,7 +85,7 @@ func AcceptInvitation(c *fiber.Ctx) error {
 		}
 
 		var organization models.Organization
-		if err := initializers.DB.First(&organization, "id=?", c.Get("orgID")).Error; err != nil {
+		if err := initializers.DB.First(&organization, "user_id=?", user.ID).Error; err != nil {
 			return &fiber.Error{Code: 400, Message: "No Organization of this ID found."}
 		}
 		event.CoOwnedBy = append(event.CoOwnedBy, organization)
@@ -152,9 +152,8 @@ func AcceptInvitation(c *fiber.Ctx) error {
 	}
 	if invitation.ProjectID != nil {
 		go routines.IncrementProjectMember(*invitation.ProjectID)
+		go routines.SendInvitationAcceptedNotification(invitation.UserID, parsedLoggedInUserID)
 	}
-
-	go routines.SendInvitationAcceptedNotification(invitation.UserID, parsedLoggedInUserID)
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",

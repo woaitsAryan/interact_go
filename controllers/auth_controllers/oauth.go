@@ -69,7 +69,11 @@ func GoogleRedirect(c *fiber.Ctx) error {
 	parameters.Add("redirect_uri", config.GoogleOAuthConfig.RedirectURL)
 	parameters.Add("response_type", "code")
 	parameters.Add("state", config.GoogleOAuthState)
-	parameters.Add("hd", config.VALID_DOMAINS[0])
+
+	if initializers.CONFIG.ENV == initializers.ProductionENV {
+		parameters.Add("hd", config.VALID_DOMAINS[0])
+	}
+
 	URL.RawQuery = parameters.Encode()
 	url := URL.String()
 	return c.Redirect(url, fiber.StatusTemporaryRedirect)
@@ -124,8 +128,10 @@ func GoogleCallback(c *fiber.Ctx) error {
 			return &helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 
-		if err := validators.EmailValidator(userInfo.Email); err != nil {
-			return err
+		if initializers.CONFIG.ENV == initializers.ProductionENV {
+			if err := validators.EmailValidator(userInfo.Email); err != nil {
+				return err
+			}
 		}
 
 		var user models.User
