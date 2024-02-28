@@ -38,4 +38,22 @@ type Event struct {
 	Invitations         []Invitation          `gorm:"foreignKey:EventID;constraint:OnDelete:CASCADE" json:"-"`
 	OrganizationHistory []OrganizationHistory `gorm:"foreignKey:EventID;constraint:OnDelete:CASCADE" json:"-"`
 	CoOwnedBy           []Organization        `gorm:"many2many:co_owned_events" json:"coHosts"`
+	History             []EventHistory        `gorm:"foreignKey:EventID;constraint:OnDelete:CASCADE" json:"-"`
+}
+
+type EventHistory struct {
+	EventID     uuid.UUID `gorm:"type:uuid;not null" json:"-"`
+	UserID      uuid.UUID `gorm:"type:uuid;not null" json:"userID"`
+	User        User      `gorm:"" json:"user"`
+	Title       bool      `son:"title"`
+	Tagline     bool      `json:"tagline"`
+	CoverPic    bool      `json:"coverPic"`
+	Description bool      `json:"description"`
+	Links       bool      `json:"links"`
+	Tags        bool      `json:"tags"`
+	StartTime   bool      `json:"startTime"`
+	EndTime     bool      `json:"endTime"`
+	Location    bool      `json:"location"`
+	Category    bool      `json:"category"`
+	CreatedAt   time.Time `gorm:"default:current_timestamp" json:"createdAt"`
 }

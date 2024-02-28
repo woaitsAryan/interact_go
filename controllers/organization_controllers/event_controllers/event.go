@@ -163,6 +163,10 @@ func UpdateEvent(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
+	report := models.EventHistory{
+		UserID: parsedUserID,
+	}
+
 	var reqBody schemas.EventUpdateSchema
 	c.BodyParser(&reqBody)
 
@@ -174,24 +178,31 @@ func UpdateEvent(c *fiber.Ctx) error {
 
 	if reqBody.Tagline != "" {
 		event.Tagline = reqBody.Tagline
+		report.Tagline = true
 	}
 	if picName != "" {
 		event.CoverPic = picName
+		report.CoverPic = true
 	}
 	if reqBody.Category != "" {
 		event.Category = reqBody.Category
+		report.Category = true
 	}
 	if reqBody.Description != "" {
 		event.Description = reqBody.Description
+		report.Description = true
 	}
 	if reqBody.Location != "" {
 		event.Location = reqBody.Location
+		report.Location = true
 	}
 	if reqBody.Tags != nil {
 		event.Tags = reqBody.Tags
+		report.Tags = true
 	}
 	if reqBody.Links != nil {
 		event.Links = reqBody.Links
+		report.Links = true
 	}
 	if reqBody.StartTime != "" {
 		startTime, err := time.Parse(time.RFC3339, reqBody.StartTime)
@@ -199,6 +210,7 @@ func UpdateEvent(c *fiber.Ctx) error {
 			return &fiber.Error{Code: 400, Message: "Invalid Start Time."}
 		}
 		event.StartTime = startTime
+		report.StartTime = true
 	}
 	if reqBody.EndTime != "" {
 		endTime, err := time.Parse(time.RFC3339, reqBody.EndTime)
@@ -207,9 +219,23 @@ func UpdateEvent(c *fiber.Ctx) error {
 		}
 
 		event.EndTime = endTime
+		report.EndTime = true
 	}
 
-	if err := initializers.DB.Save(&event).Error; err != nil {
+	tx := initializers.DB.Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	if err := tx.Save(&event).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	if err := tx.Create(&report).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	if err := tx.Commit().Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
@@ -267,6 +293,15 @@ func DeleteEvent(c *fiber.Ctx) error {
 		if err := tx.Delete(&invitation).Error; err != nil {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
+	}
+
+	var history models.EventHistory
+	if err := tx.Where("event_id = ?", eventID).First(&history).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	if err := tx.Delete(&history).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	if err := tx.Delete(&event).Error; err != nil {
