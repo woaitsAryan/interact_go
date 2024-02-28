@@ -35,6 +35,7 @@ type Event struct {
 	Notifications       []Notification        `gorm:"foreignKey:EventID;constraint:OnDelete:CASCADE" json:"-"`
 	Messages            []Message             `gorm:"foreignKey:EventID;constraint:OnDelete:CASCADE" json:"-"`
 	GroupChatMessages   []GroupChatMessage    `gorm:"foreignKey:EventID;constraint:OnDelete:CASCADE" json:"-"`
+	Invitations         []Invitation          `gorm:"foreignKey:EventID;constraint:OnDelete:CASCADE" json:"-"`
 	OrganizationHistory []OrganizationHistory `gorm:"foreignKey:EventID;constraint:OnDelete:CASCADE" json:"-"`
 	CoOwnedBy           []Organization        `gorm:"many2many:co_owned_events" json:"coHosts"`
 }

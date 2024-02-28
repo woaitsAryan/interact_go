@@ -116,7 +116,6 @@ func AddCoHostOrgs(c *fiber.Ctx) error {
 	})
 }
 
-// TODO test this
 func RemoveCoHostOrgs(c *fiber.Ctx) error {
 	var reqBody schemas.CoHostEventSchema
 	if err := c.BodyParser(&reqBody); err != nil {
@@ -134,9 +133,19 @@ func RemoveCoHostOrgs(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	coHostOrgs := event.CoOwnedBy
-
 	toRemoveOrgIDs := []uuid.UUID{}
+
+	tx := initializers.DB.Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	defer func() {
+		if tx.Error != nil {
+			tx.Rollback()
+			go helpers.LogDatabaseError("Transaction rolled back due to error", tx.Error, "AddCoHostOrg")
+		}
+	}()
 
 	for _, userID := range reqBody.UserIDs {
 		var CoOwnOrganization models.Organization
@@ -147,17 +156,14 @@ func RemoveCoHostOrgs(c *fiber.Ctx) error {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 
-		for i, coOwner := range coHostOrgs {
-			if coOwner.ID == CoOwnOrganization.ID {
-				coHostOrgs = append(coHostOrgs[:i], coHostOrgs[i+1:]...)
-				toRemoveOrgIDs = append(toRemoveOrgIDs, coOwner.ID)
-				break
-			}
+		toRemoveOrgIDs = append(toRemoveOrgIDs, CoOwnOrganization.ID)
+
+		if err := tx.Model(&event).Association("CoOwnedBy").Delete(&CoOwnOrganization); err != nil {
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 	}
 
-	event.CoOwnedBy = coHostOrgs
-	if err := initializers.DB.Save(&event).Error; err != nil {
+	if err := tx.Commit().Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 

@@ -184,7 +184,7 @@ func AddTask(taskType string) func(c *fiber.Ctx) error {
 			// 	go routines.SendTaskNotification(user.ID, parsedID, project.ID)
 			// }
 
-			go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 12, nil, nil, nil, &task.ID, nil, nil, nil,  nil, "")
+			go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 12, nil, nil, nil, &task.ID, nil, nil, nil, nil, "")
 
 			return c.Status(201).JSON(fiber.Map{
 				"status":  "success",
@@ -399,22 +399,32 @@ func DeleteTask(taskType string) func(c *fiber.Ctx) error {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 			}
 
+			tx := initializers.DB.Begin()
+			if tx.Error != nil {
+				return tx.Error
+			}
+
 			// Delete all users from the task_assigned_users table
-			if err := initializers.DB.Model(&task).Association("Users").Clear(); err != nil {
+			if err := tx.Model(&task).Association("Users").Clear(); err != nil {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 			}
 
 			for _, subTask := range task.SubTasks {
 				// Delete all users from the subtask_assigned_users table
-				if err := initializers.DB.Model(&subTask).Association("Users").Clear(); err != nil {
+				if err := tx.Model(&subTask).Association("Users").Clear(); err != nil {
 					return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 				}
 			}
 
-			result := initializers.DB.Delete(&task)
+			result := tx.Delete(&task)
 			if result.Error != nil {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
+
+			if err := tx.Commit().Error; err != nil {
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+			}
+
 			orgMemberID := c.GetRespHeader("orgMemberID")
 			orgID := c.Params("orgID")
 			if orgMemberID != "" && orgID != "" {
@@ -440,14 +450,23 @@ func DeleteTask(taskType string) func(c *fiber.Ctx) error {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 			}
 
+			tx := initializers.DB.Begin()
+			if tx.Error != nil {
+				return tx.Error
+			}
+
 			// Delete all users from the subtask_assigned_users table
-			if err := initializers.DB.Model(&task).Association("Users").Clear(); err != nil {
+			if err := tx.Model(&task).Association("Users").Clear(); err != nil {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 			}
 
-			result := initializers.DB.Delete(&task)
+			result := tx.Delete(&task)
 			if result.Error != nil {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
+			}
+
+			if err := tx.Commit().Error; err != nil {
+				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 			}
 		}
 

@@ -239,8 +239,13 @@ func DeleteEvent(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
 	}
 
+	tx := initializers.DB.Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+
 	var event models.Event
-	if err := initializers.DB.Where("id = ?", eventID).First(&event).Error; err != nil {
+	if err := initializers.DB.Preload("CoOwnedBy").Preload("Invitations").Where("id = ? AND organization_id=?", eventID, parsedOrgID).First(&event).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Event of this ID found."}
 		}
@@ -248,15 +253,38 @@ func DeleteEvent(c *fiber.Ctx) error {
 	}
 
 	eventPic := event.CoverPic
+	coHosts := event.CoOwnedBy
 
-	if err := initializers.DB.Delete(&event).Error; err != nil {
+	if err := tx.Model(&event).Association("CoOwnedBy").Clear(); err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	if err := tx.Model(&event).Association("Coordinators").Clear(); err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	for _, invitation := range event.Invitations {
+		if err := tx.Delete(&invitation).Error; err != nil {
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+		}
+	}
+
+	if err := tx.Delete(&event).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	if err := tx.Commit().Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	go routines.DeleteFromBucket(helpers.EventClient, eventPic)
 	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 1, nil, nil, nil, nil, nil, nil, nil, nil, event.Title)
-	go routines.DecrementOrgEvent(parsedOrgID)
 	go cache.RemoveEvent(event.ID.String())
+
+	go routines.DecrementOrgEvent(parsedOrgID)
+	for _, org := range coHosts {
+		go routines.DecrementOrgEvent(org.ID)
+	}
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",
