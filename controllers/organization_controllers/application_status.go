@@ -12,6 +12,7 @@ import (
 )
 
 func AcceptApplication(c *fiber.Ctx) error {
+	//TODO add org history
 	applicationID := c.Params("applicationID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	// orgMemberID := c.GetRespHeader("orgMemberID")
@@ -36,6 +37,11 @@ func AcceptApplication(c *fiber.Ctx) error {
 
 	if application.Status == -1 {
 		return &fiber.Error{Code: 400, Message: "Application is already Rejected."}
+	}
+
+	var existingMembership models.OrganizationMembership
+	if err := initializers.DB.Where("user_id = ? AND organization_id = ?", application.UserID, application.Opening.OrganizationID).First(&existingMembership).Error; err == nil {
+		return &fiber.Error{Code: 400, Message: "User is already a member of this organization."}
 	}
 
 	tx := initializers.DB.Begin()

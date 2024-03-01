@@ -322,11 +322,10 @@ func ProcessLeaveProject(membership *models.Membership) error {
 	}
 
 	// Step 5: Find all subtasks assigned to the user in the given project
-	//! not working fix this
 	var subtasks []models.SubTask
 	if err := tx.
 		Joins("JOIN tasks ON sub_tasks.task_id = tasks.id").
-		Joins("JOIN sub_task_assigned_users ON tasks.id = sub_task_assigned_users.task_id").
+		Joins("JOIN sub_task_assigned_users ON tasks.id = sub_task_assigned_users.sub_task_id").
 		Where("tasks.project_id = ? AND sub_task_assigned_users.user_id = ?", membership.ProjectID, membership.UserID).
 		Find(&subtasks).Error; err != nil {
 		return err

@@ -153,7 +153,7 @@ func AcceptInvitation(c *fiber.Ctx) error {
 	}
 	if invitation.ProjectID != nil {
 		go routines.IncrementProjectMember(*invitation.ProjectID)
-		go routines.SendInvitationAcceptedNotification(invitation.UserID, parsedLoggedInUserID)
+		go routines.SendProjectInvitationAcceptedNotification(invitation.UserID, parsedLoggedInUserID, *invitation.ProjectID)
 	}
 
 	return c.Status(200).JSON(fiber.Map{

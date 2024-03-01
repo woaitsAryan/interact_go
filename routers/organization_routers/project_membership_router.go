@@ -1,7 +1,6 @@
 package organization_routers
 
 import (
-	"github.com/Pratham-Mishra04/interact/controllers"
 	"github.com/Pratham-Mishra04/interact/controllers/organization_controllers"
 	"github.com/Pratham-Mishra04/interact/controllers/project_controllers"
 	"github.com/Pratham-Mishra04/interact/middlewares"
@@ -15,6 +14,6 @@ func ProjectMembershipRouter(app *fiber.App) {
 	membershipRoutes.Post("/:projectID", project_controllers.AddMember)
 	membershipRoutes.Patch("/:membershipID", project_controllers.ChangeMemberRole)
 	//TODO implement this
-	membershipRoutes.Delete("/invitation/:invitationID", controllers.WithdrawInvitation)
+	// membershipRoutes.Delete("/invitation/:invitationID", controllers.WithdrawInvitation)
 	membershipRoutes.Delete("/:membershipID", project_controllers.RemoveMember)
 }
