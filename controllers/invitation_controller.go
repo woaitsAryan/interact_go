@@ -147,6 +147,7 @@ func AcceptInvitation(c *fiber.Ctx) error {
 	if result.Error != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
+
 	if invitation.OrganizationID != nil {
 		go routines.IncrementOrgMember(*invitation.OrganizationID)
 	}
@@ -179,9 +180,8 @@ func RejectInvitation(c *fiber.Ctx) error {
 	invitation.Status = -1
 
 	result := initializers.DB.Save(&invitation)
-
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	return c.Status(200).JSON(fiber.Map{
@@ -191,7 +191,8 @@ func RejectInvitation(c *fiber.Ctx) error {
 }
 
 func WithdrawInvitation(c *fiber.Ctx) error {
-	//TODO add user_id to invitation fetching
+	//TODO make org managers be able to withdraw project invitations
+	//TODO project history
 	invitationID := c.Params("invitationID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
@@ -216,9 +217,8 @@ func WithdrawInvitation(c *fiber.Ctx) error {
 	}
 
 	result := initializers.DB.Delete(&invitation)
-
 	if result.Error != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
 	orgMemberID := c.GetRespHeader("orgMemberID")

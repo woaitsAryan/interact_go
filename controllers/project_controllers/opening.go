@@ -113,6 +113,9 @@ func AddOpening(c *fiber.Ctx) error {
 	}
 
 	projectMemberID := c.GetRespHeader("projectMemberID")
+	if projectMemberID == "" {
+		projectMemberID = c.GetRespHeader("orgMemberID")
+	}
 	parsedID, _ := uuid.Parse(projectMemberID)
 	go routines.MarkProjectHistory(project.ID, parsedID, 3, nil, &newOpening.ID, nil, nil, nil, "")
 
@@ -187,6 +190,9 @@ func EditOpening(c *fiber.Ctx) error {
 	}
 
 	projectMemberID := c.GetRespHeader("projectMemberID")
+	if projectMemberID == "" {
+		projectMemberID = c.GetRespHeader("orgMemberID")
+	}
 	parsedID, _ := uuid.Parse(projectMemberID)
 	go routines.MarkProjectHistory(*opening.ProjectID, parsedID, 4, nil, &opening.ID, nil, nil, nil, "")
 
@@ -231,6 +237,9 @@ func DeleteOpening(c *fiber.Ctx) error {
 	}
 
 	projectMemberID := c.GetRespHeader("projectMemberID")
+	if projectMemberID == "" {
+		projectMemberID = c.GetRespHeader("orgMemberID")
+	}
 	parsedID, _ := uuid.Parse(projectMemberID)
 	go routines.MarkProjectHistory(*projectID, parsedID, 5, nil, nil, nil, nil, nil, opening.Title)
 

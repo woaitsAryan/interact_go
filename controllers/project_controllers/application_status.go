@@ -59,6 +59,9 @@ func AcceptApplication(c *fiber.Ctx) error {
 	go routines.ProjectMembershipSendNotification(&application)
 
 	projectMemberID := c.GetRespHeader("projectMemberID")
+	if projectMemberID == "" {
+		projectMemberID = c.GetRespHeader("orgMemberID")
+	}
 	parsedID, _ := uuid.Parse(projectMemberID)
 	go routines.MarkProjectHistory(*application.ProjectID, parsedID, 6, &application.UserID, nil, &application.ID, nil, nil, "")
 
@@ -113,6 +116,9 @@ func RejectApplication(c *fiber.Ctx) error {
 	}
 
 	projectMemberID := c.GetRespHeader("projectMemberID")
+	if projectMemberID == "" {
+		projectMemberID = c.GetRespHeader("orgMemberID")
+	}
 	parsedID, _ := uuid.Parse(projectMemberID)
 	go routines.MarkProjectHistory(*application.ProjectID, parsedID, 7, &application.UserID, nil, &application.ID, nil, nil, application.Content)
 

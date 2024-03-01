@@ -17,22 +17,28 @@ func GetNonMembers(c *fiber.Ctx) error {
 	projectID := c.Params("projectID")
 
 	var project models.Project
-	if err := initializers.DB.Where("id = ?", projectID).Preload("Memberships").First(&project).Error; err != nil {
+	if err := initializers.DB.Preload("Memberships").Preload("Invitations").Where("id = ?", projectID).First(&project).Error; err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Project ID"}
 	}
 
-	var membershipUserIDs []string
+	var userIDs []string
 
 	for _, membership := range project.Memberships {
-		membershipUserIDs = append(membershipUserIDs, membership.UserID.String())
+		userIDs = append(userIDs, membership.UserID.String())
 	}
 
-	membershipUserIDs = append(membershipUserIDs, project.UserID.String())
+	for _, invitation := range project.Invitations {
+		if invitation.Status == 0 {
+			userIDs = append(userIDs, invitation.UserID.String())
+		}
+	}
+
+	userIDs = append(userIDs, project.UserID.String())
 
 	searchedDB := API.Search(c, 0)(initializers.DB)
 
 	var users []models.User
-	if err := searchedDB.Where("id NOT IN (?)", membershipUserIDs).Limit(10).Find(&users).Error; err != nil {
+	if err := searchedDB.Where("id NOT IN (?)", userIDs).Limit(10).Find(&users).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
@@ -42,7 +48,7 @@ func GetNonMembers(c *fiber.Ctx) error {
 	})
 }
 
-func AddMember(c *fiber.Ctx) error {
+func AddMember(c *fiber.Ctx) error { //TODO keep a check on self invites
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	projectID := c.Params("projectID")
 
@@ -95,12 +101,14 @@ func AddMember(c *fiber.Ctx) error {
 			invitation.Title = reqBody.Title
 
 			result := initializers.DB.Create(&invitation)
-
 			if result.Error != nil {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 
 			projectMemberID := c.GetRespHeader("projectMemberID")
+			if projectMemberID == "" {
+				projectMemberID = c.GetRespHeader("orgMemberID")
+			}
 			parsedID, _ := uuid.Parse(projectMemberID)
 			go routines.MarkProjectHistory(project.ID, parsedID, 0, &invitation.UserID, nil, nil, &invitation.ID, nil, "")
 
@@ -121,7 +129,7 @@ func AddMember(c *fiber.Ctx) error {
 	}
 }
 
-func RemoveMember(c *fiber.Ctx) error { //TODO add manager cannot remove manager
+func RemoveMember(c *fiber.Ctx) error { //TODO add manager cannot remove manager (also consider removals via org managers)
 	membershipID := c.Params("membershipID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
@@ -153,6 +161,9 @@ func RemoveMember(c *fiber.Ctx) error { //TODO add manager cannot remove manager
 	projectSlug := membership.Project.Slug
 
 	projectMemberID := c.GetRespHeader("projectMemberID")
+	if projectMemberID == "" {
+		projectMemberID = c.GetRespHeader("orgMemberID")
+	}
 	parsedID, _ := uuid.Parse(projectMemberID)
 
 	go routines.MarkProjectHistory(parsedProjectID, parsedID, 11, &parsedUserID, nil, nil, nil, nil, membership.Title)
@@ -201,6 +212,7 @@ func LeaveProject(c *fiber.Ctx) error {
 }
 
 func ChangeMemberRole(c *fiber.Ctx) error {
+	//TODO add project history
 	membershipID := c.Params("membershipID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
@@ -310,6 +322,7 @@ func ProcessLeaveProject(membership *models.Membership) error {
 	}
 
 	// Step 5: Find all subtasks assigned to the user in the given project
+	//! not working fix this
 	var subtasks []models.SubTask
 	if err := tx.
 		Joins("JOIN tasks ON sub_tasks.task_id = tasks.id").

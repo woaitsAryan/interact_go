@@ -52,6 +52,24 @@ func GetEvent(c *fiber.Ctx) error {
 	})
 }
 
+func GetEventHistory(c *fiber.Ctx) error {
+	eventID := c.Params("eventID")
+
+	var history []models.EventHistory
+	if err := initializers.DB.
+		Preload("User").
+		Where("event_id = ?", eventID).
+		First(&history).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "",
+		"history": history,
+	})
+}
+
 func GetPopulatedOrgEvents(c *fiber.Ctx) error {
 	orgID := c.Params("orgID")
 
@@ -163,8 +181,9 @@ func UpdateEvent(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	report := models.EventHistory{
-		UserID: parsedUserID,
+	history := models.EventHistory{
+		EventID: event.ID,
+		UserID:  parsedUserID,
 	}
 
 	var reqBody schemas.EventUpdateSchema
@@ -178,31 +197,31 @@ func UpdateEvent(c *fiber.Ctx) error {
 
 	if reqBody.Tagline != "" {
 		event.Tagline = reqBody.Tagline
-		report.Tagline = true
+		history.Tagline = true
 	}
 	if picName != "" {
 		event.CoverPic = picName
-		report.CoverPic = true
+		history.CoverPic = true
 	}
 	if reqBody.Category != "" {
 		event.Category = reqBody.Category
-		report.Category = true
+		history.Category = true
 	}
 	if reqBody.Description != "" {
 		event.Description = reqBody.Description
-		report.Description = true
+		history.Description = true
 	}
 	if reqBody.Location != "" {
 		event.Location = reqBody.Location
-		report.Location = true
+		history.Location = true
 	}
 	if reqBody.Tags != nil {
 		event.Tags = reqBody.Tags
-		report.Tags = true
+		history.Tags = true
 	}
 	if reqBody.Links != nil {
 		event.Links = reqBody.Links
-		report.Links = true
+		history.Links = true
 	}
 	if reqBody.StartTime != "" {
 		startTime, err := time.Parse(time.RFC3339, reqBody.StartTime)
@@ -210,7 +229,7 @@ func UpdateEvent(c *fiber.Ctx) error {
 			return &fiber.Error{Code: 400, Message: "Invalid Start Time."}
 		}
 		event.StartTime = startTime
-		report.StartTime = true
+		history.StartTime = true
 	}
 	if reqBody.EndTime != "" {
 		endTime, err := time.Parse(time.RFC3339, reqBody.EndTime)
@@ -219,7 +238,7 @@ func UpdateEvent(c *fiber.Ctx) error {
 		}
 
 		event.EndTime = endTime
-		report.EndTime = true
+		history.EndTime = true
 	}
 
 	tx := initializers.DB.Begin()
@@ -231,7 +250,7 @@ func UpdateEvent(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	if err := tx.Create(&report).Error; err != nil {
+	if err := tx.Create(&history).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
