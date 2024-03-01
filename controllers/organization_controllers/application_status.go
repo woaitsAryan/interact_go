@@ -12,11 +12,10 @@ import (
 )
 
 func AcceptApplication(c *fiber.Ctx) error {
-	//TODO add org history
 	applicationID := c.Params("applicationID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
-	// orgMemberID := c.GetRespHeader("orgMemberID")
-	// parsedOrgMemberID, _ := uuid.Parse(orgMemberID)
+	orgMemberID := c.GetRespHeader("orgMemberID")
+	parsedOrgMemberID, _ := uuid.Parse(orgMemberID)
 
 	parsedApplicationID, err := uuid.Parse(applicationID)
 	if err != nil {
@@ -86,7 +85,7 @@ func AcceptApplication(c *fiber.Ctx) error {
 
 	go routines.OrgMembershipSendNotification(&application)
 
-	// go routines.MarkOrganizationHistory(*application.OrganizationID, parsedOrgMemberID, 27, &application.UserID, nil, nil, nil, nil, nil, nil, &application.OpeningID, "")
+	go routines.MarkOrganizationHistory(*application.OrganizationID, parsedOrgMemberID, 27, nil, nil, nil, nil, nil, nil, nil, &application.OpeningID, &application.ID, "")
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
@@ -140,7 +139,7 @@ func RejectApplication(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	go routines.MarkOrganizationHistory(*application.OrganizationID, parsedOrgMemberID, 28, nil, nil, nil, nil, nil, nil, nil, nil, application.Opening.Title)
+	go routines.MarkOrganizationHistory(*application.OrganizationID, parsedOrgMemberID, 28, nil, nil, nil, nil, nil, nil, nil, nil, &application.ID, "")
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",

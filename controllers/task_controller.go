@@ -184,7 +184,7 @@ func AddTask(taskType string) func(c *fiber.Ctx) error {
 			// 	go routines.SendTaskNotification(user.ID, parsedID, project.ID)
 			// }
 
-			go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 12, nil, nil, nil, &task.ID, nil, nil, nil, nil, "")
+			go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 12, nil, nil, nil, &task.ID, nil, nil, nil, nil, nil, "")
 
 			return c.Status(201).JSON(fiber.Map{
 				"status":  "success",
@@ -437,7 +437,7 @@ func DeleteTask(taskType string) func(c *fiber.Ctx) error {
 				if err != nil {
 					return &fiber.Error{Code: 400, Message: "Invalid User ID."}
 				}
-				go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 13, nil, nil, nil, nil, nil, nil, nil, nil, task.Title)
+				go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 13, nil, nil, nil, nil, nil, nil, nil, nil, nil, task.Title)
 			}
 
 		case "subtask":

@@ -117,7 +117,7 @@ func CreatePoll(c *fiber.Ctx) error {
 		return helpers.AppError{Code: fiber.StatusInternalServerError, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	go routines.MarkOrganizationHistory(orgID, parsedUserID, 18, nil, nil, nil, nil, nil, &poll.ID, nil, nil, "")
+	go routines.MarkOrganizationHistory(orgID, parsedUserID, 18, nil, nil, nil, nil, nil, &poll.ID, nil, nil, nil, "")
 
 	if err := initializers.DB.Preload("Options").First(&poll).Error; err != nil {
 		return helpers.AppError{Code: fiber.StatusInternalServerError, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
@@ -323,7 +323,7 @@ func EditPoll(c *fiber.Ctx) error {
 	}
 	orgID := poll.OrganizationID
 
-	go routines.MarkOrganizationHistory(orgID, parsedUserID, 20, nil, nil, nil, nil, nil, &poll.ID, nil, nil, "")
+	go routines.MarkOrganizationHistory(orgID, parsedUserID, 20, nil, nil, nil, nil, nil, &poll.ID, nil, nil, nil, "")
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status":  "success",
@@ -383,7 +383,7 @@ func DeletePoll(c *fiber.Ctx) error {
 
 	parsedUserID, _ := uuid.Parse(c.GetRespHeader("orgMemberID"))
 
-	go routines.MarkOrganizationHistory(orgID, parsedUserID, 19, nil, nil, nil, nil, nil, nil, nil, nil, poll.Content)
+	go routines.MarkOrganizationHistory(orgID, parsedUserID, 19, nil, nil, nil, nil, nil, nil, nil, nil, nil, poll.Content)
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",

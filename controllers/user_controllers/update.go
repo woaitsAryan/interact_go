@@ -158,7 +158,7 @@ func UpdateMe(c *fiber.Ctx) error {
 		if err != nil {
 			return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
 		}
-		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 14, nil, nil, nil, nil, nil, nil, nil, nil, "")
+		go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 14, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
 	}
 
 	if c.Query("action", "") == "onboarding" && !user.OnboardingCompleted {

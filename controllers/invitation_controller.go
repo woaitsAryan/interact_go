@@ -235,9 +235,9 @@ func WithdrawInvitation(c *fiber.Ctx) error {
 		}
 
 		if c.Query("action", "") == "event_cohost" {
-			go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 29, nil, nil, nil, nil, nil, nil, nil, nil, invitation.Title)
+			go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 29, nil, nil, invitation.EventID, nil, &invitation.ID, nil, nil, nil, nil, invitation.Title)
 		} else {
-			go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 4, nil, nil, nil, nil, nil, nil, nil, nil, invitation.Title)
+			go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 4, nil, nil, nil, nil, nil, nil, nil, nil, nil, invitation.Title)
 		}
 	}
 

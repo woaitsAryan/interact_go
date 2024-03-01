@@ -69,7 +69,7 @@ func AddEventCoordinators(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 16, nil, nil, &event.ID, nil, nil, nil, nil, nil, "")
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 16, nil, nil, &event.ID, nil, nil, nil, nil, nil, nil, "")
 	go cache.RemoveEvent(event.ID.String())
 
 	return c.Status(200).JSON(fiber.Map{
@@ -95,7 +95,7 @@ func RemoveEventCoordinators(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 17, nil, nil, &event.ID, nil, nil, nil, nil, nil, "")
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 17, nil, nil, &event.ID, nil, nil, nil, nil, nil, nil, "")
 	go cache.RemoveEvent(event.ID.String())
 
 	return c.Status(204).JSON(fiber.Map{

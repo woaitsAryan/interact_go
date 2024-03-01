@@ -79,9 +79,9 @@ history type:
 *24 - User added an opening
 *25 - User deleted an opening
 *26 - User edited an opening
-*27 - User accepted an invitation
+*27 - User accepted an application
 *28 - User rejected application
-*29 - User withdraw an invitation for event cohost //TODO have to implement
+*29 - User withdraw an invitation for event cohost
 */
 
 type OrganizationHistory struct {
@@ -104,6 +104,8 @@ type OrganizationHistory struct {
 	Announcement   Announcement `json:"announcement"`
 	OpeningID      *uuid.UUID   `gorm:"type:uuid" json:"openingID"`
 	Opening        Opening      `json:"opening"`
+	ApplicationID  *uuid.UUID   `gorm:"type:uuid" json:"applicationID"`
+	Application    Application  `json:"application"`
 	PollID         *uuid.UUID   `gorm:"type:uuid" json:"pollID"`
 	Poll           Poll         `json:"poll"`
 	DeletedText    string       `gorm:"type:text" json:"deletedText"`
