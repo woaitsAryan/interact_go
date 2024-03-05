@@ -34,7 +34,13 @@ func GetPost(c *fiber.Ctx) error {
 	}
 
 	var post models.Post
-	if err := initializers.DB.Preload("RePost").Preload("User").First(&post, "id = ?", parsedPostID).Error; err != nil {
+	if err := initializers.DB.
+		Preload("RePost").
+		Preload("RePost.User").
+		Preload("RePost.TaggedUsers").
+		Preload("User").
+		Preload("TaggedUsers").
+		First(&post, "id = ?", parsedPostID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Post of this ID found."}
 		}

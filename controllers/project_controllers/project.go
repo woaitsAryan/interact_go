@@ -137,6 +137,10 @@ func GetProjectHistory(c *fiber.Ctx) error {
 	if err := paginatedDB.
 		Preload("Sender").
 		Preload("User").
+		Preload("Opening").
+		Preload("Application").
+		Preload("Invitation").
+		Preload("Task").
 		Where("project_id=?", projectID).
 		Order("created_at DESC").
 		Find(&history).Error; err != nil {
