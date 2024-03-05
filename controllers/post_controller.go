@@ -123,13 +123,13 @@ func AddPost(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
 	}
 
-	parsedID, err := uuid.Parse(c.GetRespHeader("loggedInUserID"))
+	parsedLoggedInUserID, err := uuid.Parse(c.GetRespHeader("loggedInUserID"))
 	if err != nil {
 		return &fiber.Error{Code: 500, Message: "Error Parsing the Loggedin User ID."}
 	}
 
 	var user models.User
-	if err := initializers.DB.Where("id=?", parsedID).First(&user).Error; err != nil {
+	if err := initializers.DB.Where("id=?", parsedLoggedInUserID).First(&user).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 	if !user.Verified {
@@ -147,7 +147,7 @@ func AddPost(c *fiber.Ctx) error {
 	}
 
 	newPost := models.Post{
-		UserID:  parsedID,
+		UserID:  parsedLoggedInUserID,
 		Content: reqBody.Content,
 		Images:  images,
 		Tags:    reqBody.Tags,
@@ -162,9 +162,9 @@ func AddPost(c *fiber.Ctx) error {
 		newPost.IsRePost = true
 	}
 
-	if reqBody.TaggedUsernames != nil {
-		var taggedUsers []models.User
+	var taggedUsers []models.User
 
+	if reqBody.TaggedUsernames != nil {
 		for _, username := range reqBody.TaggedUsernames {
 			var user models.User
 			if err := initializers.DB.First(&user, "username=?", username).Error; err == nil {
@@ -178,6 +178,12 @@ func AddPost(c *fiber.Ctx) error {
 	result := initializers.DB.Create(&newPost)
 	if result.Error != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
+	}
+
+	if len(taggedUsers) > 0 {
+		for _, user := range taggedUsers {
+			go routines.SendTaggedNotification(user.ID, parsedLoggedInUserID, &newPost.ID, nil)
+		}
 	}
 
 	//TODO convert to routine
@@ -219,6 +225,8 @@ func AddPost(c *fiber.Ctx) error {
 func UpdatePost(c *fiber.Ctx) error {
 	postID := c.Params("postID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
+
+	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
 	parsedPostID, err := uuid.Parse(postID)
 	if err != nil {
@@ -275,12 +283,25 @@ func UpdatePost(c *fiber.Ctx) error {
 		post.TaggedUsers = newTaggedUsers
 	}
 
-	if err := initializers.DB.Save(&post).Error; err != nil {
+	tx := initializers.DB.Begin()
+
+	if err := tx.Save(&post).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	for _, userToRemove := range usersToRemove {
-		initializers.DB.Model(&post).Association("TaggedUsers").Delete(userToRemove)
+		tx.Model(&post).Association("TaggedUsers").Delete(userToRemove)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return helpers.AppError{Code: fiber.StatusInternalServerError, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	if len(newTaggedUsers) > 0 {
+		for _, user := range newTaggedUsers {
+			go routines.SendTaggedNotification(user.ID, parsedLoggedInUserID, &post.ID, nil)
+		}
 	}
 
 	orgMemberID := c.GetRespHeader("orgMemberID")

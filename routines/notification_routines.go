@@ -108,3 +108,23 @@ func sendImpressionNotification(userID uuid.UUID,
 		helpers.LogDatabaseError("Error whiling creating notification-SendImpressionNotification", result.Error, "go_routine")
 	}
 }
+
+func SendTaggedNotification(userID uuid.UUID, senderID uuid.UUID, postID *uuid.UUID, announcementID *uuid.UUID) {
+	notification := models.Notification{
+		UserID:   userID,
+		SenderID: senderID,
+	}
+
+	if postID != nil {
+		notification.PostID = postID
+		notification.NotificationType = 21
+	} else {
+		notification.AnnouncementID = postID
+		notification.NotificationType = 22
+	}
+
+	result := initializers.DB.Create(&notification)
+	if result.Error != nil {
+		helpers.LogDatabaseError("Error whiling creating notification-SendImpressionNotification", result.Error, "go_routine")
+	}
+}

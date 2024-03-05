@@ -107,7 +107,8 @@ func AddAnnouncement(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
 	}
 
-	parsedLoggedInUserID, _ := uuid.Parse(c.GetRespHeader("orgMemberID"))
+	parsedLoggedInUserID, _ := uuid.Parse(c.GetRespHeader("loggedInUserID"))
+	parsedOrgMemberID, _ := uuid.Parse(c.GetRespHeader("orgMemberID"))
 
 	parsedOrgID, err := uuid.Parse(c.Params("orgID"))
 	if err != nil {
@@ -121,9 +122,9 @@ func AddAnnouncement(c *fiber.Ctx) error {
 		IsOpen:         reqBody.IsOpen,
 	}
 
-	if reqBody.TaggedUsernames != nil {
-		var taggedUsers []models.User
+	var taggedUsers []models.User
 
+	if reqBody.TaggedUsernames != nil {
 		for _, username := range reqBody.TaggedUsernames {
 			var user models.User
 			if err := initializers.DB.First(&user, "username=?", username).Error; err == nil {
@@ -138,7 +139,13 @@ func AddAnnouncement(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	go routines.MarkOrganizationHistory(parsedOrgID, parsedLoggedInUserID, 21, nil, nil, nil, nil, nil, nil, &announcement.ID, nil, nil, "")
+	if len(taggedUsers) > 0 {
+		for _, user := range taggedUsers {
+			go routines.SendTaggedNotification(user.ID, parsedLoggedInUserID, nil, &announcement.ID)
+		}
+	}
+
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 21, nil, nil, nil, nil, nil, nil, &announcement.ID, nil, nil, "")
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"status":       "success",
@@ -216,7 +223,21 @@ func DeleteAnnouncement(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	if err := initializers.DB.Delete(&announcement).Error; err != nil {
+	tx := initializers.DB.Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	// Delete all the tagged users
+	if err := tx.Model(&announcement).Association("TaggedUsers").Clear(); err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	if err := tx.Delete(&announcement).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+	}
+
+	if err := tx.Commit().Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 

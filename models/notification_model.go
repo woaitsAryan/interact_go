@@ -30,6 +30,8 @@ notification type:
 *18 - User liked your announcement
 *19 - User commented on your announcement
 *20 - User applied for your organization's opening
+*21 - Tagged in a Post
+*22 - Tagged in an Announcement
 */
 
 type Notification struct {
