@@ -48,7 +48,7 @@ func GetNonMembers(c *fiber.Ctx) error {
 	})
 }
 
-func AddMember(c *fiber.Ctx) error { //TODO keep a check on self invites
+func AddMember(c *fiber.Ctx) error { //TODO15 keep a check on self invites
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	projectID := c.Params("projectID")
 
@@ -129,7 +129,7 @@ func AddMember(c *fiber.Ctx) error { //TODO keep a check on self invites
 	}
 }
 
-func RemoveMember(c *fiber.Ctx) error { //TODO add manager cannot remove manager (also consider removals via org managers)
+func RemoveMember(c *fiber.Ctx) error { //TODO16 add manager cannot remove manager (also consider removals via org managers)
 	membershipID := c.Params("membershipID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
@@ -212,7 +212,7 @@ func LeaveProject(c *fiber.Ctx) error {
 }
 
 func ChangeMemberRole(c *fiber.Ctx) error {
-	//TODO add project history
+	//TODO17 add project history
 	membershipID := c.Params("membershipID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)

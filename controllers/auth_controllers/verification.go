@@ -29,7 +29,7 @@ func GenerateOTP(max int) string {
 }
 
 func SendVerificationCode(c *fiber.Ctx) error {
-	//TODO add a limiter to keep a check on spam requests
+	//TODO9 add a limiter to keep a check on spam requests
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 

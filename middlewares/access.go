@@ -89,7 +89,7 @@ func OrgEventCoHostAuthorization(c *fiber.Ctx) error {
 	orgID := c.Params("orgID")
 	eventID := c.Params("eventID")
 
-	//TODO add caching
+	//TODO23 add caching
 	var event models.Event
 	if err := initializers.DB.Preload("Organization").
 		Preload("Organization.Memberships").

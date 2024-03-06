@@ -69,7 +69,7 @@ func verifyToken(tokenString string, user *models.User, checkRedirect bool) (*mo
 			go cache.SetUser(user.ID.String(), user)
 		}
 
-		// TODO
+		//TODO43
 		// if user.PasswordChangedAt.After(time.Unix(int64(claims["crt"].(float64)), 0)) {
 		// 	return &fiber.Error{Code: 401, Message: "Password was recently changed, log in again."}
 		// }

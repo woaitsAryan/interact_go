@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type ResourceBucket struct { //TODO make a similar thing for projects
+type ResourceBucket struct { //TODO33 make a similar thing for projects
 	ID             uuid.UUID        `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	OrganizationID uuid.UUID        `gorm:"type:uuid;not null" json:"organizationID"`
 	Title          string           `gorm:"type:text;not null" json:"title"`

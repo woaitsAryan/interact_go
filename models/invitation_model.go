@@ -6,8 +6,8 @@ import (
 	"github.com/google/uuid"
 )
 
-type Invitation struct { //TODO add accepting project invitations field on user model
-	//TODO add sender id
+type Invitation struct { //TODO25 add accepting project invitations field on user model
+	//TODO26 add sender id
 	ID                  uuid.UUID             `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	UserID              uuid.UUID             `gorm:"type:uuid;not null" json:"userID"`
 	User                User                  `gorm:"" json:"user"`
@@ -21,7 +21,7 @@ type Invitation struct { //TODO add accepting project invitations field on user 
 	GroupChat           GroupChat             `gorm:"" json:"chat"`
 	Title               string                `gorm:"not null" json:"title"`
 	Status              int                   `gorm:"default:0" json:"status"`     //* -1 for reject, 0 for waiting and, 1 for accept
-	Read                bool                  `gorm:"default:false" json:"isRead"` //TODO remove this, not needed
+	Read                bool                  `gorm:"default:false" json:"isRead"` //TODO27 remove this, not needed
 	CreatedAt           time.Time             `gorm:"default:current_timestamp" json:"createdAt"`
 	OrganizationHistory []OrganizationHistory `gorm:"foreignKey:InvitationID;constraint:OnDelete:CASCADE" json:"-"`
 }

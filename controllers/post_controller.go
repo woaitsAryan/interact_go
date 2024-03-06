@@ -192,7 +192,7 @@ func AddPost(c *fiber.Ctx) error {
 		}
 	}
 
-	//TODO convert to routine
+	//TODO6 convert to routine
 	routines.GetBlurHashesForPost(c, "images", &newPost)
 
 	if err := initializers.DB.Preload("User").
@@ -264,7 +264,7 @@ func UpdatePost(c *fiber.Ctx) error {
 	var newTaggedUsers []models.User
 	var usersToRemove []models.User
 
-	if reqBody.TaggedUsernames != nil { //TODO not working
+	if reqBody.TaggedUsernames != nil { //TODO7 not working
 		// Create a map to store existing tagged users for quick comparison
 		existingTaggedUsers := make(map[uuid.UUID]models.User)
 		for _, user := range post.TaggedUsers {

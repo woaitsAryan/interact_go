@@ -191,8 +191,8 @@ func RejectInvitation(c *fiber.Ctx) error {
 }
 
 func WithdrawInvitation(c *fiber.Ctx) error {
-	//TODO make org managers be able to withdraw project invitations
-	//TODO project history
+	//TODO4 make org managers be able to withdraw project invitations
+	//TODO5 project history
 	invitationID := c.Params("invitationID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 

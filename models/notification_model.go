@@ -17,9 +17,9 @@ notification type:
 *5 - User applied for your project opening
 *6 - You got selected for the opening
 *7 - You got rejected for the opening
-*8 - You were removed from the project //TODO have to implement this
+*8 - You were removed from the project //TODO28 have to implement this
 *9 - Chat request
-*10 - Accepted Project Invitation //TODO add more invitation acceptance notifications, and add notification for you have been invited
+*10 - Accepted Project Invitation //TODO29 add more invitation acceptance notifications, and add notification for you have been invited
 *11 - User assigned you a task in project
 *12 - User liked your event
 *13 - User commented on your event

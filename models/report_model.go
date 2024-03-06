@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type Report struct { //TODO notifications will be sent after reporting
+type Report struct { //TODO32 notifications will be sent after reporting
 	ID             uuid.UUID    `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	ReportType     int8         `json:"reportType"`
 	ReporterID     uuid.UUID    `gorm:"type:uuid;not null" json:"reporterID"`

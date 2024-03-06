@@ -26,7 +26,7 @@ import (
 // }
 
 func SendMail(subject string, body string, recipientName string, recipientEmail string, htmlStr string) error {
-	htmlContent := body + htmlStr //TODO Email Template
+	htmlContent := body + htmlStr //TODO22 Email Template
 	m := gomail.NewMessage()
 	m.SetHeader("From", config.GMAIL_SENDER)
 	m.SetHeader("To", recipientEmail)

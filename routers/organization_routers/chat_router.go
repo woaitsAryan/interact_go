@@ -13,6 +13,6 @@ func ChatRouter(app *fiber.App) {
 	app.Get("/org/:orgID/chats", middlewares.Protect, middlewares.OrgRoleAuthorization(models.Member), organization_controllers.GetOrganizationChats)
 
 	chatRoutes := app.Group("/org/:orgID/chats", middlewares.Protect, middlewares.OrgRoleAuthorization(models.Senior))
-	//TODO add chat and chat membership edit routes for org acc and org managers
+	//TODO36 add chat and chat membership edit routes for org acc and org managers
 	chatRoutes.Post("/", messaging_controllers.AddGroupChat("Organization"))
 }

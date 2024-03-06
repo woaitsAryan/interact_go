@@ -13,8 +13,8 @@ import (
 
 var ctx = context.Background()
 
-// TODO check if this works
-func ImpressionsDumpSub(client *redis.Client, db *gorm.DB) { //TODO add logger here for errors
+// TODO1 check if this works
+func ImpressionsDumpSub(client *redis.Client, db *gorm.DB) { //TODO2 add logger here for errors
 	if client == nil {
 		fmt.Println("Error Subscribing to Redis Expiration Event for Impressions Dump: ", "redis client is nil")
 		return

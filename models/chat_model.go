@@ -27,7 +27,7 @@ type Chat struct {
 	LastReadMessageByAcceptingUser   *Message   `gorm:"foreignKey:LastReadMessageByAcceptingUserID;constraint:OnDelete:CASCADE" json:"lastReadMessageByAcceptingUser"`
 }
 
-type GroupChat struct { //TODO store number of members in model to show in invitation
+type GroupChat struct { //TODO24 store number of members in model to show in invitation
 	ID              uuid.UUID             `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
 	Title           string                `gorm:"type:varchar(50);" json:"title"`
 	Description     string                `gorm:"type:text" json:"description"`

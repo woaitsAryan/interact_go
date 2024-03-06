@@ -9,7 +9,7 @@ import (
 
 type Project struct {
 	ID                  uuid.UUID             `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	Title               string                `gorm:"type:text;not null" json:"title"` //TODO Validation error handling for no of chars
+	Title               string                `gorm:"type:text;not null" json:"title"` //TODO31 Validation error handling for no of chars
 	Slug                string                `gorm:"type:text;not null" json:"slug"`
 	Tagline             string                `gorm:"type:text;not null" json:"tagline"`
 	CoverPic            string                `gorm:"type:text; default:default.jpg" json:"coverPic"`

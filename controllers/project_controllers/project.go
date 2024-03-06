@@ -115,8 +115,8 @@ func GetWorkSpaceProject(c *fiber.Ctx) error {
 	}
 	project.Views = count
 	project.Memberships = memberships
-	project.Invitations = invitations //TODO remove if not required
-	// project.Chats = chats //TODO only include chats you are part of
+	project.Invitations = invitations //TODO18 remove if not required
+	// project.Chats = chats //TODO19 only include chats you are part of
 
 	go cache.SetProject("-workspace--"+project.Slug, &project)
 

@@ -13,7 +13,7 @@ func ProjectMembershipRouter(app *fiber.App) {
 	membershipRoutes.Post("/initial/:projectID", organization_controllers.AddProjectMembers)
 	membershipRoutes.Post("/:projectID", project_controllers.AddMember)
 	membershipRoutes.Patch("/:membershipID", project_controllers.ChangeMemberRole)
-	//TODO implement this
+	//TODO37 implement this
 	// membershipRoutes.Delete("/invitation/:invitationID", controllers.WithdrawInvitation)
 	membershipRoutes.Delete("/:membershipID", project_controllers.RemoveMember)
 }

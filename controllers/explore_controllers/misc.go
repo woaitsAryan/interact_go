@@ -64,7 +64,7 @@ func AddCollege(c *fiber.Ctx) error {
 
 	go cache.RemoveFromCacheGeneric("colleges")
 
-	//TODO add a log of this college being added
+	//TODO10 add a log of this college being added
 
 	return c.Status(201).JSON(fiber.Map{
 		"status": "success",

@@ -52,7 +52,7 @@ func Filter(c *fiber.Ctx, index int) func(db *gorm.DB) *gorm.DB {
 		//* For Tasks
 		case 5:
 			taskFields := []string{"tags", "priority", "is_completed", "deadline"}
-			//TODO assigned to a user filter
+			//TODO41 assigned to a user filter
 			for _, taskField := range taskFields {
 				value := c.Query(taskField, "")
 				db = genericFilter(db, taskField, value, "tasks")
@@ -63,7 +63,7 @@ func Filter(c *fiber.Ctx, index int) func(db *gorm.DB) *gorm.DB {
 			//* For Sub Tasks
 		case 6:
 			taskFields := []string{"tags", "priority", "is_completed", "deadline"}
-			//TODO assigned to a user filter
+			//TODO42 assigned to a user filter
 			for _, taskField := range taskFields {
 				value := c.Query(taskField, "")
 				db = genericFilter(db, taskField, value, "sub_tasks")

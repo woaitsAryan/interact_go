@@ -314,7 +314,7 @@ func EditResourceFile(c *fiber.Ctx) error {
 }
 
 func DeleteResourceBucket(c *fiber.Ctx) error {
-	//TODO add OTP here
+	//TODO14 add OTP here
 	parsedResourceBucketID, err := uuid.Parse(c.Params("resourceBucketID"))
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Resource Bucket ID."}

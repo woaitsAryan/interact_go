@@ -128,7 +128,7 @@ func AddGroupChat(chatType string) func(c *fiber.Ctx) error {
 				}
 			}
 		} else {
-			if chatType == "Project" { //TODO check for project and organization memberships of the users in reqBody
+			if chatType == "Project" { //TODO11 check for project and organization memberships of the users in reqBody
 				userID := c.GetRespHeader("projectMemberID")
 				if userID == "" {
 					userID = c.GetRespHeader("loggedInUserID")
@@ -215,7 +215,7 @@ func AddGroupChat(chatType string) func(c *fiber.Ctx) error {
 			for _, chatUserID := range chatUserIDs {
 				parsedChatUserID, err := uuid.Parse(chatUserID)
 				if err != nil {
-					return &fiber.Error{Code: 500, Message: "Invalid User ID."} //TODO errors config for all types of error messages
+					return &fiber.Error{Code: 500, Message: "Invalid User ID."} //TODO12 errors config for all types of error messages
 				}
 
 				groupChatMembership := models.GroupChatMembership{

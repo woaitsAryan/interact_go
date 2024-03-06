@@ -179,7 +179,7 @@ func AddTask(taskType string) func(c *fiber.Ctx) error {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 			}
 
-			//TODO
+			//TODO8
 			// for _, user := range users {
 			// 	go routines.SendTaskNotification(user.ID, parsedID, project.ID)
 			// }

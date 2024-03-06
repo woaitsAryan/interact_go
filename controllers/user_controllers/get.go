@@ -54,7 +54,7 @@ func GetUser(c *fiber.Ctx) error {
 	username := c.Params("username")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
-	//TODO add error handing here
+	//TODO20 add error handing here
 	var user models.User
 	initializers.DB.Preload("Profile").First(&user, "username = ?", username)
 

@@ -7,7 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-//TODO have separate routers and controllers for project group n organization chats
+//TODO34 have separate routers and controllers for project group n organization chats
 
 func MessagingRouter(app *fiber.App) {
 	messagingRoutes := app.Group("/messaging", middlewares.Protect)
@@ -44,7 +44,7 @@ func MessagingRouter(app *fiber.App) {
 	messagingRoutes.Delete("/:chatID", middlewares.GroupChatAdminAuthorization(), messaging_controllers.DeleteChat)
 	messagingRoutes.Delete("/group/:chatID", middlewares.GroupChatAdminAuthorization(), messaging_controllers.DeleteGroupChat)
 
-	messagingRoutes.Delete("/group/leave/:chatID", messaging_controllers.LeaveGroupChat) //TODO when admin leaves, then make the first joined person as admin
+	messagingRoutes.Delete("/group/leave/:chatID", messaging_controllers.LeaveGroupChat) //TODO35 when admin leaves, then make the first joined person as admin
 
 	messagingRoutes.Get("/content/:chatID", messaging_controllers.GetMessages)
 	messagingRoutes.Get("/content/group/:chatID", messaging_controllers.GetGroupChatMessages)
