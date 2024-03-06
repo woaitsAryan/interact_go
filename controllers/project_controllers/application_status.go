@@ -63,7 +63,7 @@ func AcceptApplication(c *fiber.Ctx) error {
 		projectMemberID = c.GetRespHeader("orgMemberID")
 	}
 	parsedID, _ := uuid.Parse(projectMemberID)
-	go routines.MarkProjectHistory(*application.ProjectID, parsedID, 6, &application.UserID, nil, &application.ID, nil, nil, "")
+	go routines.MarkProjectHistory(*application.ProjectID, parsedID, 6, &application.UserID, nil, &application.ID, nil, nil, nil, "")
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
@@ -120,7 +120,7 @@ func RejectApplication(c *fiber.Ctx) error {
 		projectMemberID = c.GetRespHeader("orgMemberID")
 	}
 	parsedID, _ := uuid.Parse(projectMemberID)
-	go routines.MarkProjectHistory(*application.ProjectID, parsedID, 7, &application.UserID, nil, &application.ID, nil, nil, application.Content)
+	go routines.MarkProjectHistory(*application.ProjectID, parsedID, 7, &application.UserID, nil, &application.ID, nil, nil, nil, "")
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",

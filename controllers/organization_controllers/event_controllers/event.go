@@ -150,7 +150,7 @@ func AddEvent(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
-	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 0, nil, nil, &event.ID, nil, nil, nil, nil, nil, nil, "")
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 0, nil, nil, &event.ID, nil, nil, nil, nil, nil, nil, nil, "")
 	go routines.IncrementOrgEvent(parsedOrgID)
 	routines.GetImageBlurHash(c, "coverPic", &event)
 
@@ -262,7 +262,7 @@ func UpdateEvent(c *fiber.Ctx) error {
 		go routines.DeleteFromBucket(helpers.EventClient, oldEventPic)
 	}
 
-	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 2, nil, nil, &event.ID, nil, nil, nil, nil, nil, nil, "")
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 2, nil, nil, &event.ID, nil, nil, nil, nil, nil, nil, nil, "")
 	routines.GetImageBlurHash(c, "coverPic", &event)
 	go cache.RemoveEvent(event.ID.String())
 
@@ -332,7 +332,7 @@ func DeleteEvent(c *fiber.Ctx) error {
 	}
 
 	go routines.DeleteFromBucket(helpers.EventClient, eventPic)
-	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 1, nil, nil, nil, nil, nil, nil, nil, nil, nil, event.Title)
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 1, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, event.Title)
 	go cache.RemoveEvent(event.ID.String())
 
 	go routines.DecrementOrgEvent(parsedOrgID)

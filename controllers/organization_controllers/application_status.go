@@ -85,7 +85,7 @@ func AcceptApplication(c *fiber.Ctx) error {
 
 	go routines.OrgMembershipSendNotification(&application)
 
-	go routines.MarkOrganizationHistory(*application.OrganizationID, parsedOrgMemberID, 27, nil, nil, nil, nil, nil, nil, nil, &application.OpeningID, &application.ID, "")
+	go routines.MarkOrganizationHistory(*application.OrganizationID, parsedOrgMemberID, 27, nil, nil, nil, nil, nil, nil, nil, &application.OpeningID, &application.ID, nil, "")
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
@@ -139,7 +139,7 @@ func RejectApplication(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
-	go routines.MarkOrganizationHistory(*application.OrganizationID, parsedOrgMemberID, 28, nil, nil, nil, nil, nil, nil, nil, nil, &application.ID, "")
+	go routines.MarkOrganizationHistory(*application.OrganizationID, parsedOrgMemberID, 28, nil, nil, nil, nil, nil, nil, nil, nil, &application.ID, nil, "")
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",

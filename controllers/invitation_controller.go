@@ -74,7 +74,7 @@ func AcceptInvitation(c *fiber.Ctx) error {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 		}
 
-		go routines.MarkProjectHistory(*invitation.ProjectID, parsedLoggedInUserID, 1, nil, nil, nil, nil, nil, "")
+		go routines.MarkProjectHistory(*invitation.ProjectID, parsedLoggedInUserID, 1, nil, nil, nil, nil, nil, nil, "")
 		go cache.RemoveProject(invitation.Project.Slug)
 		go cache.RemoveProject("-workspace--" + invitation.Project.Slug)
 
@@ -192,7 +192,6 @@ func RejectInvitation(c *fiber.Ctx) error {
 
 func WithdrawInvitation(c *fiber.Ctx) error {
 	//TODO4 make org managers be able to withdraw project invitations
-	//TODO5 project history
 	invitationID := c.Params("invitationID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
@@ -235,10 +234,21 @@ func WithdrawInvitation(c *fiber.Ctx) error {
 		}
 
 		if c.Query("action", "") == "event_cohost" {
-			go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 29, nil, nil, invitation.EventID, nil, &invitation.ID, nil, nil, nil, nil, invitation.Title)
-		} else {
-			go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 4, nil, nil, nil, nil, nil, nil, nil, nil, nil, invitation.Title)
+			go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 29, nil, nil, invitation.EventID, nil, &invitation.ID, nil, nil, nil, nil, nil, invitation.Title)
+		} else if invitation.OrganizationID != nil {
+			go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 4, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, invitation.Title)
 		}
+	}
+
+	if invitation.ProjectID != nil {
+		parsedUserID, _ := uuid.Parse(loggedInUserID)
+		projectMemberID := c.GetRespHeader("projectMemberID")
+
+		if projectMemberID != "" {
+			parsedUserID, _ = uuid.Parse(projectMemberID)
+		}
+
+		go routines.MarkProjectHistory(*invitation.ProjectID, parsedUserID, 12, nil, nil, nil, nil, nil, nil, invitation.Title)
 	}
 
 	return c.Status(204).JSON(fiber.Map{

@@ -113,6 +113,8 @@ func GetOrganizationHistory(c *fiber.Ctx) error {
 		Preload("Invitation.User").
 		Preload("Application").
 		Preload("Application.User").
+		Preload("Membership").
+		Preload("Membership.User").
 		Where("organization_id=?", orgID).
 		Order("created_at DESC").
 		Find(&history).Error; err != nil {
@@ -305,7 +307,7 @@ func UpdateOrg(c *fiber.Ctx) error {
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
 	}
-	go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 14, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 14, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",

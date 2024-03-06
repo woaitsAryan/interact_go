@@ -171,7 +171,7 @@ func AddGroupChat(chatType string) func(c *fiber.Ctx) error {
 
 				projectMemberID := c.GetRespHeader("projectMemberID")
 				parsedID, _ := uuid.Parse(projectMemberID)
-				go routines.MarkProjectHistory(project.ID, parsedID, 8, nil, nil, nil, nil, nil, "")
+				go routines.MarkProjectHistory(project.ID, parsedID, 8, nil, nil, nil, nil, nil, nil, "")
 
 			} else if chatType == "Organization" {
 				userID := c.GetRespHeader("orgMemberID")

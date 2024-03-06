@@ -69,6 +69,7 @@ func MarkProjectHistory(
 	applicationID *uuid.UUID,
 	invitationID *uuid.UUID,
 	taskID *uuid.UUID,
+	membershipID *uuid.UUID,
 	deletedText string) {
 
 	history := models.ProjectHistory{
@@ -92,6 +93,9 @@ func MarkProjectHistory(
 	if taskID != nil {
 		history.TaskID = taskID
 	}
+	if membershipID != nil {
+		history.MembershipID = membershipID
+	}
 	if deletedText != "" {
 		history.DeletedText = deletedText
 	}
@@ -114,6 +118,7 @@ func MarkOrganizationHistory(
 	announcementID *uuid.UUID,
 	openingID *uuid.UUID,
 	applicationID *uuid.UUID,
+	membershipID *uuid.UUID,
 	deletedText string) {
 
 	organizationHistory := models.OrganizationHistory{
@@ -148,6 +153,9 @@ func MarkOrganizationHistory(
 	}
 	if applicationID != nil {
 		organizationHistory.ApplicationID = applicationID
+	}
+	if membershipID != nil {
+		organizationHistory.MembershipID = membershipID
 	}
 	if deletedText != "" {
 		organizationHistory.DeletedText = deletedText

@@ -110,7 +110,7 @@ func AddMember(c *fiber.Ctx) error { //TODO15 keep a check on self invites
 				projectMemberID = c.GetRespHeader("orgMemberID")
 			}
 			parsedID, _ := uuid.Parse(projectMemberID)
-			go routines.MarkProjectHistory(project.ID, parsedID, 0, &invitation.UserID, nil, nil, &invitation.ID, nil, "")
+			go routines.MarkProjectHistory(project.ID, parsedID, 0, &invitation.UserID, nil, nil, &invitation.ID, nil, nil, "")
 
 			invitation.User = user
 
@@ -166,7 +166,7 @@ func RemoveMember(c *fiber.Ctx) error { //TODO16 add manager cannot remove manag
 	}
 	parsedID, _ := uuid.Parse(projectMemberID)
 
-	go routines.MarkProjectHistory(parsedProjectID, parsedID, 11, &parsedUserID, nil, nil, nil, nil, membership.Title)
+	go routines.MarkProjectHistory(parsedProjectID, parsedID, 11, &parsedUserID, nil, nil, nil, nil, nil, membership.Title)
 	go cache.RemoveProject(projectSlug)
 	go cache.RemoveProject("-workspace--" + projectSlug)
 	go routines.DecrementProjectMember(parsedProjectID)
@@ -199,7 +199,7 @@ func LeaveProject(c *fiber.Ctx) error {
 	parsedProjectID := membership.ProjectID
 	projectSlug := membership.Project.Slug
 
-	go routines.MarkProjectHistory(parsedProjectID, parsedUserID, 10, nil, nil, nil, nil, nil, membership.Title)
+	go routines.MarkProjectHistory(parsedProjectID, parsedUserID, 10, nil, nil, nil, nil, nil, nil, membership.Title)
 	go cache.RemoveProject(projectSlug)
 	go cache.RemoveProject("-workspace--" + projectSlug)
 	go routines.DecrementProjectMember(parsedProjectID)
@@ -268,6 +268,13 @@ func ChangeMemberRole(c *fiber.Ctx) error {
 	if result.Error != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
+
+	projectMemberID := c.GetRespHeader("projectMemberID")
+	if projectMemberID != "" {
+		parsedLoggedInUserID, _ = uuid.Parse(projectMemberID)
+	}
+
+	go routines.MarkProjectHistory(membership.ProjectID, parsedLoggedInUserID, 13, nil, nil, nil, nil, nil, &membership.UserID, "")
 
 	go cache.RemoveProject(membership.Project.Slug)
 	go cache.RemoveProject("-workspace--" + membership.Project.Slug)

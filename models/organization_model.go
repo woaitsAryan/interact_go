@@ -37,14 +37,15 @@ const (
 //* Organization Account Logger can do all this, including delete the organization, transfer of ownership, and organization chats.
 
 type OrganizationMembership struct {
-	ID             uuid.UUID        `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	OrganizationID uuid.UUID        `gorm:"type:uuid;not null" json:"organizationID"`
-	Organization   Organization     `gorm:"" json:"organization"`
-	UserID         uuid.UUID        `gorm:"type:uuid;not null" json:"userID"`
-	User           User             `gorm:"" json:"user"`
-	Title          string           `gorm:"type:varchar(25);not null" json:"title"`
-	Role           OrganizationRole `gorm:"type:text" json:"role"`
-	CreatedAt      time.Time        `gorm:"default:current_timestamp" json:"createdAt"`
+	ID                    uuid.UUID             `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	OrganizationID        uuid.UUID             `gorm:"type:uuid;not null" json:"organizationID"`
+	Organization          Organization          `gorm:"" json:"organization"`
+	UserID                uuid.UUID             `gorm:"type:uuid;not null" json:"userID"`
+	User                  User                  `gorm:"" json:"user"`
+	Title                 string                `gorm:"type:varchar(25);not null" json:"title"`
+	Role                  OrganizationRole      `gorm:"type:text" json:"role"`
+	CreatedAt             time.Time             `gorm:"default:current_timestamp" json:"createdAt"`
+	OrganizationHistories []OrganizationHistory `gorm:"foreignKey:MembershipID;constraint:OnDelete:CASCADE" json:"-"`
 }
 
 //TODO30 add last edited n all fields on models
@@ -82,32 +83,35 @@ history type:
 *27 - User accepted an application
 *28 - User rejected application
 *29 - User withdraw an invitation for event cohost
+*30 - Updated a membership
 */
 
 type OrganizationHistory struct {
-	ID             uuid.UUID    `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
-	OrganizationID uuid.UUID    `gorm:"type:uuid;not null" json:"orgID"`
-	HistoryType    int8         `json:"historyType"`
-	UserID         uuid.UUID    `gorm:"type:uuid;not null" json:"userID"`
-	User           User         `json:"user"`
-	PostID         *uuid.UUID   `gorm:"type:uuid" json:"postID"`
-	Post           Post         `json:"post"`
-	EventID        *uuid.UUID   `gorm:"type:uuid" json:"eventID"`
-	Event          Event        `json:"event"`
-	ProjectID      *uuid.UUID   `gorm:"type:uuid" json:"projectID"`
-	Project        Project      `json:"project"`
-	TaskID         *uuid.UUID   `gorm:"type:uuid" json:"taskID"`
-	Task           Task         `json:"task"`
-	InvitationID   *uuid.UUID   `gorm:"type:uuid" json:"invitationID"`
-	Invitation     Invitation   `json:"invitation"`
-	AnnouncementID *uuid.UUID   `gorm:"type:uuid" json:"announcementID"`
-	Announcement   Announcement `json:"announcement"`
-	OpeningID      *uuid.UUID   `gorm:"type:uuid" json:"openingID"`
-	Opening        Opening      `json:"opening"`
-	ApplicationID  *uuid.UUID   `gorm:"type:uuid" json:"applicationID"`
-	Application    Application  `json:"application"`
-	PollID         *uuid.UUID   `gorm:"type:uuid" json:"pollID"`
-	Poll           Poll         `json:"poll"`
-	DeletedText    string       `gorm:"type:text" json:"deletedText"`
-	CreatedAt      time.Time    `gorm:"default:current_timestamp" json:"createdAt"`
+	ID             uuid.UUID              `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	OrganizationID uuid.UUID              `gorm:"type:uuid;not null" json:"orgID"`
+	HistoryType    int8                   `json:"historyType"`
+	UserID         uuid.UUID              `gorm:"type:uuid;not null" json:"userID"`
+	User           User                   `json:"user"`
+	PostID         *uuid.UUID             `gorm:"type:uuid" json:"postID"`
+	Post           Post                   `json:"post"`
+	EventID        *uuid.UUID             `gorm:"type:uuid" json:"eventID"`
+	Event          Event                  `json:"event"`
+	ProjectID      *uuid.UUID             `gorm:"type:uuid" json:"projectID"`
+	Project        Project                `json:"project"`
+	TaskID         *uuid.UUID             `gorm:"type:uuid" json:"taskID"`
+	Task           Task                   `json:"task"`
+	InvitationID   *uuid.UUID             `gorm:"type:uuid" json:"invitationID"`
+	Invitation     Invitation             `json:"invitation"`
+	AnnouncementID *uuid.UUID             `gorm:"type:uuid" json:"announcementID"`
+	Announcement   Announcement           `json:"announcement"`
+	OpeningID      *uuid.UUID             `gorm:"type:uuid" json:"openingID"`
+	Opening        Opening                `json:"opening"`
+	ApplicationID  *uuid.UUID             `gorm:"type:uuid" json:"applicationID"`
+	Application    Application            `json:"application"`
+	MembershipID   *uuid.UUID             `gorm:"type:uuid" json:"membershipID"`
+	Membership     OrganizationMembership `json:"membership"`
+	PollID         *uuid.UUID             `gorm:"type:uuid" json:"pollID"`
+	Poll           Poll                   `json:"poll"`
+	DeletedText    string                 `gorm:"type:text" json:"deletedText"`
+	CreatedAt      time.Time              `gorm:"default:current_timestamp" json:"createdAt"`
 }

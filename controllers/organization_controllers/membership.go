@@ -174,7 +174,7 @@ func AddMember(c *fiber.Ctx) error {
 
 			invitation.User = user
 
-			go routines.MarkOrganizationHistory(parsedOrganizationID, parsedUserID, 3, nil, nil, nil, nil, &invitation.ID, nil, nil, nil, nil, "")
+			go routines.MarkOrganizationHistory(parsedOrganizationID, parsedUserID, 3, nil, nil, nil, nil, &invitation.ID, nil, nil, nil, nil, nil, "")
 			go cache.RemoveOrganization("-access--" + organization.ID.String())
 			return c.Status(201).JSON(fiber.Map{
 				"status":     "success",
@@ -222,7 +222,7 @@ func RemoveMember(c *fiber.Ctx) error {
 	}
 
 	go routines.DecrementOrgMember(membership.OrganizationID)
-	go routines.MarkOrganizationHistory(membership.OrganizationID, parsedOrgMemberID, 5, nil, nil, nil, nil, nil, nil, nil, nil, nil, membership.Title)
+	go routines.MarkOrganizationHistory(membership.OrganizationID, parsedOrgMemberID, 5, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, membership.Title)
 	go cache.RemoveOrganization("-access--" + membership.OrganizationID.String())
 
 	return c.Status(204).JSON(fiber.Map{
@@ -267,7 +267,7 @@ func LeaveOrganization(c *fiber.Ctx) error {
 	}
 
 	go routines.DecrementOrgMember(membership.OrganizationID)
-	go routines.MarkOrganizationHistory(membership.OrganizationID, parsedOrgMemberID, 15, nil, nil, nil, nil, nil, nil, nil, nil, nil, membership.Title)
+	go routines.MarkOrganizationHistory(membership.OrganizationID, parsedOrgMemberID, 15, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, membership.Title)
 	go cache.RemoveOrganization("-access--" + membership.OrganizationID.String())
 
 	return c.Status(204).JSON(fiber.Map{
@@ -319,6 +319,9 @@ func ChangeMemberRole(c *fiber.Ctx) error {
 	if result.Error != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
+
+	parsedUserID, _ := uuid.Parse(loggedInUserID)
+	go routines.MarkOrganizationHistory(membership.OrganizationID, parsedUserID, 30, nil, nil, nil, nil, nil, nil, nil, nil, nil, &membership.ID, "")
 
 	go cache.RemoveOrganization("-access--" + membership.OrganizationID.String())
 

@@ -114,7 +114,7 @@ func AddOpening(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
-	go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 24, nil, nil, nil, nil, nil, nil, nil, &newOpening.ID, nil, "")
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 24, nil, nil, nil, nil, nil, nil, nil, &newOpening.ID, nil, nil, "")
 
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",
@@ -185,7 +185,7 @@ func EditOpening(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
-	go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 26, nil, nil, nil, nil, nil, nil, nil, &opening.ID, nil, "")
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 26, nil, nil, nil, nil, nil, nil, nil, &opening.ID, nil, nil, "")
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
@@ -218,7 +218,7 @@ func DeleteOpening(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
-	go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 25, nil, nil, nil, nil, nil, nil, nil, nil, nil, opening.Title)
+	go routines.MarkOrganizationHistory(parsedOrgID, parsedOrgMemberID, 25, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, opening.Title)
 
 	return c.Status(204).JSON(fiber.Map{
 		"status":  "success",

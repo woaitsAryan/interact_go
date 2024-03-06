@@ -71,6 +71,8 @@ history type:
 *9 - User created a new task
 *10 - User left the project
 *11 - User removed user from the project
+*12 - User withdrew an invitation
+*13 - User updated a membership
 */
 
 type ProjectHistory struct {
@@ -89,6 +91,8 @@ type ProjectHistory struct {
 	Invitation    Invitation  `json:"invitation"`
 	TaskID        *uuid.UUID  `gorm:"type:uuid" json:"taskID"`
 	Task          Task        `json:"task"`
+	MembershipID  *uuid.UUID  `gorm:"type:uuid" json:"membershipID"`
+	Membership    Membership  `json:"membership"`
 	DeletedText   string      `gorm:"type:text" json:"deletedText"`
 	CreatedAt     time.Time   `gorm:"default:current_timestamp;index:idx_created_at,sort:desc" json:"createdAt"`
 }
