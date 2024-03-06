@@ -166,6 +166,7 @@ func RemoveMember(c *fiber.Ctx) error { //TODO16 add manager cannot remove manag
 	}
 	parsedID, _ := uuid.Parse(projectMemberID)
 
+	go routines.SendProjectRemovalNotification(parsedUserID, parsedID, membership.ProjectID)
 	go routines.MarkProjectHistory(parsedProjectID, parsedID, 11, &parsedUserID, nil, nil, nil, nil, nil, membership.Title)
 	go cache.RemoveProject(projectSlug)
 	go cache.RemoveProject("-workspace--" + projectSlug)
@@ -212,7 +213,6 @@ func LeaveProject(c *fiber.Ctx) error {
 }
 
 func ChangeMemberRole(c *fiber.Ctx) error {
-	//TODO17 add project history
 	membershipID := c.Params("membershipID")
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)

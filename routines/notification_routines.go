@@ -128,3 +128,16 @@ func SendTaggedNotification(userID uuid.UUID, senderID uuid.UUID, postID *uuid.U
 		helpers.LogDatabaseError("Error whiling creating notification-SendImpressionNotification", result.Error, "go_routine")
 	}
 }
+
+func SendProjectRemovalNotification(userID uuid.UUID, senderID uuid.UUID, projectID uuid.UUID) {
+	notification := models.Notification{
+		NotificationType: 8,
+		UserID:           userID,
+		SenderID:         senderID,
+		ProjectID:        &projectID,
+	}
+	result := initializers.DB.Create(&notification)
+	if result.Error != nil {
+		helpers.LogDatabaseError("Error whiling creating notification-SendTaskNotification", result.Error, "go_routine")
+	}
+}
