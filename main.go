@@ -22,8 +22,9 @@ func init() {
 	if initializers.CONFIG.POPULATE_DUMMIES {
 		populate.FillDummies()
 	}
-
-	// populate.PopulateColleges()
+	if initializers.CONFIG.POPULATE_ORGS {
+		populate.PopulateOrgs()
+	}
 
 	config.InitializeOAuthGoogle()
 }

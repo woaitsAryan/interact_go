@@ -7,11 +7,13 @@ import (
 	"math/rand"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/utils"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // func init() {
@@ -161,7 +163,7 @@ func PopulateOpenings() {
 	for _, opening := range openings {
 		projectID := getRandomProjectID(projectIDs)
 		opening.ProjectID = &projectID
-		
+
 		var project models.Project
 		initializers.DB.First(&project, "id=?", opening.ProjectID)
 
@@ -200,6 +202,72 @@ func PopulateColleges() {
 		} else {
 			log.Printf("Insert college: %s", college.Name)
 		}
+	}
+}
+
+func PopulateOrgs() {
+	log.Println("----------------Populating Organisations----------------")
+
+	jsonFile, err := os.Open("scripts/organisations.json")
+	if err != nil {
+		log.Fatalf("Failed to open the JSON file: %v", err)
+	}
+	defer jsonFile.Close()
+
+	var users []models.User
+	jsonDecoder := json.NewDecoder(jsonFile)
+	if err := jsonDecoder.Decode(&users); err != nil {
+		log.Fatalf("Failed to decode JSON: %v", err)
+	}
+
+	for _, user := range users {
+		log.Println("\nCreating Org - " + user.Name)
+
+		hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
+		if err != nil {
+			log.Println("Error while hashing Password.", err)
+			continue
+		}
+
+		newOrg := models.User{
+			Name:               user.Name,
+			Email:              user.Email,
+			Password:           string(hash),
+			Username:           user.Username,
+			PasswordChangedAt:  time.Now(),
+			OrganizationStatus: true,
+		}
+
+		result := initializers.DB.Create(&newOrg)
+		if result.Error != nil {
+			log.Println("Error while creating Org User.", result.Error)
+			continue
+		}
+
+		organization := models.Organization{
+			UserID:            newOrg.ID,
+			OrganizationTitle: newOrg.Name,
+			CreatedAt:         time.Now(),
+		}
+
+		result = initializers.DB.Create(&organization)
+		if result.Error != nil {
+			log.Println("Error while creating Org.", result.Error)
+			continue
+
+		}
+
+		newProfile := models.Profile{
+			UserID: newOrg.ID,
+		}
+
+		result = initializers.DB.Create(&newProfile)
+		if result.Error != nil {
+			log.Println("Error while creating Org User Profile.", result.Error)
+			continue
+		}
+
+		log.Println("Successfully created Org - " + newOrg.Name)
 	}
 }
 

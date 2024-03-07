@@ -42,6 +42,7 @@ type Config struct {
 	GCP_PRIVATE_BUCKET   string      `mapstructure:"GCP_PRIVATE_BUCKET"`
 	GCP_CREDS            string      `mapstructure:"GCP_CREDS"`
 	POPULATE_DUMMIES     bool        `mapstructure:"POPULATE_DUMMIES"`
+	POPULATE_ORGS        bool        `mapstructure:"POPULATE_ORGS"`
 }
 
 var CONFIG Config
