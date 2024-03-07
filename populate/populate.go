@@ -208,7 +208,7 @@ func PopulateColleges() {
 func PopulateOrgs() {
 	log.Println("----------------Populating Organisations----------------")
 
-	jsonFile, err := os.Open("scripts/organisations.json")
+	jsonFile, err := os.Open("populate/organisations.json")
 	if err != nil {
 		log.Fatalf("Failed to open the JSON file: %v", err)
 	}
@@ -234,6 +234,7 @@ func PopulateOrgs() {
 			Email:              user.Email,
 			Password:           string(hash),
 			Username:           user.Username,
+			Tagline:            user.Tagline,
 			PasswordChangedAt:  time.Now(),
 			OrganizationStatus: true,
 		}
