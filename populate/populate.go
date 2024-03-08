@@ -208,7 +208,7 @@ func PopulateColleges() {
 func PopulateOrgs() {
 	log.Println("----------------Populating Organisations----------------")
 
-	jsonFile, err := os.Open("populate/organisations.json")
+	jsonFile, err := os.Open("scripts/organisations.json")
 	if err != nil {
 		log.Fatalf("Failed to open the JSON file: %v", err)
 	}
@@ -230,13 +230,15 @@ func PopulateOrgs() {
 		}
 
 		newOrg := models.User{
-			Name:               user.Name,
-			Email:              user.Email,
-			Password:           string(hash),
-			Username:           user.Username,
-			Tagline:            user.Tagline,
-			PasswordChangedAt:  time.Now(),
-			OrganizationStatus: true,
+			Name:                user.Name,
+			Email:               user.Email,
+			Password:            string(hash),
+			Username:            user.Username,
+			Tagline:             user.Tagline,
+			PasswordChangedAt:   time.Now(),
+			OrganizationStatus:  true,
+			Verified:            true,
+			OnboardingCompleted: true,
 		}
 
 		result := initializers.DB.Create(&newOrg)
