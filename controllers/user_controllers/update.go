@@ -201,7 +201,7 @@ func SetupPassword(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Password is already set up."}
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(reqBody.Password), 10)
+	hash, err := bcrypt.GenerateFromPassword([]byte(reqBody.Password), 12)
 
 	if err != nil {
 		return helpers.AppError{Code: 500, Message: config.SERVER_ERROR, Err: err}

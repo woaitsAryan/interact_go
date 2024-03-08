@@ -214,7 +214,15 @@ func PopulateOrgs() {
 	}
 	defer jsonFile.Close()
 
-	var users []models.User
+	type User struct {
+		Name     string `json:"name"`
+		Username string `son:"username"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
+		Tagline  string `json:"tagline"`
+	}
+
+	var users []User
 	jsonDecoder := json.NewDecoder(jsonFile)
 	if err := jsonDecoder.Decode(&users); err != nil {
 		log.Fatalf("Failed to decode JSON: %v", err)
@@ -223,7 +231,7 @@ func PopulateOrgs() {
 	for _, user := range users {
 		log.Println("\nCreating Org - " + user.Name)
 
-		hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
+		hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 12)
 		if err != nil {
 			log.Println("Error while hashing Password.", err)
 			continue
