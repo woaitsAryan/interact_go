@@ -12,6 +12,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
+	"github.com/Pratham-Mishra04/interact/utils/select_fields"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -78,11 +79,15 @@ func GetMemberships(c *fiber.Ctx) error {
 		Preload("Memberships", func(db *gorm.DB) *gorm.DB {
 			return db.Order("created_at DESC")
 		}).
-		Preload("Memberships.User").
+		Preload("Memberships.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("Invitations", func(db *gorm.DB) *gorm.DB {
 			return db.Order("created_at DESC")
 		}).
-		Preload("Invitations.User").
+		Preload("Invitations.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		First(&organization).Error; err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Organization ID"}
 	}

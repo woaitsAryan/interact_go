@@ -65,10 +65,16 @@ func GetPersonalUnFilteredChats(c *fiber.Ctx) error {
 
 	var chats []models.Chat
 	if err := initializers.DB.
-		Preload("CreatingUser").
-		Preload("AcceptingUser").
+		Preload("CreatingUser", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
+		Preload("AcceptingUser", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("LatestMessage").
-		Preload("LatestMessage.User").
+		Preload("LatestMessage.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Where("creating_user_id=? OR accepting_user_id = ?", loggedInUserID, loggedInUserID).
 		Find(&chats).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
@@ -86,10 +92,16 @@ func GetPersonalChats(c *fiber.Ctx) error {
 
 	var chats []models.Chat
 	if err := initializers.DB.
-		Preload("CreatingUser").
-		Preload("AcceptingUser").
+		Preload("CreatingUser", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
+		Preload("AcceptingUser", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("LatestMessage").
-		Preload("LatestMessage.User").
+		Preload("LatestMessage.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Where("creating_user_id=? OR accepting_user_id = ?", loggedInUserID, loggedInUserID).
 		Find(&chats).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
@@ -137,11 +149,17 @@ func GetGroupChats(c *fiber.Ctx) error {
 
 	var groupChats []models.GroupChat
 	if err := initializers.DB.
-		Preload("User").
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("LatestMessage").
-		Preload("LatestMessage.User").
+		Preload("LatestMessage.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("Memberships").
-		Preload("Memberships.User").
+		Preload("Memberships.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Joins("JOIN group_chat_memberships ON group_chat_memberships.group_chat_id = group_chats.id").
 		Where("group_chat_memberships.user_id = ? AND group_chats.project_id IS NULL", loggedInUserID).
 		Find(&groupChats).Error; err != nil {
@@ -208,12 +226,18 @@ func GetOrgChats(c *fiber.Ctx) error {
 
 	var groupChats []models.GroupChat
 	if err := initializers.DB.
-		Preload("User").
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("Organization").
 		Preload("LatestMessage").
-		Preload("LatestMessage.User").
+		Preload("LatestMessage.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("Memberships").
-		Preload("Memberships.User").
+		Preload("Memberships.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Joins("JOIN group_chat_memberships ON group_chat_memberships.group_chat_id = group_chats.id").
 		Where("group_chat_memberships.user_id = ? AND group_chats.organization_id IS NOT NULL", loggedInUserID).
 		Find(&groupChats).Error; err != nil {

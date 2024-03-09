@@ -10,6 +10,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/schemas"
 	"github.com/Pratham-Mishra04/interact/utils"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
+	"github.com/Pratham-Mishra04/interact/utils/select_fields"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -35,11 +36,19 @@ func GetPost(c *fiber.Ctx) error {
 
 	var post models.Post
 	if err := initializers.DB.
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("RePost").
-		Preload("RePost.User").
-		Preload("RePost.TaggedUsers").
-		Preload("User").
-		Preload("TaggedUsers").
+		Preload("RePost.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
+		Preload("RePost.TaggedUsers", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.ShorterUser)
+		}).
+		Preload("TaggedUsers", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.ShorterUser)
+		}).
 		First(&post, "id = ?", parsedPostID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Post of this ID found."}

@@ -12,6 +12,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/schemas"
 	"github.com/Pratham-Mishra04/interact/utils"
+	"github.com/Pratham-Mishra04/interact/utils/select_fields"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -64,7 +65,11 @@ func GetResourceBucketFiles(c *fiber.Ctx) error {
 	}
 
 	var resourceBucket models.ResourceBucket
-	if err := initializers.DB.Preload("ResourceFiles").Preload("ResourceFiles.User").Where("id=? AND organization_id = ?", parsedResourceBucketID, parsedOrgID).First(&resourceBucket).Error; err != nil {
+	if err := initializers.DB.Preload("ResourceFiles").
+		Preload("ResourceFiles.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
+		Where("id=? AND organization_id = ?", parsedResourceBucketID, parsedOrgID).First(&resourceBucket).Error; err != nil {
 		if err != gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Resource Bucket does not exist."}
 		}

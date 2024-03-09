@@ -8,6 +8,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/schemas"
 	"github.com/Pratham-Mishra04/interact/utils"
+	"github.com/Pratham-Mishra04/interact/utils/select_fields"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -19,7 +20,9 @@ func GetEventCoHosts(c *fiber.Ctx) error {
 
 	var event models.Event
 	if err := initializers.DB.Preload("CoOwnedBy").
-		Preload("CoOwnedBy.User").
+		Preload("CoOwnedBy.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Where("id = ? AND organization_id=?", eventID, orgID).
 		First(&event).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {

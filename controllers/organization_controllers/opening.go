@@ -60,7 +60,9 @@ func GetAllOpeningsOfOrganization(c *fiber.Ctx) error {
 	var openings []models.Opening
 	if err := paginatedDB.
 		Preload("Organization").
-		Preload("Organization.User").
+		Preload("Organization.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Where("active=true").
 		Where("organization_id=?", orgID).
 		Order("created_at DESC").

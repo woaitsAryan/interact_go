@@ -136,14 +136,20 @@ func GetProjectHistory(c *fiber.Ctx) error {
 	var history []models.ProjectHistory
 
 	if err := paginatedDB.
-		Preload("Sender").
-		Preload("User").
+		Preload("Sender", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("Opening").
 		Preload("Application").
 		Preload("Invitation").
 		Preload("Task").
 		Preload("Membership").
-		Preload("Membership.User").
+		Preload("Membership.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Where("project_id=?", projectID).
 		Order("created_at DESC").
 		Find(&history).Error; err != nil {
@@ -181,15 +187,25 @@ func GetWorkSpacePopulatedProjectTasks(c *fiber.Ctx) error {
 	slug := c.Params("slug")
 
 	var project models.Project
-	if err := initializers.DB.Preload("User").Preload("Memberships").Preload("Memberships.User").First(&project, "slug = ? ", slug).Error; err != nil {
+	if err := initializers.DB.
+		Preload("User").
+		Preload("Memberships").
+		Preload("Memberships.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
+		First(&project, "slug = ? ", slug).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var tasks []models.Task
 	if err := initializers.DB.
-		Preload("Users").
+		Preload("Users", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("SubTasks").
-		Preload("SubTasks.Users").
+		Preload("SubTasks.Users", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Find(&tasks, "project_id = ? ", project.ID).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
@@ -209,7 +225,9 @@ func GetWorkSpaceProjectChats(c *fiber.Ctx) error {
 	if err := initializers.DB.
 		Preload("User").
 		Preload("Memberships").
-		Preload("Memberships.User").
+		Preload("Memberships.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Find(&chats, "project_id = ? ", projectID).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}

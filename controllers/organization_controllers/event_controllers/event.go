@@ -12,6 +12,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/schemas"
 	"github.com/Pratham-Mishra04/interact/utils"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
+	"github.com/Pratham-Mishra04/interact/utils/select_fields"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -33,10 +34,16 @@ func GetEvent(c *fiber.Ctx) error {
 	var event models.Event
 	if err := initializers.DB.
 		Preload("Organization").
-		Preload("Organization.User").
-		Preload("Coordinators").
+		Preload("Organization.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
+		Preload("Coordinators", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("CoOwnedBy").
-		Preload("CoOwnedBy.User").
+		Preload("CoOwnedBy.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Where("id = ?", eventID).
 		First(&event).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
@@ -78,10 +85,16 @@ func GetPopulatedOrgEvents(c *fiber.Ctx) error {
 	var events []models.Event
 	if err := paginatedDB.
 		Preload("Organization").
-		Preload("Organization.User").
+		Preload("Organization.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("CoOwnedBy").
-		Preload("CoOwnedBy.User").
-		Preload("Coordinators").
+		Preload("CoOwnedBy.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
+		Preload("Coordinators", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Joins("LEFT JOIN co_owned_events ON co_owned_events.event_id = events.id").
 		Where("events.organization_id = ? OR co_owned_events.organization_id = ?", orgID, orgID).
 		Order("created_at DESC").
