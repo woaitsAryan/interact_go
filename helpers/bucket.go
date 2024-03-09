@@ -30,6 +30,7 @@ var UserCoverClient *BucketClient
 var UserResumeClient *BucketClient
 
 var ResourceClient *BucketClient
+var BackupClient *BucketClient
 
 func createNewBucketClient(uploadPath string, private bool) *BucketClient {
 	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", initializers.CONFIG.GCP_CREDS)
@@ -64,6 +65,10 @@ func InitializeBucketClients() {
 	UserCoverClient = createNewBucketClient("users/coverPics/", false)
 	UserResumeClient = createNewBucketClient("users/resumes/", false)
 	ResourceClient = createNewBucketClient("resources/", initializers.CONFIG.ENV == initializers.ProductionENV)
+}
+
+func InitializeBackupBucketClient() {
+	BackupClient = createNewBucketClient("backups/", true)
 }
 
 func (c *BucketClient) UploadBucketFile(buffer *bytes.Buffer, object string) error {

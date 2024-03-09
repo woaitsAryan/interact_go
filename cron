@@ -1,2 +1,1 @@
-0 0 * * * /app/backup.sh
-0 0 * * * /app/remote_backup.sh
+0 0 * * * go run /app/scripts/main.go

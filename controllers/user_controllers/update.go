@@ -202,7 +202,6 @@ func SetupPassword(c *fiber.Ctx) error {
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(reqBody.Password), 12)
-
 	if err != nil {
 		return helpers.AppError{Code: 500, Message: config.SERVER_ERROR, Err: err}
 	}
@@ -242,9 +241,7 @@ func UpdatePassword(c *fiber.Ctx) error {
 	}
 
 	//TODO21 send email for verification
-
-	hash, err := bcrypt.GenerateFromPassword([]byte(reqBody.NewPassword), 10)
-
+	hash, err := bcrypt.GenerateFromPassword([]byte(reqBody.NewPassword), 12)
 	if err != nil {
 		return helpers.AppError{Code: 500, Message: config.SERVER_ERROR, Err: err}
 	}

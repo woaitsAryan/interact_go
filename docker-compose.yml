@@ -19,8 +19,8 @@ services:
     env_file:
       - .env
     volumes:
-      - ./public:/app/public/
       - ./log:/app/log/
+      - ./database:/app/database/
     networks:
       - backend-network
 
