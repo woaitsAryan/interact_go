@@ -49,7 +49,9 @@ func GetProject(c *fiber.Ctx) error {
 	}
 
 	var memberships []models.Membership
-	if err := initializers.DB.Preload("User").Find(&memberships, "project_id = ?", project.ID).Error; err != nil {
+	if err := initializers.DB.Preload("User", func(db *gorm.DB) *gorm.DB {
+		return db.Select(select_fields.ExtendedUser)
+	}).Find(&memberships, "project_id = ?", project.ID).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 

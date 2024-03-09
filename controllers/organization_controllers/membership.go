@@ -80,13 +80,13 @@ func GetMemberships(c *fiber.Ctx) error {
 			return db.Order("created_at DESC")
 		}).
 		Preload("Memberships.User", func(db *gorm.DB) *gorm.DB {
-			return db.Select(select_fields.User)
+			return db.Select(select_fields.ExtendedUser)
 		}).
 		Preload("Invitations", func(db *gorm.DB) *gorm.DB {
 			return db.Order("created_at DESC")
 		}).
 		Preload("Invitations.User", func(db *gorm.DB) *gorm.DB {
-			return db.Select(select_fields.User)
+			return db.Select(select_fields.ExtendedUser)
 		}).
 		First(&organization).Error; err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Organization ID"}

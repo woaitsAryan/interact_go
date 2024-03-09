@@ -35,14 +35,14 @@ func GetEvent(c *fiber.Ctx) error {
 	if err := initializers.DB.
 		Preload("Organization").
 		Preload("Organization.User", func(db *gorm.DB) *gorm.DB {
-			return db.Select(select_fields.User)
+			return db.Select(select_fields.ExtendedUser)
 		}).
 		Preload("Coordinators", func(db *gorm.DB) *gorm.DB {
-			return db.Select(select_fields.User)
+			return db.Select(select_fields.ExtendedUser)
 		}).
 		Preload("CoOwnedBy").
 		Preload("CoOwnedBy.User", func(db *gorm.DB) *gorm.DB {
-			return db.Select(select_fields.User)
+			return db.Select(select_fields.ExtendedUser)
 		}).
 		Where("id = ?", eventID).
 		First(&event).Error; err != nil {

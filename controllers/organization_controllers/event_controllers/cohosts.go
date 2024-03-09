@@ -21,7 +21,7 @@ func GetEventCoHosts(c *fiber.Ctx) error {
 	var event models.Event
 	if err := initializers.DB.Preload("CoOwnedBy").
 		Preload("CoOwnedBy.User", func(db *gorm.DB) *gorm.DB {
-			return db.Select(select_fields.User)
+			return db.Select(select_fields.ExtendedUser)
 		}).
 		Where("id = ? AND organization_id=?", eventID, orgID).
 		First(&event).Error; err != nil {
