@@ -10,8 +10,10 @@ import (
 	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/utils"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
+	"github.com/Pratham-Mishra04/interact/utils/select_fields"
 	"github.com/gofiber/fiber/v2"
 	"github.com/lib/pq"
+	"gorm.io/gorm"
 )
 
 func GetSimilarUsers(c *fiber.Ctx) error {
@@ -68,7 +70,9 @@ func GetSimilarProjects(c *fiber.Ctx) error {
 
 	if len(recommendations) == 0 {
 		if err := paginatedDB.
-			Preload("User").
+			Preload("User", func(db *gorm.DB) *gorm.DB {
+				return db.Select(select_fields.User)
+			}).
 			Preload("Memberships").
 			Where("id <> ?", project.ID).
 			Where("is_private=?", false).
@@ -79,7 +83,9 @@ func GetSimilarProjects(c *fiber.Ctx) error {
 		}
 	} else {
 		if err := initializers.DB.
-			Preload("User").
+			Preload("User", func(db *gorm.DB) *gorm.DB {
+				return db.Select(select_fields.User)
+			}).
 			Preload("Memberships").
 			Where("id IN ?", recommendations).
 			Find(&projects).Error; err != nil {
@@ -118,9 +124,13 @@ func GetSimilarEvents(c *fiber.Ctx) error {
 	if len(recommendations) == 0 {
 		if err := paginatedDB.
 			Preload("Organization").
-			Preload("Organization.User").
+			Preload("Organization.User", func(db *gorm.DB) *gorm.DB {
+				return db.Select(select_fields.User)
+			}).
 			Preload("CoOwnedBy").
-			Preload("CoOwnedBy.User").
+			Preload("CoOwnedBy.User", func(db *gorm.DB) *gorm.DB {
+				return db.Select(select_fields.User)
+			}).
 			Where("id <> ?", event.ID).
 			Where("category = ? OR tags && ?", event.Category, pq.StringArray(event.Tags)).
 			Order("no_views DESC").
@@ -130,7 +140,9 @@ func GetSimilarEvents(c *fiber.Ctx) error {
 	} else {
 		if err := initializers.DB.
 			Preload("Organization").
-			Preload("Organization.User").
+			Preload("Organization.User", func(db *gorm.DB) *gorm.DB {
+				return db.Select(select_fields.User)
+			}).
 			Where("id IN ?", recommendations).
 			Find(&events).Error; err != nil {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}

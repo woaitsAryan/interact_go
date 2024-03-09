@@ -8,8 +8,10 @@ import (
 	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/utils"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
+	"github.com/Pratham-Mishra04/interact/utils/select_fields"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 func GetRecommendedPosts(c *fiber.Ctx) error {
@@ -27,11 +29,19 @@ func GetRecommendedPosts(c *fiber.Ctx) error {
 	var posts []models.Post
 
 	if err := initializers.DB.
-		Preload("User").
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("RePost").
-		Preload("RePost.User").
-		Preload("RePost.TaggedUsers").
-		Preload("TaggedUsers").
+		Preload("RePost.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
+		Preload("RePost.TaggedUsers", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.ShorterUser)
+		}).
+		Preload("TaggedUsers", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.ShorterUser)
+		}).
 		Where("id IN ?", recommendations).
 		Find(&posts).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
@@ -61,7 +71,9 @@ func GetRecommendedOpenings(c *fiber.Ctx) error {
 	var openings []models.Opening
 
 	if err := initializers.DB.
-		Preload("User").
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Where("id IN ?", recommendations).
 		Find(&openings).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
@@ -97,7 +109,9 @@ func GetRecommendedProjects(c *fiber.Ctx) error {
 	var projects []models.Project
 
 	if err := initializers.DB.
-		Preload("User").
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("Memberships").
 		Where("id IN ?", recommendations).
 		Find(&projects).Error; err != nil {
@@ -158,9 +172,13 @@ func GetRecommendedEvents(c *fiber.Ctx) error {
 
 	if err := initializers.DB.
 		Preload("Organization").
-		Preload("Organization.User").
+		Preload("Organization.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("CoOwnedBy").
-		Preload("CoOwnedBy.User").
+		Preload("CoOwnedBy.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Where("id IN ?", recommendations).
 		Find(&events).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
