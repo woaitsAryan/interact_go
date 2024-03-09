@@ -104,7 +104,9 @@ func GetProjectOpenings(c *fiber.Ctx) error {
 
 	var openings []models.Opening
 	if err := initializers.DB.
-		Preload("Project").
+		Preload("Project", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.Project)
+		}).
 		Where("project_id = ? AND active=true", project.ID).
 		Order("created_at DESC").
 		Find(&openings).Error; err != nil {

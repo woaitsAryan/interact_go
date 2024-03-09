@@ -7,6 +7,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
+	"github.com/Pratham-Mishra04/interact/utils/select_fields"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -19,11 +20,17 @@ func GetNotifications(c *fiber.Ctx) error {
 
 	var notifications []models.Notification
 	if err := paginatedDB.
-		Preload("User").
-		Preload("Sender").
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
+		Preload("Sender", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("Announcement").
 		Preload("Post").
-		Preload("Project").
+		Preload("Project", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.Project)
+		}).
 		Preload("Event").
 		Preload("Opening").
 		Preload("Application").
@@ -46,11 +53,17 @@ func GetUnreadNotifications(c *fiber.Ctx) error {
 
 	var notifications []models.Notification
 	if err := initializers.DB.
-		Preload("User").
-		Preload("Sender").
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
+		Preload("Sender", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("Post").
 		Preload("Announcement").
-		Preload("Project").
+		Preload("Project", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.Project)
+		}).
 		Preload("Event").
 		Preload("Opening").
 		Preload("Application").

@@ -7,6 +7,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/Pratham-Mishra04/interact/utils/select_fields"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -41,9 +42,15 @@ func GetMessages(c *fiber.Ctx) error {
 		Preload("Profile").
 		Preload("Announcement").
 		Preload("Opening").
-		Preload("Opening.Project").
-		Preload("Post.User").
-		Preload("Project").
+		Preload("Opening.Project", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.Project)
+		}).
+		Preload("Post.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
+		Preload("Project", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.Project)
+		}).
 		Where("chat_id = ? AND created_at > ?", chatID, timestamp).
 		Order("created_at DESC").
 		Find(&messages).Error; err != nil {

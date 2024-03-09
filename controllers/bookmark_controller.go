@@ -5,8 +5,10 @@ import (
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
+	"github.com/Pratham-Mishra04/interact/utils/select_fields"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 func GetBookMarks(c *fiber.Ctx) error {
@@ -58,10 +60,19 @@ func GetPopulatedBookMarks(bookmarkType string) func(c *fiber.Ctx) error {
 			var postBookmarks []models.PostBookmark
 			if err := initializers.DB.
 				Preload("PostItems.Post").
-				Preload("PostItems.Post.User").
+				Preload("PostItems.Post.User", func(db *gorm.DB) *gorm.DB {
+					return db.Select(select_fields.User)
+				}).
 				Preload("PostItems.Post.RePost").
-				Preload("PostItems.Post.RePost.User").
-				Preload("PostItems.Post.TaggedUsers").
+				Preload("PostItems.Post.RePost.User", func(db *gorm.DB) *gorm.DB {
+					return db.Select(select_fields.User)
+				}).
+				Preload("PostItems.Post.RePost.TaggedUsers", func(db *gorm.DB) *gorm.DB {
+					return db.Select(select_fields.ShorterUser)
+				}).
+				Preload("PostItems.Post.TaggedUsers", func(db *gorm.DB) *gorm.DB {
+					return db.Select(select_fields.ShorterUser)
+				}).
 				Where("user_id = ?", loggedInUserID).
 				Find(&postBookmarks).Error; err != nil {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
@@ -93,7 +104,9 @@ func GetPopulatedBookMarks(bookmarkType string) func(c *fiber.Ctx) error {
 			var openingBookmarks []models.OpeningBookmark
 			if err := initializers.DB.
 				Preload("OpeningItems.Opening").
-				Preload("OpeningItems.Opening.Project").
+				Preload("OpeningItems.Opening.Project", func(db *gorm.DB) *gorm.DB {
+					return db.Select(select_fields.Project)
+				}).
 				Where("user_id = ?", loggedInUserID).
 				Find(&openingBookmarks).Error; err != nil {
 				return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}

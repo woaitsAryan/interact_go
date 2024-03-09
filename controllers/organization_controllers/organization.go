@@ -14,6 +14,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/schemas"
 	"github.com/Pratham-Mishra04/interact/utils"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
+	"github.com/Pratham-Mishra04/interact/utils/select_fields"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -102,19 +103,29 @@ func GetOrganizationHistory(c *fiber.Ctx) error {
 	var history []models.OrganizationHistory
 
 	if err := paginatedDB.
-		Preload("User").
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("Post").
 		Preload("Event").
-		Preload("Project").
+		Preload("Project", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.Project)
+		}).
 		Preload("Task").
 		Preload("Poll").
 		Preload("Announcement").
 		Preload("Invitation").
-		Preload("Invitation.User").
+		Preload("Invitation.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("Application").
-		Preload("Application.User").
+		Preload("Application.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("Membership").
-		Preload("Membership.User").
+		Preload("Membership.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Where("organization_id=?", orgID).
 		Order("created_at DESC").
 		Find(&history).Error; err != nil {

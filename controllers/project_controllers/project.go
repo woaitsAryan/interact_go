@@ -14,6 +14,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/schemas"
 	"github.com/Pratham-Mishra04/interact/utils"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
+	"github.com/Pratham-Mishra04/interact/utils/select_fields"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/gosimple/slug"
@@ -267,7 +268,9 @@ func GetUserContributingProjects(c *fiber.Ctx) error {
 
 	var memberships []models.Membership
 	if err := paginatedDB.
-		Preload("Project").
+		Preload("Project", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.Project)
+		}).
 		Where("user_id = ?", userID).
 		Order("created_at DESC").
 		Find(&memberships).Error; err != nil {

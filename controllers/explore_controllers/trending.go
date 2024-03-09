@@ -92,9 +92,13 @@ func GetTrendingOpenings(c *fiber.Ctx) error {
 		filteredDB := API.Filter(c, 4)(paginatedDB)
 
 		if err := filteredDB.
-			Preload("Project").
+			Preload("Project", func(db *gorm.DB) *gorm.DB {
+				return db.Select(select_fields.Project)
+			}).
 			Preload("Organization").
-			Preload("Organization.User").
+			Preload("Organization.User", func(db *gorm.DB) *gorm.DB {
+				return db.Select(select_fields.User)
+			}).
 			Where("active=true").
 			Select("openings.*, (no_of_applications * 0.3) / (1 + EXTRACT(EPOCH FROM age(NOW(), openings.created_at)) / 3600 / 24 / 15) AS t_ratio").
 			Order("t_ratio DESC").
@@ -107,9 +111,13 @@ func GetTrendingOpenings(c *fiber.Ctx) error {
 		filteredDB := API.Filter(c, 4)(searchedDB)
 
 		if err := filteredDB.
-			Preload("Project").
+			Preload("Project", func(db *gorm.DB) *gorm.DB {
+				return db.Select(select_fields.Project)
+			}).
 			Preload("Organization").
-			Preload("Organization.User").
+			Preload("Organization.User", func(db *gorm.DB) *gorm.DB {
+				return db.Select(select_fields.User)
+			}).
 			Where("active=true").
 			Select("openings.*, (no_of_applications * 0.3) / (1 + EXTRACT(EPOCH FROM age(NOW(), openings.created_at)) / 3600 / 24 / 15) AS t_ratio").
 			Order("t_ratio DESC").
