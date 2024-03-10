@@ -17,6 +17,7 @@ func IncrementPostCommentsAndSendNotification(postID uuid.UUID, loggedInUserID u
 
 		if result.Error != nil {
 			helpers.LogDatabaseError("Error while updating Post-IncrementPostCommentsAndSendNotification", result.Error, "go_routine")
+			return
 		}
 
 		if loggedInUserID != post.UserID {
@@ -44,6 +45,7 @@ func IncrementAnnouncementCommentsAndSendNotification(announcementID uuid.UUID, 
 
 		if result.Error != nil {
 			helpers.LogDatabaseError("Error while updating Post-IncrementAnnouncementCommentsAndSendNotification", result.Error, "go_routine")
+			return
 		}
 
 		if loggedInUserID != announcement.Organization.UserID {
@@ -51,7 +53,7 @@ func IncrementAnnouncementCommentsAndSendNotification(announcementID uuid.UUID, 
 				SenderID:         loggedInUserID,
 				NotificationType: 19,
 				UserID:           announcement.Organization.UserID,
-				AnnouncementID:           &announcement.ID,
+				AnnouncementID:   &announcement.ID,
 			}
 
 			if err := initializers.DB.Create(&notification).Error; err != nil {
@@ -71,6 +73,7 @@ func IncrementProjectCommentsAndSendNotification(projectID uuid.UUID, loggedInUs
 
 		if result.Error != nil {
 			helpers.LogDatabaseError("Error while updating Project-IncrementProjectCommentsAndSendNotification", result.Error, "go_routine")
+			return
 		}
 
 		if loggedInUserID != project.UserID {
@@ -98,6 +101,7 @@ func IncrementEventCommentsAndSendNotification(eventID uuid.UUID, loggedInUserID
 
 		if result.Error != nil {
 			helpers.LogDatabaseError("Error while updating Event-IncrementEventCommentsAndSendNotification", result.Error, "go_routine")
+			return
 		}
 
 		if loggedInUserID != event.Organization.UserID {
@@ -125,6 +129,7 @@ func DecrementPostComments(postID uuid.UUID) {
 
 		if result.Error != nil {
 			helpers.LogDatabaseError("Error while updating Post-DecrementPostComments", err, "go_routine")
+			return
 		}
 	}
 }
@@ -139,6 +144,7 @@ func DecrementProjectComments(projectID uuid.UUID) {
 
 		if result.Error != nil {
 			helpers.LogDatabaseError("Error while updating Project-DecrementProjectComments", err, "go_routine")
+			return
 		}
 	}
 }

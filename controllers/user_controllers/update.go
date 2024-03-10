@@ -165,7 +165,7 @@ func UpdateMe(c *fiber.Ctx) error {
 		go func() {
 			user.OnboardingCompleted = true
 			if err := initializers.DB.Save(&user).Error; err != nil {
-				helpers.LogDatabaseError("Error while updating User-UpdateMe", err, "go_routine")
+				go helpers.LogDatabaseError("Error while updating User-UpdateMe", err, "go_routine")
 			}
 		}()
 	}

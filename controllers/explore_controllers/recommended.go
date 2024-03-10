@@ -19,7 +19,7 @@ func GetRecommendedPosts(c *fiber.Ctx) error {
 
 	recommendations, err := utils.MLReq(loggedInUserID, config.POST_RECOMMENDATION)
 	if err != nil {
-		helpers.LogServerError("Error Fetching from ML API", err, c.Path())
+		go helpers.LogServerError("Error Fetching from ML API", err, c.Path())
 		return c.Status(200).JSON(fiber.Map{
 			"status": "success",
 			"posts":  nil,
@@ -61,7 +61,7 @@ func GetRecommendedOpenings(c *fiber.Ctx) error {
 
 	recommendations, err := utils.MLReq(loggedInUserID, config.OPENING_RECOMMENDATION)
 	if err != nil {
-		helpers.LogServerError("Error Fetching from ML API", err, c.Path())
+		go helpers.LogServerError("Error Fetching from ML API", err, c.Path())
 		return c.Status(200).JSON(fiber.Map{
 			"status":   "success",
 			"openings": nil,
@@ -99,7 +99,7 @@ func GetRecommendedProjects(c *fiber.Ctx) error {
 
 	recommendations, err := utils.MLReq(loggedInUserID, config.PROJECT_RECOMMENDATION)
 	if err != nil {
-		helpers.LogServerError("Error Fetching from ML API", err, c.Path())
+		go helpers.LogServerError("Error Fetching from ML API", err, c.Path())
 		return c.Status(200).JSON(fiber.Map{
 			"status":   "success",
 			"projects": nil,
@@ -161,7 +161,7 @@ func GetRecommendedEvents(c *fiber.Ctx) error {
 
 	recommendations, err := utils.MLReq(loggedInUserID, config.EVENT_RECOMMENDATION)
 	if err != nil {
-		helpers.LogServerError("Error Fetching from ML API", err, c.Path())
+		go helpers.LogServerError("Error Fetching from ML API", err, c.Path())
 		return c.Status(200).JSON(fiber.Map{
 			"status": "success",
 			"events": nil,

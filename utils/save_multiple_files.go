@@ -22,7 +22,7 @@ func SaveMultipleFiles(c *fiber.Ctx, fieldName string, path string, resize bool,
 		filePath := "public/" + path + "/" + c.GetRespHeader("loggedInUserID") + "-" + file.Filename
 
 		if err := c.SaveFile(file, filePath); err != nil {
-			helpers.LogServerError("Error while saving a file", err, c.Path())
+			go helpers.LogServerError("Error while saving a file", err, c.Path())
 			return nil, err
 		}
 

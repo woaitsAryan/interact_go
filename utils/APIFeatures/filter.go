@@ -85,13 +85,13 @@ func eventTimeSearch(c *fiber.Ctx, db *gorm.DB) *gorm.DB {
 	if start != "" && end != "" {
 		startTime, err := time.Parse(time.RFC3339, start)
 		if err != nil {
-			helpers.LogServerError("Error parsing start timestamp", err, "timestampSearch")
+			go helpers.LogServerError("Error parsing start timestamp", err, "timestampSearch")
 			return db
 		}
 
 		endTime, err := time.Parse(time.RFC3339, end)
 		if err != nil {
-			helpers.LogServerError("Error parsing end timestamp", err, "timestampSearch")
+			go helpers.LogServerError("Error parsing end timestamp", err, "timestampSearch")
 			return db
 		}
 
@@ -99,7 +99,7 @@ func eventTimeSearch(c *fiber.Ctx, db *gorm.DB) *gorm.DB {
 	} else if start != "" {
 		startTime, err := time.Parse(time.RFC3339, start)
 		if err != nil {
-			helpers.LogServerError("Error parsing start timestamp", err, "timestampSearch")
+			go helpers.LogServerError("Error parsing start timestamp", err, "timestampSearch")
 			return db
 		}
 
@@ -107,7 +107,7 @@ func eventTimeSearch(c *fiber.Ctx, db *gorm.DB) *gorm.DB {
 	} else if end != "" {
 		endTime, err := time.Parse(time.RFC3339, end)
 		if err != nil {
-			helpers.LogServerError("Error parsing end timestamp", err, "timestampSearch")
+			go helpers.LogServerError("Error parsing end timestamp", err, "timestampSearch")
 			return db
 		}
 

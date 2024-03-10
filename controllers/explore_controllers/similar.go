@@ -63,7 +63,7 @@ func GetSimilarProjects(c *fiber.Ctx) error {
 
 	recommendations, err := utils.MLReq(project.ID.String(), config.PROJECT_SIMILAR, limit, page)
 	if err != nil {
-		helpers.LogServerError("Error Fetching from ML API", err, c.Path())
+		go helpers.LogServerError("Error Fetching from ML API", err, c.Path())
 	}
 
 	var projects []models.Project
@@ -116,7 +116,7 @@ func GetSimilarEvents(c *fiber.Ctx) error {
 
 	recommendations, err := utils.MLReq(event.ID.String(), config.EVENT_SIMILAR, limit, page)
 	if err != nil {
-		helpers.LogServerError("Error Fetching from ML API", err, c.Path())
+		go helpers.LogServerError("Error Fetching from ML API", err, c.Path())
 	}
 
 	var events []models.Event

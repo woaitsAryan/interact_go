@@ -41,6 +41,9 @@ type Config struct {
 	GCP_PUBLIC_BUCKET    string      `mapstructure:"GCP_PUBLIC_BUCKET"`
 	GCP_PRIVATE_BUCKET   string      `mapstructure:"GCP_PRIVATE_BUCKET"`
 	GCP_CREDS            string      `mapstructure:"GCP_CREDS"`
+	LOGGER_URL           string      `mapstructure:"LOGGER_URL"`
+	LOGGER_SECRET        string      `mapstructure:"LOGGER_SECRET"`
+	LOGGER_TOKEN         string      `mapstructure:"LOGGER_TOKEN"`
 	POPULATE_DUMMIES     bool        `mapstructure:"POPULATE_DUMMIES"`
 	POPULATE_ORGS        bool        `mapstructure:"POPULATE_ORGS"`
 }

@@ -80,6 +80,7 @@ func SendChatMail(recipientName string, recipientEmail string, chatUserName stri
 	t, err := template.ParseFiles(path)
 	if err != nil {
 		LogDatabaseError("Error while sending Chat Mail-SendChatMail", err, "go_routine")
+		return
 	}
 
 	t.Execute(&body, struct {
@@ -89,6 +90,7 @@ func SendChatMail(recipientName string, recipientEmail string, chatUserName stri
 
 	if err != nil {
 		LogDatabaseError("Error while sending Chat Mail-SendChatMail", err, "go_routine")
+		return
 	}
 
 	m := gomail.NewMessage()

@@ -413,7 +413,7 @@ func UpdateLastRead(c *fiber.Ctx) error {
 
 	result := initializers.DB.Save(&chat)
 	if result.Error != nil {
-		helpers.LogDatabaseError("Error while updating Chat-UpdateChatLastRead", result.Error, "go_routine")
+		go helpers.LogDatabaseError("Error while updating Chat-UpdateChatLastRead", result.Error, "go_routine")
 	}
 
 	return c.Status(200).JSON(fiber.Map{

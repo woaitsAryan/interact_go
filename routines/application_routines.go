@@ -17,6 +17,7 @@ func IncrementOpeningApplicationsAndSendNotification(openingID uuid.UUID, applic
 
 		if result.Error != nil {
 			helpers.LogDatabaseError("Error while updating Opening-IncrementOpeningApplicationsAndSendNotification", err, "go_routine")
+			return
 		}
 
 		notification := models.Notification{
@@ -73,6 +74,7 @@ func IncrementOrgOpeningApplicationsAndSendNotification(openingID uuid.UUID, app
 
 		if result.Error != nil {
 			helpers.LogDatabaseError("Error while updating Opening-IncrementOrgOpeningApplicationsAndSendNotification", err, "go_routine")
+			return
 		}
 
 		notification := models.Notification{
@@ -90,7 +92,7 @@ func IncrementOrgOpeningApplicationsAndSendNotification(openingID uuid.UUID, app
 }
 
 func OrgMembershipSendNotification(application *models.Application) {
-	
+
 	notification := models.Notification{
 		NotificationType: 21,
 		UserID:           application.UserID,
