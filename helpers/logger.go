@@ -63,6 +63,7 @@ func LogToAdminLogger(customString string, level string, err error, path string)
 
 	jsonData, err := json.Marshal(logEntry)
 	if err != nil {
+		initializers.Logger.Errorw("Error Posting to Admin Logger", "Message", err.Error(), "Path", "LogToAdminLogger", "Error", err.Error())
 		return
 	}
 
@@ -73,6 +74,7 @@ func LogToAdminLogger(customString string, level string, err error, path string)
 
 	request, err := http.NewRequest("POST", initializers.CONFIG.LOGGER_URL, bytes.NewBuffer(jsonData))
 	if err != nil {
+		initializers.Logger.Errorw("Error Posting to Admin Logger", "Message", err.Error(), "Path", "LogToAdminLogger", "Error", err.Error())
 		return
 	}
 
@@ -83,6 +85,7 @@ func LogToAdminLogger(customString string, level string, err error, path string)
 	client := http.DefaultClient
 	response, err := client.Do(request)
 	if err != nil {
+		initializers.Logger.Errorw("Error Adding to Admin Logger", "Message", err.Error(), "Path", "LogToAdminLogger", "Error", err.Error())
 		return
 	}
 	defer response.Body.Close()
