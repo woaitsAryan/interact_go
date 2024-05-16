@@ -64,9 +64,11 @@ func GetEventHistory(c *fiber.Ctx) error {
 
 	var history []models.EventHistory
 	if err := initializers.DB.
-		Preload("User").
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Where("event_id = ?", eventID).
-		First(&history).Error; err != nil {
+		Find(&history).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
@@ -163,6 +165,7 @@ func AddEvent(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
+	//TODO Mark Event Create History
 	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 0, nil, nil, &event.ID, nil, nil, nil, nil, nil, nil, nil, "")
 	go routines.IncrementOrgEvent(parsedOrgID)
 	routines.GetImageBlurHash(c, "coverPic", &event)

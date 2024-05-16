@@ -79,11 +79,17 @@ func PopulateProjects() {
 		userIDs = append(userIDs, user.ID)
 	}
 
+	coverPics := []string{"default_1.jpg", "default_2.jpg", "default_3.jpg", "default_4.jpg", "default_5.jpg", "default_6.jpg", "default_7.jpg", "default_8.jpg", "default_9.jpg"}
+
 	for _, project := range projects {
 		project.UserID = getRandomUserID(userIDs)
 		project.Slug = utils.SoftSlugify(project.Title)
 		project.Tags = ToLowercaseArray(project.Tags)
 		project.Links = RandomLinks()
+
+		// Randomly select a cover picture
+		coverPicIndex := rand.Intn(len(coverPics))
+		project.CoverPic = coverPics[coverPicIndex]
 
 		if err := initializers.DB.Create(&project).Error; err != nil {
 			log.Printf("Failed to insert project: %v", err)
