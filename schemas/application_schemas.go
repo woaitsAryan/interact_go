@@ -7,4 +7,5 @@ type ApplicationCreateSchema struct {
 	Links         pq.StringArray `json:"links" validate:"dive,url"`
 	IncludeEmail  bool           `json:"includeEmail"`
 	IncludeResume bool           `json:"includeResume"`
+	YOE           int8           `json:"yoe"`
 }

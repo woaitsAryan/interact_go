@@ -11,7 +11,6 @@ import (
 )
 
 func MLReq(id string, url string, args ...int) ([]string, error) {
-
 	var limit, page int
 	switch len(args) {
 	case 0:
@@ -39,7 +38,6 @@ func MLReq(id string, url string, args ...int) ([]string, error) {
 
 	var responseBody struct {
 		Recommendations []string `json:"recommendations"`
-		// Define other fields you expect in the response
 	}
 
 	decoder := json.NewDecoder(response.Body)

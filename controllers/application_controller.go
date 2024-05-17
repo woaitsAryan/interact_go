@@ -73,7 +73,6 @@ func GetApplication(applicationType string) func(*fiber.Ctx) error {
 }
 
 func GetAllApplicationsOfOpening(c *fiber.Ctx) error {
-
 	openingID := c.Params("openingID")
 
 	parsedOpeningID, err := uuid.Parse(openingID)
@@ -147,6 +146,7 @@ func AddApplication(applicationType string) func(c *fiber.Ctx) error {
 			Links:         reqBody.Links,
 			IncludeEmail:  reqBody.IncludeEmail,
 			IncludeResume: reqBody.IncludeResume,
+			YOE:           reqBody.YOE,
 		}
 
 		var opening models.Opening
@@ -202,7 +202,7 @@ func AddApplication(applicationType string) func(c *fiber.Ctx) error {
 		}
 
 		go routines.IncrementOpeningApplicationsAndSendNotification(parsedOpeningID, newApplication.ID, parsedUserID)
-
+		go routines.GetApplicationScore(&newApplication)
 		// go cache.RemoveProject("-workspace--" + opening.Project.Slug)
 
 		return c.Status(201).JSON(fiber.Map{
