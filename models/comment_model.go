@@ -21,6 +21,7 @@ type Comment struct {
 	Content        string       `gorm:"type:text;not null" json:"content"`
 	NoLikes        int          `json:"noLikes"`
 	Edited         bool         `gorm:"default:false" json:"edited"`
+	IsFlagged      bool         `gorm:"default:false" json:"-"`
 	CreatedAt      time.Time    `gorm:"default:current_timestamp" json:"createdAt"`
 	UpdatedAt      time.Time    `gorm:"default:current_timestamp" json:"updatedAt"`
 	Likes          []Like       `gorm:"foreignKey:CommentID;constraint:OnDelete:CASCADE" json:"-"`

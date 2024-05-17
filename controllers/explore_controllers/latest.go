@@ -34,6 +34,7 @@ func GetLatestPosts(c *fiber.Ctx) error {
 		}).
 		Joins("JOIN users ON posts.user_id = users.id AND users.active = ?", true).
 		Select("*, posts.id, posts.created_at").
+		Where("is_flagged=?", false).
 		Order("posts.created_at DESC").
 		Find(&posts).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}

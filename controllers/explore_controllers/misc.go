@@ -9,6 +9,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
+	"github.com/Pratham-Mishra04/interact/utils"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/Pratham-Mishra04/interact/utils/select_fields"
 	"github.com/gofiber/fiber/v2"
@@ -79,10 +80,19 @@ func AddSearchQuery(c *fiber.Ctx) error {
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
 	}
-	searchQuery := models.SearchQuery{
-		Query: strings.ToLower(strings.TrimSpace(reqBody.Search)),
+
+	flag, err := utils.MLFlagReq(reqBody.Search)
+	if err != nil {
+		helpers.LogServerError("Error Fetching from ML API", err, "CheckFlagPost")
+	} else {
+		if !flag {
+			searchQuery := models.SearchQuery{
+				Query: strings.ToLower(strings.TrimSpace(reqBody.Search)),
+			}
+			initializers.DB.Create(&searchQuery)
+		}
 	}
-	initializers.DB.Create(&searchQuery)
+
 	return c.Status(201).JSON(fiber.Map{
 		"status": "success",
 	})

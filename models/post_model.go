@@ -25,6 +25,7 @@ type Post struct {
 	Tags                pq.StringArray        `gorm:"type:text[]" json:"tags"`
 	Impressions         int                   `gorm:"default:0" json:"noImpressions"`
 	Edited              bool                  `gorm:"default:false" json:"isEdited"`
+	IsFlagged           bool                  `gorm:"default:false" json:"-"`
 	Comments            []Comment             `gorm:"foreignKey:PostID;constraint:OnDelete:CASCADE" json:"comments"`
 	TaggedUsers         []User                `gorm:"many2many:post_tagged_users" json:"taggedUsers"`
 	Notifications       []Notification        `gorm:"foreignKey:PostID;constraint:OnDelete:CASCADE" json:"-"`

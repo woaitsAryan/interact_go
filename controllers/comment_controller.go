@@ -23,7 +23,7 @@ func GetPostComments(c *fiber.Ctx) error {
 	paginatedDB := API.Paginator(c)(initializers.DB)
 
 	var comments []models.Comment
-	if err := paginatedDB.Preload("User").Where("post_id=?", parsedPostID).Order("created_at DESC").Find(&comments).Error; err != nil {
+	if err := paginatedDB.Preload("User").Where("post_id=? AND is_flagged=?", parsedPostID, false).Order("created_at DESC").Find(&comments).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
@@ -45,7 +45,7 @@ func GetProjectComments(c *fiber.Ctx) error {
 	paginatedDB := API.Paginator(c)(initializers.DB)
 
 	var comments []models.Comment
-	if err := paginatedDB.Preload("User").Where("project_id=?", parsedProjectID).Order("created_at DESC").Find(&comments).Error; err != nil {
+	if err := paginatedDB.Preload("User").Where("project_id=? AND is_flagged=?", parsedProjectID, false).Order("created_at DESC").Find(&comments).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
@@ -67,7 +67,7 @@ func GetEventComments(c *fiber.Ctx) error {
 	paginatedDB := API.Paginator(c)(initializers.DB)
 
 	var comments []models.Comment
-	if err := paginatedDB.Preload("User").Where("event_id=?", parsedEventID).Order("created_at DESC").Find(&comments).Error; err != nil {
+	if err := paginatedDB.Preload("User").Where("event_id=? AND is_flagged=?", parsedEventID, false).Order("created_at DESC").Find(&comments).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
@@ -89,7 +89,7 @@ func GetAnnouncementComments(c *fiber.Ctx) error {
 	paginatedDB := API.Paginator(c)(initializers.DB)
 
 	var comments []models.Comment
-	if err := paginatedDB.Preload("User").Where("announcement_id=?", parsedAnnouncementID).Order("created_at DESC").Find(&comments).Error; err != nil {
+	if err := paginatedDB.Preload("User").Where("announcement_id=? AND is_flagged=?", parsedAnnouncementID, false).Order("created_at DESC").Find(&comments).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
@@ -165,6 +165,8 @@ func AddComment(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
+	go routines.CheckFlagComment(&comment)
+
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Comment Added",
@@ -205,6 +207,8 @@ func UpdateComment(c *fiber.Ctx) error {
 	if err := initializers.DB.Save(&comment).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
+
+	go routines.CheckFlagComment(&comment)
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",

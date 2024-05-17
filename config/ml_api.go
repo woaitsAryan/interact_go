@@ -10,4 +10,5 @@ const (
 	EVENT_SIMILAR          = "/events/similar"
 	IMAGE_BLUR_HASH        = "/image_blur_hash"
 	APPLICATION_SCORE      = "/openings/application_score"
+	FLAG                   = "/toxicity"
 )

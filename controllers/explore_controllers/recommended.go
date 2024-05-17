@@ -17,7 +17,7 @@ import (
 func GetRecommendedPosts(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
-	recommendations, err := utils.MLReq(loggedInUserID, config.POST_RECOMMENDATION)
+	recommendations, err := utils.MLRecommendationsReq(loggedInUserID, config.POST_RECOMMENDATION)
 	if err != nil {
 		go helpers.LogServerError("Error Fetching from ML API", err, c.Path())
 		return c.Status(200).JSON(fiber.Map{
@@ -42,6 +42,7 @@ func GetRecommendedPosts(c *fiber.Ctx) error {
 		Preload("TaggedUsers", func(db *gorm.DB) *gorm.DB {
 			return db.Select(select_fields.ShorterUser)
 		}).
+		Where("is_flagged=?", false).
 		Where("id IN ?", recommendations).
 		Find(&posts).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
@@ -59,7 +60,7 @@ func GetRecommendedOpenings(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
-	recommendations, err := utils.MLReq(loggedInUserID, config.OPENING_RECOMMENDATION)
+	recommendations, err := utils.MLRecommendationsReq(loggedInUserID, config.OPENING_RECOMMENDATION)
 	if err != nil {
 		go helpers.LogServerError("Error Fetching from ML API", err, c.Path())
 		return c.Status(200).JSON(fiber.Map{
@@ -97,7 +98,7 @@ func GetRecommendedOpenings(c *fiber.Ctx) error {
 func GetRecommendedProjects(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
-	recommendations, err := utils.MLReq(loggedInUserID, config.PROJECT_RECOMMENDATION)
+	recommendations, err := utils.MLRecommendationsReq(loggedInUserID, config.PROJECT_RECOMMENDATION)
 	if err != nil {
 		go helpers.LogServerError("Error Fetching from ML API", err, c.Path())
 		return c.Status(200).JSON(fiber.Map{
@@ -159,7 +160,7 @@ func GetRecommendedUsers(c *fiber.Ctx) error {
 func GetRecommendedEvents(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
-	recommendations, err := utils.MLReq(loggedInUserID, config.EVENT_RECOMMENDATION)
+	recommendations, err := utils.MLRecommendationsReq(loggedInUserID, config.EVENT_RECOMMENDATION)
 	if err != nil {
 		go helpers.LogServerError("Error Fetching from ML API", err, c.Path())
 		return c.Status(200).JSON(fiber.Map{

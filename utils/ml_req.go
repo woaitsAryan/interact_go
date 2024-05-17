@@ -10,7 +10,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/initializers"
 )
 
-func MLReq(id string, url string, args ...int) ([]string, error) {
+func MLRecommendationsReq(id string, url string, args ...int) ([]string, error) {
 	var limit, page int
 	switch len(args) {
 	case 0:
@@ -46,4 +46,27 @@ func MLReq(id string, url string, args ...int) ([]string, error) {
 	}
 
 	return responseBody.Recommendations, nil
+}
+
+func MLFlagReq(content string) (bool, error) {
+	URL := initializers.CONFIG.ML_URL + config.FLAG
+	reqBody, _ := json.Marshal(map[string]any{
+		"content": content,
+	})
+	response, err := http.Post(URL, "application/json", bytes.NewBuffer(reqBody))
+	if err != nil {
+		return false, helpers.AppError{Code: 500, Message: config.SERVER_ERROR, Err: err}
+	}
+	defer response.Body.Close()
+
+	var responseBody struct {
+		Flag bool `json:"flag"`
+	}
+
+	decoder := json.NewDecoder(response.Body)
+	if err := decoder.Decode(&responseBody); err != nil {
+		return false, helpers.AppError{Code: 500, Message: config.SERVER_ERROR, Err: err}
+	}
+
+	return responseBody.Flag, nil
 }

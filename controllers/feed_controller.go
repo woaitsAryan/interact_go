@@ -47,6 +47,7 @@ func GetFeed(c *fiber.Ctx) error {
 			return db.Select(select_fields.ShorterUser)
 		}).
 		Joins("JOIN users ON posts.user_id = users.id AND users.active = ?", true).
+		Where("is_flagged=?", false).
 		Where("user_id = ? OR user_id IN (?)", loggedInUserID, followingIDs).
 		Order("created_at DESC").
 		Find(&posts).Error; err != nil {
@@ -119,6 +120,7 @@ func GetCombinedFeed(c *fiber.Ctx) error {
 		Preload("TaggedUsers", func(db *gorm.DB) *gorm.DB {
 			return db.Select(select_fields.ShorterUser)
 		}).
+		Where("is_flagged=?", false).
 		Joins("JOIN users ON posts.user_id = users.id AND users.active = ?", true).
 		Where("user_id = ? OR user_id IN (?)", parsedUserID, followingIDs).
 		Order("created_at DESC").

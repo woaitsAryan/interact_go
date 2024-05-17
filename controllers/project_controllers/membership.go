@@ -38,7 +38,13 @@ func GetNonMembers(c *fiber.Ctx) error {
 	searchedDB := API.Search(c, 0)(initializers.DB)
 
 	var users []models.User
-	if err := searchedDB.Where("id NOT IN (?)", userIDs).Limit(10).Find(&users).Error; err != nil {
+	if err := searchedDB.Where("id NOT IN (?)", userIDs).
+		Where("active=? AND onboarding_completed=?", true, true).
+		Where("verified=?", true).
+		Where("username != email").
+		Where("organization_status=?", false).
+		Where("username != users.email").
+		Limit(10).Find(&users).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 

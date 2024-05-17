@@ -77,6 +77,7 @@ func GetUserPosts(c *fiber.Ctx) error {
 		Preload("RePost.TaggedUsers").
 		Preload("User").
 		Preload("TaggedUsers").
+		Where("is_flagged=?", false).
 		Where("user_id = ?", userID).
 		Order("created_at DESC").
 		Find(&posts).Error; err != nil {
@@ -99,9 +100,12 @@ func GetMyPosts(c *fiber.Ctx) error {
 	if err := paginatedDB.Preload("User").
 		Preload("RePost").
 		Preload("RePost.User").
-		Preload("TaggedUsers").
 		Preload("RePost.TaggedUsers").
-		Where("user_id = ?", loggedInUserID).Find(&posts).Error; err != nil {
+		Preload("User").
+		Preload("TaggedUsers").
+		Where("user_id = ?", loggedInUserID).
+		Order("created_at DESC").
+		Find(&posts).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
@@ -230,6 +234,8 @@ func AddPost(c *fiber.Ctx) error {
 		go routines.IncrementReposts(*newPost.RePostID)
 	}
 
+	go routines.CheckFlagPost(&newPost)
+
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Post Added",
@@ -335,6 +341,7 @@ func UpdatePost(c *fiber.Ctx) error {
 	}
 
 	go cache.RemovePost(postID)
+	go routines.CheckFlagPost(&post)
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",

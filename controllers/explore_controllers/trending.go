@@ -60,6 +60,7 @@ func GetTrendingPosts(c *fiber.Ctx) error {
 			return db.Select(select_fields.ShorterUser)
 		}).
 		Joins("JOIN users ON posts.user_id = users.id AND users.active = ?", true).
+		Where("is_flagged=?", false).
 		Select("*, posts.id, posts.created_at, (2 * no_likes + no_comments + 5 * no_shares) / (1 + EXTRACT(EPOCH FROM age(NOW(), posts.created_at)) / 3600 / 24 / 7) AS weighted_average"). //* 7 days
 		Order("weighted_average DESC, posts.created_at ASC")
 
