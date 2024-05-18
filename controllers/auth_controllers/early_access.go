@@ -79,14 +79,9 @@ func GetEarlyAccessToken(c *fiber.Ctx) error {
 		eaModel = earlyAccessModel
 	}
 
-	// err := helpers.SendMail(config.EARLY_ACCESS_EMAIL_SUBJECT, config.EARLY_ACCESS_EMAIL_BODY+access_token, "Interact User", reqBody.Email, "<div><strong>This is Valid for next 7 days!</strong></div><a href="+initializers.CONFIG.FRONTEND_URL+"/signup"+">Click Here to complete your signup!</a>")
-	// if err != nil {
-	// 	return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage:Err.Error() ,Err: err}
-	// }
-
-	err := helpers.SendEarlyAccessMail("Interact User", reqBody.Email, access_token)
+	err := helpers.SendMailReq(reqBody.Email, config.EARLY_ACCESS_MAIL, nil, &access_token, nil)
 	if err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+		return &fiber.Error{Code: 500, Message: config.SERVER_ERROR}
 	}
 
 	eaModel.MailSent = true

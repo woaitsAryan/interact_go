@@ -74,9 +74,10 @@ func SendVerificationCode(c *fiber.Ctx) error {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 		}
 	}
-	err = helpers.SendMail(config.VERIFICATION_EMAIL_SUBJECT, config.VERIFICATION_EMAIL_BODY+code, user.Name, user.Email, "<div><strong>This is Valid for next 10 minutes only!</strong></div>")
+
+	err = helpers.SendMailReq(user.Email, config.ACCOUNT_VERIFICATION_MAIL, &user, &code, nil)
 	if err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+		return &fiber.Error{Code: 500, Message: config.SERVER_ERROR}
 	}
 
 	return c.Status(200).JSON(fiber.Map{

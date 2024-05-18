@@ -375,7 +375,7 @@ func AddChat(c *fiber.Ctx) error {
 	}
 
 	go routines.SendChatNotification(parsedUserID, parsedChatUserID)
-	go helpers.SendChatMail(chatUser.Name, chatUser.Email, user.Name)
+	go helpers.SendMailReq(chatUser.Email, config.NEW_CHAT_REQUEST_MAIL, &chatUser, nil, &user)
 
 	return c.Status(201).JSON(fiber.Map{
 		"status":  "success",

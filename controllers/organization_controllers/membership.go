@@ -435,9 +435,10 @@ func SendLeaveOrgVerificationCode(c *fiber.Ctx) error {
 	if err := initializers.DB.Preload("User").Where("organization_id=? AND user_id=?", orgID, parsedLoggedInUserID).First(&membership).Error; err != nil {
 		return &fiber.Error{Code: 400, Message: "No Membership found."}
 	}
-	err = helpers.SendMail(config.VERIFICATION_LEAVE_ORG_SUBJECT, config.VERIFICATION_EMAIL_BODY+code, membership.User.Name, membership.User.Email, "<div><strong>This is Valid for next 10 minutes only!</strong></div>")
+
+	err = helpers.SendMailReq(membership.User.Email, config.OTP_VERIFICATION_MAIL, &membership.User, &code, nil)
 	if err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+		return &fiber.Error{Code: 500, Message: config.SERVER_ERROR}
 	}
 
 	err = cache.SetOtpToCache(membership.UserID.String()+"-"+membership.ID.String(), []byte(hash))

@@ -648,9 +648,10 @@ func SendDeleteVerificationCode(c *fiber.Ctx) error {
 		go helpers.LogServerError("Error while hashing an OTP.", err, c.Path())
 		return helpers.AppError{Code: 500, Message: config.SERVER_ERROR, Err: err}
 	}
-	err = helpers.SendMail(config.VERIFICATION_DELETE_PROJECT_SUBJECT, config.VERIFICATION_EMAIL_BODY+code, user.Name, user.Email, "<div><strong>This is Valid for next 10 minutes only!</strong></div>")
+
+	err = helpers.SendMailReq(user.Email, config.OTP_VERIFICATION_MAIL, &user, &code, nil)
 	if err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+		return &fiber.Error{Code: 500, Message: config.SERVER_ERROR}
 	}
 
 	err = cache.SetOtpToCache(user.ID.String()+"-"+project.ID.String(), []byte(hash))
