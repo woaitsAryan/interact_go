@@ -7,6 +7,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/schemas"
+	"github.com/Pratham-Mishra04/interact/utils"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -84,6 +85,11 @@ func CreatePoll(c *fiber.Ctx) error {
 	}
 	if len(reqBody.Options) < 2 || len(reqBody.Options) > 10 {
 		return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Invalid request body."}
+	}
+
+	flag, _ := utils.MLFlagReq(reqBody.Title)
+	if flag {
+		return &fiber.Error{Code: 400, Message: "Cannot use this title."}
 	}
 
 	orgID, _ := uuid.Parse(c.Params("orgID"))

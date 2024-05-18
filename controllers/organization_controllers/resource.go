@@ -124,6 +124,11 @@ func AddResourceBucket(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
 	}
 
+	flag, _ := utils.MLFlagReq(reqBody.Title)
+	if flag {
+		return &fiber.Error{Code: 400, Message: "Cannot use this title."}
+	}
+
 	resourceBucket := models.ResourceBucket{
 		OrganizationID: parsedOrgID,
 		Title:          reqBody.Title,
@@ -162,6 +167,11 @@ func AddResourceFile(c *fiber.Ctx) error {
 	parsedUserID, err := uuid.Parse(c.GetRespHeader("orgMemberID"))
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid User ID."}
+	}
+
+	flag, _ := utils.MLFlagReq(reqBody.Title)
+	if flag {
+		return &fiber.Error{Code: 400, Message: "Cannot use this title."}
 	}
 
 	var resourceBucket models.ResourceBucket
@@ -240,6 +250,11 @@ func EditResourceBucket(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
 	}
 
+	flag, _ := utils.MLFlagReq(reqBody.Title)
+	if flag {
+		return &fiber.Error{Code: 400, Message: "Cannot use this title."}
+	}
+
 	var resourceBucket models.ResourceBucket
 	if err := initializers.DB.Where("id=? AND organization_id = ?", parsedResourceBucketID, parsedOrgID).First(&resourceBucket).Error; err != nil {
 		if err != gorm.ErrRecordNotFound {
@@ -288,6 +303,11 @@ func EditResourceFile(c *fiber.Ctx) error {
 	parsedUserID, err := uuid.Parse(c.GetRespHeader("orgMemberID"))
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Member ID."}
+	}
+
+	flag, _ := utils.MLFlagReq(reqBody.Title)
+	if flag {
+		return &fiber.Error{Code: 400, Message: "Cannot use this title."}
 	}
 
 	var resourceFile models.ResourceFile

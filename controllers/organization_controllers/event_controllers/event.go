@@ -128,6 +128,11 @@ func AddEvent(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
 	}
 
+	flag, _ := utils.MLFlagReq(reqBody.Title)
+	if flag {
+		return &fiber.Error{Code: 400, Message: "Cannot use this title."}
+	}
+
 	picName, err := utils.UploadImage(c, "coverPic", helpers.EventClient, 1920, 1080)
 	if err != nil {
 		return err
