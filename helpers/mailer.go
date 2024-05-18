@@ -2,11 +2,16 @@ package helpers
 
 import (
 	"bytes"
+	"encoding/json"
 	"html/template"
+	"net/http"
+	"time"
 
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/initializers"
+	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/go-gomail/gomail"
+	"github.com/golang-jwt/jwt/v5"
 	// "github.com/sendgrid/sendgrid-go"
 	// "github.com/sendgrid/sendgrid-go/helpers/mail"
 )
@@ -104,4 +109,57 @@ func SendChatMail(recipientName string, recipientEmail string, chatUserName stri
 	if err := d.DialAndSend(m); err != nil {
 		LogDatabaseError("Error while sending Chat Mail-SendChatMail", err, "go_routine")
 	}
+}
+
+func createMailerJWT() (string, error) {
+	token_claim := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"sub": "backend",
+		"crt": time.Now().Unix(),
+		"exp": time.Now().Add(config.LOGIN_TOKEN_TTL).Unix(),
+	})
+
+	token, err := token_claim.SignedString([]byte(initializers.CONFIG.MAILER_SECRET))
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
+}
+
+func SendMailReq(email string, emailType int, user *models.User) error {
+	jsonData, err := json.Marshal(map[string]any{
+		"email": email,
+		"type":  emailType,
+		"user":  user,
+	})
+	if err != nil {
+		initializers.Logger.Errorw("Error calling Mailer", "Message", err.Error(), "Path", "SendMailReq", "Error", err.Error())
+		return err
+	}
+
+	jwt, err := createMailerJWT()
+	if err != nil {
+		initializers.Logger.Errorw("Error calling Mailer", "Message", err.Error(), "Path", "SendMailReq", "Error", err.Error())
+		return err
+	}
+
+	request, err := http.NewRequest("POST", initializers.CONFIG.MAILER_URL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		initializers.Logger.Errorw("Error calling Mailer", "Message", err.Error(), "Path", "SendMailReq", "Error", err.Error())
+		return err
+	}
+
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Authorization", "Bearer "+jwt)
+	request.Header.Set("API-TOKEN", initializers.CONFIG.MAILER_TOKEN)
+
+	client := http.DefaultClient
+	response, err := client.Do(request)
+	if err != nil {
+		initializers.Logger.Errorw("Error calling Mailer", "Message", err.Error(), "Path", "SendMailReq", "Error", err.Error())
+		return err
+	}
+	defer response.Body.Close()
+
+	return nil
 }

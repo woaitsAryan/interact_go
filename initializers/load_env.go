@@ -44,6 +44,9 @@ type Config struct {
 	LOGGER_URL           string      `mapstructure:"LOGGER_URL"`
 	LOGGER_SECRET        string      `mapstructure:"LOGGER_SECRET"`
 	LOGGER_TOKEN         string      `mapstructure:"LOGGER_TOKEN"`
+	MAILER_URL           string      `mapstructure:"MAILER_URL"`
+	MAILER_SECRET        string      `mapstructure:"MAILER_SECRET"`
+	MAILER_TOKEN         string      `mapstructure:"MAILER_TOKEN"`
 	POPULATE_DUMMIES     bool        `mapstructure:"POPULATE_DUMMIES"`
 	POPULATE_ORGS        bool        `mapstructure:"POPULATE_ORGS"`
 }
