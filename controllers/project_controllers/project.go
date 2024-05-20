@@ -366,13 +366,9 @@ func AddProject(c *fiber.Ctx) error {
 					return &fiber.Error{Code: 401, Message: config.VERIFICATION_ERROR}
 				}
 
-				flag, err := utils.MLFlagReq(reqBody.Title)
-				if err != nil {
-					go helpers.LogServerError("Error Fetching from ML API", err, "CheckFlagComment")
-				} else {
-					if flag {
-						return &fiber.Error{Code: 400, Message: "Cannot use this title."}
-					}
+				flag, _ := utils.MLFlagReq(reqBody.Title)
+				if flag {
+					return &fiber.Error{Code: 400, Message: "Cannot use this title."}
 				}
 
 				picName, err := utils.UploadImage(c, "coverPic", helpers.ProjectClient, 2560, 2560)

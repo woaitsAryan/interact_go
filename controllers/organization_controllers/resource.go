@@ -141,6 +141,8 @@ func AddResourceBucket(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
+	//TODO add org history
+
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"status":         "success",
 		"message":        "Resource Bucket added",
@@ -281,6 +283,8 @@ func EditResourceBucket(c *fiber.Ctx) error {
 	}
 
 	go cache.RemoveResourceBucket(resourceBucket.ID.String())
+
+	//TODO add org history
 
 	return c.Status(200).JSON(fiber.Map{
 		"status":         "success",
