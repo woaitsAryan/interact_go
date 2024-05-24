@@ -9,6 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/Pratham-Mishra04/interact/cache/subscribers"
 )
 
 func init() {
@@ -18,6 +19,7 @@ func init() {
 	initializers.ConnectToCache()
 	initializers.AutoMigrate()
 	helpers.InitializeBucketClients()
+	go subscribers.ImpressionsDumpSub(initializers.RedisClient, initializers.DB)
 
 	if initializers.CONFIG.POPULATE_DUMMIES {
 		populate.FillDummies()
@@ -38,7 +40,7 @@ func main() {
 
 	app.Use(helmet.New())
 	app.Use(config.CORS())
-	// app.Use(config.RATE_LIMITER())
+	app.Use(config.RATE_LIMITER())
 	// app.Use(config.API_CHECKER)
 
 	// if initializers.CONFIG.ENV == initializers.DevelopmentENV {

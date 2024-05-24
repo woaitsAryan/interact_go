@@ -43,10 +43,10 @@ func IncrementImpressions(items interface{}, getModelID func(interface{}) string
 		}
 	}
 
-	incrementImpressionsConcurrently(itemIDs, workerCount, incrementDB, modelType)
+	incrementImpressionsConcurrently(itemIDs, workerCount, incrementDB)
 }
 
-func incrementImpressionsConcurrently(ids []string, workerCount int, incrementDB IncrementFunc, modelType interface{}) {
+func incrementImpressionsConcurrently(ids []string, workerCount int, incrementDB IncrementFunc) {
 	done := make(chan uint, workerCount)
 	var wg sync.WaitGroup
 	for _, id := range ids {
@@ -131,18 +131,10 @@ func checkForNotification(item interface{}, modelType interface{}, cacheImpressi
 	}
 }
 
-func getModelTypeStr(modelType interface{}) string {
-	switch modelType.(type) {
-	case *models.Post:
-		return "post"
-	case *models.Project:
-		return "project"
-	case *models.Event:
-		return "event"
-	case *models.Opening:
-		return "opening"
-	case *models.User:
-		return "user"
-	}
-	return ""
+func getModelTypeStr(item interface{}) string {
+    t := reflect.TypeOf(item)
+    if t.Kind() == reflect.Ptr {
+        t = t.Elem()
+    }
+    return t.Name()
 }
