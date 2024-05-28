@@ -1,14 +1,17 @@
 [
     {
-        "name":"Some Org",
-        "username":"some_org",
-        "email":"someorg@gmail.com",
-        "password":"12345678"
+      "id": "987kw432-10ab-cdef-fedc-ba09876543dw",
+      "userID": "98765432-10ab-cdef-fedc-ba0987654321",  
+      "OrganizationTitle": "Acme Technologies Inc."
     },
     {
-        "name":"Some Org 2",
-        "username":"some_org2",
-        "email":"someorg2@gmail.com",
-        "password":"12345678"
+      "id": "fedc1209-8765-4321-abcd-efghijklmn12",
+      "userID": "fedcba09-8765-4321-abcd-efghijklmnop",     
+      "OrganizationTitle": "Greenpeace International"
+    },
+    {
+      "id": "123fw678-abcd-efgh-ijkl-mnopqrstuvwx24",
+      "userID": "12345678-abcd-efgh-ijkl-mnopqrstuvwxyz",          
+      "OrganizationTitle": "Médecins Sans Frontières (MSF)"
     }
-]
+  ]

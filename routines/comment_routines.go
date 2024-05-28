@@ -119,6 +119,18 @@ func IncrementEventCommentsAndSendNotification(eventID uuid.UUID, loggedInUserID
 	}
 }
 
+func IncrementCommentReplies(commentID uuid.UUID) {
+	var comment models.Comment
+	if err := initializers.DB.First(&comment, "id = ?", commentID).Error; err != nil {
+		helpers.LogDatabaseError("No Comment of this ID found-IncrementRepliedComments.", err, "go_routine")
+	} else {
+		comment.NoReplies++
+		if err := initializers.DB.Save(&comment).Error; err != nil {
+			helpers.LogDatabaseError("Error while updating Comment-IncrementRepliedComments", err, "go_routine")
+		}
+	}
+}
+
 func DecrementPostComments(postID uuid.UUID) {
 	var post models.Post
 	if err := initializers.DB.First(&post, "id=?", postID).Error; err != nil {
@@ -159,6 +171,18 @@ func DecrementEventComments(eventID uuid.UUID) {
 
 		if result.Error != nil {
 			helpers.LogDatabaseError("Error while updating Event-DecrementEventComments", err, "go_routine")
+		}
+	}
+}
+
+func DecrementCommentReplies(commentID uuid.UUID) {
+	var comment models.Comment
+	if err := initializers.DB.First(&comment, "id = ?", commentID).Error; err != nil {
+		helpers.LogDatabaseError("No Comment of this ID found-DecrementRepliedComments.", err, "go_routine")
+	} else {
+		comment.NoReplies--
+		if err := initializers.DB.Save(&comment).Error; err != nil {
+			helpers.LogDatabaseError("Error while updating Comment-DecrementRepliedComments", err, "go_routine")
 		}
 	}
 }

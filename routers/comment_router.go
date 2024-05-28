@@ -9,10 +9,11 @@ import (
 func CommentRouter(app *fiber.App) {
 	commentRoutes := app.Group("/comments", middlewares.Protect)
 
-	commentRoutes.Get("/post/:postID", controllers.GetPostComments)
-	commentRoutes.Get("/project/:projectID", controllers.GetProjectComments)
-	commentRoutes.Get("/event/:eventID", controllers.GetEventComments)
-	commentRoutes.Get("/announcement/:announcementID", controllers.GetAnnouncementComments)
+	commentRoutes.Get("/post/:postID", controllers.GetComments("post"))
+	commentRoutes.Get("/project/:projectID", controllers.GetComments("project"))
+	commentRoutes.Get("/event/:eventID", controllers.GetComments("event"))
+	commentRoutes.Get("/announcement/:announcementID", controllers.GetComments("announcement"))
+	commentRoutes.Get("/replies/:commentID", controllers.GetComments("comment"))
 
 	commentRoutes.Post("/", controllers.AddComment)
 
