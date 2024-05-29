@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"database/sql"
+
 	"github.com/Pratham-Mishra04/interact/config"
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
@@ -112,6 +114,40 @@ func AddComment(c *fiber.Ctx) error {
 		}
 		comment.ParentCommentID = &parsedCommentID
 		comment.IsRepliedComment = true
+
+		var level int
+
+		query := `
+			WITH RECURSIVE comment_levels AS (
+				SELECT id, parent_comment_id, 1 AS level
+				FROM comments
+				WHERE id = ?
+
+				UNION ALL
+
+				SELECT c.id, c.parent_comment_id, cl.level + 1
+				FROM comments c
+				INNER JOIN comment_levels cl ON c.id = cl.parent_comment_id
+			)
+			SELECT level
+			FROM comment_levels
+			ORDER BY level DESC
+			LIMIT 1;
+		`
+
+		row := initializers.DB.Raw(query, parsedCommentID).Row()
+		if err := row.Scan(&level); err != nil {
+			if err == sql.ErrNoRows {
+				return &fiber.Error{Code: 400, Message: "No Comment of this ID found."}
+			}
+			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+		}
+
+		if level >= 5 {
+			return &fiber.Error{Code: 400, Message: "Cannot reply to comments of level 5."}
+		}
+
+		comment.Level = level + 1
 	}
 
 	result := initializers.DB.Create(&comment)

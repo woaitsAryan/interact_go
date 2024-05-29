@@ -18,6 +18,7 @@ type Comment struct {
 	Announcement     Announcement `gorm:"" json:"announcement"`
 	ParentCommentID  *uuid.UUID   `gorm:"type:uuid;" json:"parentCommentID"`
 	IsRepliedComment bool         `gorm:"default:false" json:"isRepliedComment"`
+	Level            int          `gorm:"default:1" json:"level"`
 	UserID           uuid.UUID    `gorm:"type:uuid;not null" json:"userID"`
 	User             User         `gorm:"" json:"user"`
 	Content          string       `gorm:"type:text;not null" json:"content"`
