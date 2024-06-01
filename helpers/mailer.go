@@ -36,20 +36,21 @@ func SendMailReq(email string, emailType int, user *models.User, otp *string, se
 		"otp":           otp,
 		"secondaryUser": secondaryUser,
 	})
+
 	if err != nil {
-		initializers.Logger.Errorw("Error calling Mailer", "Message", err.Error(), "Path", "SendMailReq", "Error", err.Error())
+		LogServerError("Error calling Mailer", err, "SendMailReq")
 		return err
 	}
 
 	jwt, err := createMailerJWT()
 	if err != nil {
-		initializers.Logger.Errorw("Error calling Mailer", "Message", err.Error(), "Path", "SendMailReq", "Error", err.Error())
+		LogServerError("Error calling Mailer", err, "SendMailReq")
 		return err
 	}
 
 	request, err := http.NewRequest("POST", initializers.CONFIG.MAILER_URL, bytes.NewBuffer(jsonData))
 	if err != nil {
-		initializers.Logger.Errorw("Error calling Mailer", "Message", err.Error(), "Path", "SendMailReq", "Error", err.Error())
+		LogServerError("Error calling Mailer", err, "SendMailReq")
 		return err
 	}
 
@@ -60,13 +61,23 @@ func SendMailReq(email string, emailType int, user *models.User, otp *string, se
 	client := http.DefaultClient
 	response, err := client.Do(request)
 	if err != nil {
-		initializers.Logger.Errorw("Error calling Mailer", "Message", err.Error(), "Path", "SendMailReq", "Error", err.Error())
+		LogServerError("Error calling Mailer", err, "SendMailReq")
 		return err
 	}
 	defer response.Body.Close()
 
+	var responseBody struct {
+		Status  string `json:"status"`
+		Message string `json:"message"`
+	}
+
 	if response.StatusCode != 200 {
-		initializers.Logger.Errorw("Error calling Mailer", "Message", fmt.Sprint("Status Code - ", response.StatusCode), "Path", "SendMailReq", "Error", response.Body)
+		decoder := json.NewDecoder(response.Body)
+		if err := decoder.Decode(&responseBody); err == nil {
+			LogServerError("Error calling Mailer", fmt.Errorf(fmt.Sprint("Status Code: ", response.StatusCode, ", Message: ", responseBody.Message)), "SendMailReq")
+		} else {
+			LogServerError("Error calling Mailer", fmt.Errorf(fmt.Sprint("Status Code: ", response.StatusCode)), "SendMailReq")
+		}
 		return fmt.Errorf("error calling mailer")
 	}
 
