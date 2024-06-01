@@ -11,7 +11,7 @@
       "tags": ["programming", "javascript", "python"],
       "links": ["https://github.com/johndoe", "https://johndoe.com"],
       "isOnboardingComplete": true,
-      "OrganizationStatus": false
+      "isOrganization": false
     },
     {
       "id": "11cbef1a-3029-421c-b0e9-9876543210ab",
@@ -25,7 +25,7 @@
       "tags": ["design", "ui", "ux", "figma"],
       "links": ["https://www.behance.net/janesmith", "https://janesmith.design"],
       "isOnboardingComplete": true,
-      "OrganizationStatus": false
+      "isOrganization": false
     },
     {
       "id": "98fedcba-4321-01ab-cdef-fedcba098765",
@@ -39,7 +39,7 @@
       "tags": ["data", "analysis", "python", "pandas"],
       "links": ["https://www.linkedin.com/in/alexmiller", "https://alexmiller.dataportfolio.com"],
       "isOnboardingComplete": true,
-      "OrganizationStatus": false
+      "isOrganization": false
     },
     {
       "id": "7e4f1234-5678-9abc-def0-1234567890ab",
@@ -53,7 +53,7 @@
       "tags": ["marketing", "socialmedia", "content", "instagram"],
       "links": ["https://twitter.com/oliviajones", "https://oliviajones.com"],
       "isOnboardingComplete": true,
-      "OrganizationStatus": false
+      "isOrganization": false
     },
     {
       "id": "00112233-4455-6677-8899-aabbccddee00",
@@ -67,7 +67,7 @@
       "tags": ["writing", "content", "seo", "copywriting"],
       "links": ["https://medium.com/@noahbrown", "https://noahbrown.writerfolio.com"],
       "isOnboardingComplete": true,
-      "OrganizationStatus": false
+      "isOrganization": false
     },
     {
       "id": "fedcba09-8765-4321-cdef-fedcba098765",
@@ -81,7 +81,7 @@
       "tags": ["product", "management", "ux", "agile"],
       "links": ["https://www.linkedin.com/in/sophiagarcia", "https://sophiagarcia.productfolio"],
       "isOnboardingComplete": true,
-      "OrganizationStatus": false
+      "isOrganization": false
     },
     {
       "id": "b3c1a8f2-3a45-44c6-9181-bd7b1a6f8827",
@@ -95,7 +95,7 @@
       "tags": ["Go", "Python", "Docker"],
       "links": ["https://github.com/alicej", "https://linkedin.com/in/alicej"],
       "isOnboardingComplete": true,
-      "OrganizationStatus": false
+      "isOrganization": false
   },
   {
       "id": "a2d7d3e4-5a67-4bd8-9e47-bf3b2b4e9c17",
@@ -109,7 +109,7 @@
       "tags": ["JavaScript", "React", "Node.js"],
       "links": ["https://github.com/bobsmith", "https://linkedin.com/in/bobsmith"],
       "isOnboardingComplete": true,
-      "OrganizationStatus": false
+      "isOrganization": false
   },
   {
       "id": "c4e2f6a5-6b47-4d6e-8c2d-bb4b3c4e6e27",
@@ -123,7 +123,7 @@
       "tags": ["Python", "R", "Machine Learning"],
       "links": ["https://github.com/carolwhite", "https://linkedin.com/in/carolwhite"],
       "isOnboardingComplete": false,
-      "OrganizationStatus": false
+      "isOrganization": false
   },
   {
       "id": "d5f3e7b6-7c58-4e6f-9d3f-cd5c4d7e8f38",
@@ -137,7 +137,7 @@
       "tags": ["AWS", "Kubernetes", "Terraform"],
       "links": ["https://github.com/davebrown", "https://linkedin.com/in/davebrown"],
       "isOnboardingComplete": true,
-      "OrganizationStatus": false
+      "isOrganization": false
   },
   {
       "id": "e6f4f8c7-8d69-4f7f-ae4f-de6d5e8f9g49",
@@ -151,7 +151,7 @@
       "tags": ["HTML", "CSS", "JavaScript"],
       "links": ["https://github.com/eveblack", "https://linkedin.com/in/eveblack"],
       "isOnboardingComplete": true,
-      "OrganizationStatus": false
+      "isOrganization": false
   },
   {
       "id": "f7g5h9d8-9e7a-5g8g-bf6h-fg7h8i9j0k5l",
@@ -165,7 +165,7 @@
       "tags": ["Java", "Spring", "Microservices"],
       "links": ["https://github.com/frankgreen", "https://linkedin.com/in/frankgreen"],
       "isOnboardingComplete": false,
-      "OrganizationStatus": false
+      "isOrganization": false
   },
   {
       "id": "g8h6i0e9-0f8b-6h9i-cg7i-gh8i9j0k6m7n",
@@ -179,7 +179,7 @@
       "tags": ["Figma", "Sketch", "Adobe XD"],
       "links": ["https://github.com/gracehall", "https://linkedin.com/in/gracehall"],
       "isOnboardingComplete": true,
-      "OrganizationStatus": false
+      "isOrganization": false
   },
   {
       "id": "h9i7j1f0-1g9c-7i0j-dh8j-hi9j0k1l8n8o",
@@ -193,7 +193,7 @@
       "tags": ["Kotlin", "Swift", "React Native"],
       "links": ["https://github.com/hanklewis", "https://linkedin.com/in/hanklewis"],
       "isOnboardingComplete": true,
-      "OrganizationStatus": false
+      "isOrganization": false
   },
   {
       "id": "i0j8k2g1-2h0d-8j1k-ei9k-ij0k1l2m9o9p",
@@ -207,7 +207,7 @@
       "tags": ["Network Security", "Penetration Testing", "Encryption"],
       "links": ["https://github.com/ivymartinez", "https://linkedin.com/in/ivymartinez"],
       "isOnboardingComplete": false,
-      "OrganizationStatus": false
+      "isOrganization": false
   },
   {
       "id": "j1k9l3h2-3i1e-9k2l-fj0l-jk1l2m3n0p0q",
@@ -221,7 +221,7 @@
       "tags": ["TensorFlow", "PyTorch", "Scikit-Learn"],
       "links": ["https://github.com/jackierobinson", "https://linkedin.com/in/jackierobinson"],
       "isOnboardingComplete": true,
-      "OrganizationStatus": false
+      "isOrganization": false
   },
     {
       "id": "98765432-10ab-cdef-fedc-ba0987654321",
@@ -235,7 +235,7 @@
       "tags": ["software", "technology", "innovation"],
       "links": ["https://www.acmetechnologies.com", "https://twitter.com/acmetech"],
       "isOnboardingComplete": true,
-      "OrganizationStatus": true
+      "isOrganization": true
       },
       {
       "id": "fedcba09-8765-4321-abcd-efghijklmnop",
@@ -249,7 +249,7 @@
       "tags": ["environment", "sustainability", "activism"],
       "links": ["https://www.greenpeace.org", "https://twitter.com/greenpeace"],
       "isOnboardingComplete": true,
-      "OrganizationStatus": true
+      "isOrganization": true
       },
       {
       "id": "12345678-abcd-efgh-ijkl-mnopqrstuvwxyz",
@@ -263,7 +263,6 @@
       "tags": ["healthcare", "humanitarian", "aid"],
       "links": ["https://www.msf.org", "https://twitter.com/MSF"],
       "isOnboardingComplete": true,
-      "OrganizationStatus": true
+      "isOrganization": true
       }
 ]
-  
