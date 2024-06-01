@@ -17,7 +17,7 @@ func GetFromCache(key string) (string, error) {
 		if err == redis.Nil {
 			return "", fmt.Errorf("item not found in cache")
 		}
-		go helpers.LogServerError("Error Getting from cache", err, "")
+		go helpers.LogServerError("Error Getting from cache", err, "redis")
 		return "", fmt.Errorf("error getting from cache")
 	}
 	return data, nil
@@ -25,7 +25,7 @@ func GetFromCache(key string) (string, error) {
 
 func SetToCache(key string, data []byte) error {
 	if err := initializers.RedisClient.Set(ctx, key, data, initializers.CacheExpirationTime).Err(); err != nil {
-		go helpers.LogServerError("Error Setting to cache", err, "")
+		go helpers.LogServerError("Error Setting to cache", err, "redis")
 		return fmt.Errorf("error setting to cache")
 	}
 	return nil
@@ -37,7 +37,7 @@ func RemoveFromCache(key string) error {
 		if err == redis.Nil {
 			return nil
 		}
-		go helpers.LogServerError("Error Removing from cache", err, "")
+		go helpers.LogServerError("Error Removing from cache", err, "redis")
 		return fmt.Errorf("error removing from cache")
 	}
 	return nil

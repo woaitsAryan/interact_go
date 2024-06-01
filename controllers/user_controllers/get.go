@@ -7,8 +7,10 @@ import (
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/utils"
+	"github.com/Pratham-Mishra04/interact/utils/select_fields"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 func GetViews(c *fiber.Ctx) error {
@@ -155,7 +157,9 @@ func GetMyOrgMemberships(c *fiber.Ctx) error {
 	if populate == "true" {
 		if err := initializers.DB.
 			Preload("Organization").
-			Preload("Organization.User").
+			Preload("Organization.User", func(db *gorm.DB) *gorm.DB {
+				return db.Select(select_fields.User)
+			}).
 			Find(&memberships, "user_id = ?", loggedInUserID).Error; err != nil {
 			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}

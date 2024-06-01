@@ -7,7 +7,9 @@ import (
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
+	"github.com/Pratham-Mishra04/interact/utils/select_fields"
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 func GetLatestPosts(c *fiber.Ctx) error {
@@ -17,13 +19,22 @@ func GetLatestPosts(c *fiber.Ctx) error {
 	searchedDB := API.Search(c, 2)(paginatedDB)
 
 	if err := searchedDB.
-		Preload("User").
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("RePost").
-		Preload("RePost.User").
-		Preload("RePost.TaggedUsers").
-		Preload("TaggedUsers").
+		Preload("RePost.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
+		Preload("RePost.TaggedUsers", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.ShorterUser)
+		}).
+		Preload("TaggedUsers", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.ShorterUser)
+		}).
 		Joins("JOIN users ON posts.user_id = users.id AND users.active = ?", true).
 		Select("*, posts.id, posts.created_at").
+		Where("is_flagged=?", false).
 		Order("posts.created_at DESC").
 		Find(&posts).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
@@ -44,7 +55,9 @@ func GetLatestProjects(c *fiber.Ctx) error {
 	searchedDB := API.Search(c, 1)(paginatedDB)
 
 	if err := searchedDB.
-		Preload("User").
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("Memberships").
 		Order("created_at DESC").
 		Where("is_private = ?", false).

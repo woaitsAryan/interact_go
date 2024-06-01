@@ -39,6 +39,20 @@ func UpdateMe(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid Request Body."}
 	}
 
+	if reqBody.Name != nil {
+		flag, _ := utils.MLFlagReq(*reqBody.Name)
+		if flag {
+			return &fiber.Error{Code: 400, Message: "Cannot use this name."}
+		}
+	}
+
+	if reqBody.Tagline != nil {
+		flag, _ := utils.MLFlagReq(*reqBody.Tagline)
+		if flag {
+			return &fiber.Error{Code: 400, Message: "Cannot use this tagline."}
+		}
+	}
+
 	// if err := helpers.Validate[schemas.UserUpdateSchema](reqBody); err != nil {
 	// 	return &fiber.Error{Code: 400, Message: err.Error()}
 	// }
@@ -165,7 +179,7 @@ func UpdateMe(c *fiber.Ctx) error {
 		go func() {
 			user.OnboardingCompleted = true
 			if err := initializers.DB.Save(&user).Error; err != nil {
-				helpers.LogDatabaseError("Error while updating User-UpdateMe", err, "go_routine")
+				go helpers.LogDatabaseError("Error while updating User-UpdateMe", err, "go_routine")
 			}
 		}()
 	}

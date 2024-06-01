@@ -13,6 +13,7 @@ func UpdateChatLastRead(chatID uuid.UUID, messages []models.Message, loggedInUse
 		Preload("LastReadMessageByAcceptingUser").
 		First(&chat, "id=?", chatID).Error; err != nil {
 		helpers.LogDatabaseError("Error while fetching Chat-UpdateChatLastRead", err, "go_routine")
+		return
 	}
 
 	if chat.AcceptingUserID == loggedInUserID {

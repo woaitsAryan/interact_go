@@ -12,6 +12,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/schemas"
 	"github.com/Pratham-Mishra04/interact/utils"
+	"github.com/Pratham-Mishra04/interact/utils/select_fields"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -64,7 +65,11 @@ func GetResourceBucketFiles(c *fiber.Ctx) error {
 	}
 
 	var resourceBucket models.ResourceBucket
-	if err := initializers.DB.Preload("ResourceFiles").Preload("ResourceFiles.User").Where("id=? AND organization_id = ?", parsedResourceBucketID, parsedOrgID).First(&resourceBucket).Error; err != nil {
+	if err := initializers.DB.Preload("ResourceFiles").
+		Preload("ResourceFiles.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
+		Where("id=? AND organization_id = ?", parsedResourceBucketID, parsedOrgID).First(&resourceBucket).Error; err != nil {
 		if err != gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: fiber.StatusBadRequest, Message: "Resource Bucket does not exist."}
 		}
@@ -119,6 +124,11 @@ func AddResourceBucket(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
 	}
 
+	flag, _ := utils.MLFlagReq(reqBody.Title)
+	if flag {
+		return &fiber.Error{Code: 400, Message: "Cannot use this title."}
+	}
+
 	resourceBucket := models.ResourceBucket{
 		OrganizationID: parsedOrgID,
 		Title:          reqBody.Title,
@@ -130,6 +140,8 @@ func AddResourceBucket(c *fiber.Ctx) error {
 	if err := initializers.DB.Create(&resourceBucket).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
+
+	//TODO add org history
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"status":         "success",
@@ -157,6 +169,11 @@ func AddResourceFile(c *fiber.Ctx) error {
 	parsedUserID, err := uuid.Parse(c.GetRespHeader("orgMemberID"))
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid User ID."}
+	}
+
+	flag, _ := utils.MLFlagReq(reqBody.Title)
+	if flag {
+		return &fiber.Error{Code: 400, Message: "Cannot use this title."}
 	}
 
 	var resourceBucket models.ResourceBucket
@@ -235,6 +252,11 @@ func EditResourceBucket(c *fiber.Ctx) error {
 		return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
 	}
 
+	flag, _ := utils.MLFlagReq(reqBody.Title)
+	if flag {
+		return &fiber.Error{Code: 400, Message: "Cannot use this title."}
+	}
+
 	var resourceBucket models.ResourceBucket
 	if err := initializers.DB.Where("id=? AND organization_id = ?", parsedResourceBucketID, parsedOrgID).First(&resourceBucket).Error; err != nil {
 		if err != gorm.ErrRecordNotFound {
@@ -262,6 +284,8 @@ func EditResourceBucket(c *fiber.Ctx) error {
 
 	go cache.RemoveResourceBucket(resourceBucket.ID.String())
 
+	//TODO add org history
+
 	return c.Status(200).JSON(fiber.Map{
 		"status":         "success",
 		"message":        "Resource Bucket Edited",
@@ -283,6 +307,11 @@ func EditResourceFile(c *fiber.Ctx) error {
 	parsedUserID, err := uuid.Parse(c.GetRespHeader("orgMemberID"))
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Member ID."}
+	}
+
+	flag, _ := utils.MLFlagReq(reqBody.Title)
+	if flag {
+		return &fiber.Error{Code: 400, Message: "Cannot use this title."}
 	}
 
 	var resourceFile models.ResourceFile

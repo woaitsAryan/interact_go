@@ -74,9 +74,10 @@ func SendDeactivateVerificationCode(c *fiber.Ctx) error {
 	if err := initializers.DB.Where("id=?", parsedLoggedInUserID).First(&user).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
-	err = helpers.SendMail(config.VERIFICATION_DELETE_SUBJECT, config.VERIFICATION_EMAIL_BODY+code, user.Name, user.Email, "<div><strong>This is Valid for next 10 minutes only!</strong></div>")
+
+	err = helpers.SendMailReq(user.Email, config.ACCOUNT_DEACTIVATION_OTP_MAIL, &user, &code, nil)
 	if err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+		return &fiber.Error{Code: 500, Message: config.SERVER_ERROR}
 	}
 
 	err = cache.SetOtpToCache(user.ID.String(), []byte(hash))

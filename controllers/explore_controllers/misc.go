@@ -9,7 +9,9 @@ import (
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
+	"github.com/Pratham-Mishra04/interact/utils"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
+	"github.com/Pratham-Mishra04/interact/utils/select_fields"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
@@ -78,10 +80,19 @@ func AddSearchQuery(c *fiber.Ctx) error {
 	if err := c.BodyParser(&reqBody); err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Req Body"}
 	}
-	searchQuery := models.SearchQuery{
-		Query: strings.ToLower(strings.TrimSpace(reqBody.Search)),
+
+	flag, err := utils.MLFlagReq(reqBody.Search)
+	if err != nil {
+		helpers.LogServerError("Error Fetching from ML API", err, "CheckFlagPost")
+	} else {
+		if !flag {
+			searchQuery := models.SearchQuery{
+				Query: strings.ToLower(strings.TrimSpace(reqBody.Search)),
+			}
+			initializers.DB.Create(&searchQuery)
+		}
 	}
-	initializers.DB.Create(&searchQuery)
+
 	return c.Status(201).JSON(fiber.Map{
 		"status": "success",
 	})
@@ -103,7 +114,9 @@ func GetProjectOpenings(c *fiber.Ctx) error {
 
 	var openings []models.Opening
 	if err := initializers.DB.
-		Preload("Project").
+		Preload("Project", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.Project)
+		}).
 		Where("project_id = ? AND active=true", project.ID).
 		Order("created_at DESC").
 		Find(&openings).Error; err != nil {
@@ -126,10 +139,16 @@ func GetOrgEvents(c *fiber.Ctx) error {
 	var events []models.Event
 	if err := paginatedDB.
 		Preload("Organization").
-		Preload("Organization.User").
+		Preload("Organization.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("CoOwnedBy").
-		Preload("CoOwnedBy.User").
-		Preload("Coordinators").
+		Preload("CoOwnedBy.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
+		Preload("Coordinators", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Joins("LEFT JOIN co_owned_events ON co_owned_events.event_id = events.id").
 		Where("events.organization_id = ? OR co_owned_events.organization_id = ?", orgID, orgID).
 		Order("created_at DESC").
@@ -153,7 +172,9 @@ func GetMostLikedProjects(c *fiber.Ctx) error {
 	searchedDB := API.Search(c, 1)(paginatedDB)
 
 	if err := searchedDB.
-		Preload("User").
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("Memberships").
 		Order("no_likes DESC").
 		Where("is_private = ?", false).
@@ -176,7 +197,9 @@ func GetLastViewedProjects(c *fiber.Ctx) error {
 
 	paginatedDB := API.Paginator(c)(initializers.DB)
 	if err := paginatedDB.
-		Preload("User").
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("Memberships").
 		Order("timestamp DESC").
 		Preload("Project").

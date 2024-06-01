@@ -6,7 +6,9 @@ import (
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
+	"github.com/Pratham-Mishra04/interact/utils/select_fields"
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 func GetMyProjects(c *fiber.Ctx) error {
@@ -30,7 +32,9 @@ func GetMyContributingProjects(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
 	var memberships []models.Membership
-	if err := initializers.DB.Preload("Project").Preload("Project.User").Where("user_id = ?", loggedInUserID).Order("created_at DESC").Find(&memberships).Error; err != nil {
+	if err := initializers.DB.Preload("Project").Preload("Project.User", func(db *gorm.DB) *gorm.DB {
+		return db.Select(select_fields.User)
+	}).Where("user_id = ?", loggedInUserID).Order("created_at DESC").Find(&memberships).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
@@ -52,9 +56,13 @@ func GetMyApplications(c *fiber.Ctx) error {
 	var applications []models.Application
 	if err := initializers.DB.
 		Preload("Opening").
-		Preload("Project").
+		Preload("Project", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.Project)
+		}).
 		Preload("Organization").
-		Preload("Organization.User").
+		Preload("Organization.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Where("user_id=?", loggedInUserID).
 		Order("created_at DESC").
 		Find(&applications).Error; err != nil {

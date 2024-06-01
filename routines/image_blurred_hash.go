@@ -90,7 +90,7 @@ func makeBlurHashReq(file *multipart.FileHeader) (*Response, error) {
 func GetImageBlurHash(c *fiber.Ctx, fieldName string, model interface{}) {
 	files, err := processCtx(c, fieldName)
 	if err != nil {
-		helpers.LogDatabaseError("Error Getting Image Hash", err, "go_routine")
+		go helpers.LogDatabaseError("Error Getting Image Hash", err, "go_routine")
 		return
 	}
 	if files == nil {
@@ -101,7 +101,7 @@ func GetImageBlurHash(c *fiber.Ctx, fieldName string, model interface{}) {
 
 	pythonResponse, err := makeBlurHashReq(file)
 	if err != nil {
-		helpers.LogDatabaseError("Error Getting Image Hash", err, "go_routine")
+		go helpers.LogDatabaseError("Error Getting Image Hash", err, "go_routine")
 		return
 	}
 
@@ -114,20 +114,20 @@ func GetImageBlurHash(c *fiber.Ctx, fieldName string, model interface{}) {
 
 			result := initializers.DB.Save(model)
 			if result.Error != nil {
-				helpers.LogDatabaseError(fmt.Sprintf("Error while updating model - GetImageBlurHash: %v", result.Error), nil, "go_routine")
+				go helpers.LogDatabaseError(fmt.Sprintf("Error while updating model - GetImageBlurHash: %v", result.Error), nil, "go_routine")
 			}
 		} else {
-			helpers.LogDatabaseError("Invalid or unexported field", nil, "go_routine")
+			go helpers.LogDatabaseError("Invalid or unexported field", nil, "go_routine")
 		}
 	} else {
-		helpers.LogDatabaseError(fmt.Sprintf("Error Getting Image Hash - Error from Python Server %s", pythonResponse.Message), nil, "go_routine")
+		go helpers.LogDatabaseError(fmt.Sprintf("Error Getting Image Hash - Error from Python Server %s", pythonResponse.Message), nil, "go_routine")
 	}
 }
 
 func GetBlurHashesForPost(c *fiber.Ctx, fieldName string, post *models.Post) {
 	files, err := processCtx(c, fieldName)
 	if err != nil {
-		helpers.LogDatabaseError("Error Getting Image Hash", err, "go_routine")
+		go helpers.LogDatabaseError("Error Getting Image Hash", err, "go_routine")
 		return
 	}
 	if files == nil {
@@ -138,14 +138,14 @@ func GetBlurHashesForPost(c *fiber.Ctx, fieldName string, post *models.Post) {
 	for _, file := range files {
 		pythonResponse, err := makeBlurHashReq(file)
 		if err != nil {
-			helpers.LogDatabaseError("Error Getting Image Hash", err, "go_routine")
+			go helpers.LogDatabaseError("Error Getting Image Hash", err, "go_routine")
 			return
 		}
 
 		if pythonResponse.Status == "success" {
 			hashes = append(hashes, pythonResponse.DataURL)
 		} else {
-			helpers.LogDatabaseError(fmt.Sprintf("Error Getting Image Hash - Error from Python Server %s", pythonResponse.Message), nil, "go_routine")
+			go helpers.LogDatabaseError(fmt.Sprintf("Error Getting Image Hash - Error from Python Server %s", pythonResponse.Message), nil, "go_routine")
 		}
 	}
 
@@ -153,6 +153,6 @@ func GetBlurHashesForPost(c *fiber.Ctx, fieldName string, post *models.Post) {
 
 	result := initializers.DB.Save(post)
 	if result.Error != nil {
-		helpers.LogDatabaseError(fmt.Sprintf("Error while updating model - GetBlurHashesForPost: %v", result.Error), nil, "go_routine")
+		go helpers.LogDatabaseError(fmt.Sprintf("Error while updating model - GetBlurHashesForPost: %v", result.Error), nil, "go_routine")
 	}
 }

@@ -23,8 +23,10 @@ type Application struct {
 	Content             string                `gorm:"type:text;not null" json:"content"`
 	Resume              string                `gorm:"type:text" json:"resume"`
 	Links               pq.StringArray        `gorm:"type:text[]" json:"links"`
+	YOE                 int8                  `gorm:"default:0" json:"yoe"`
 	IncludeEmail        bool                  `gorm:"default:false" json:"-"`
 	IncludeResume       bool                  `gorm:"default:false" json:"-"`
+	Score               float32               `gorm:"default:-1.0" json:"score"`
 	Notifications       []Notification        `gorm:"foreignKey:ApplicationID;constraint:OnDelete:CASCADE" json:"-"`
 	History             []ProjectHistory      `gorm:"foreignKey:ApplicationID;constraint:OnDelete:CASCADE" json:"-"`
 	OrganizationHistory []OrganizationHistory `gorm:"foreignKey:ApplicationID;constraint:OnDelete:CASCADE" json:"-"`

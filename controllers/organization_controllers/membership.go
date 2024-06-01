@@ -12,6 +12,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
+	"github.com/Pratham-Mishra04/interact/utils/select_fields"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -78,11 +79,15 @@ func GetMemberships(c *fiber.Ctx) error {
 		Preload("Memberships", func(db *gorm.DB) *gorm.DB {
 			return db.Order("created_at DESC")
 		}).
-		Preload("Memberships.User").
+		Preload("Memberships.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.ExtendedUser)
+		}).
 		Preload("Invitations", func(db *gorm.DB) *gorm.DB {
 			return db.Order("created_at DESC")
 		}).
-		Preload("Invitations.User").
+		Preload("Invitations.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.ExtendedUser)
+		}).
 		First(&organization).Error; err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Organization ID"}
 	}
@@ -430,9 +435,10 @@ func SendLeaveOrgVerificationCode(c *fiber.Ctx) error {
 	if err := initializers.DB.Preload("User").Where("organization_id=? AND user_id=?", orgID, parsedLoggedInUserID).First(&membership).Error; err != nil {
 		return &fiber.Error{Code: 400, Message: "No Membership found."}
 	}
-	err = helpers.SendMail(config.VERIFICATION_LEAVE_ORG_SUBJECT, config.VERIFICATION_EMAIL_BODY+code, membership.User.Name, membership.User.Email, "<div><strong>This is Valid for next 10 minutes only!</strong></div>")
+
+	err = helpers.SendMailReq(membership.User.Email, config.OTP_VERIFICATION_MAIL, &membership.User, &code, nil)
 	if err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+		return &fiber.Error{Code: 500, Message: config.SERVER_ERROR}
 	}
 
 	err = cache.SetOtpToCache(membership.UserID.String()+"-"+membership.ID.String(), []byte(hash))

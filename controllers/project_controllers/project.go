@@ -14,6 +14,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/schemas"
 	"github.com/Pratham-Mishra04/interact/utils"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
+	"github.com/Pratham-Mishra04/interact/utils/select_fields"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/gosimple/slug"
@@ -48,7 +49,9 @@ func GetProject(c *fiber.Ctx) error {
 	}
 
 	var memberships []models.Membership
-	if err := initializers.DB.Preload("User").Find(&memberships, "project_id = ?", project.ID).Error; err != nil {
+	if err := initializers.DB.Preload("User", func(db *gorm.DB) *gorm.DB {
+		return db.Select(select_fields.ExtendedUser)
+	}).Find(&memberships, "project_id = ?", project.ID).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
@@ -135,14 +138,20 @@ func GetProjectHistory(c *fiber.Ctx) error {
 	var history []models.ProjectHistory
 
 	if err := paginatedDB.
-		Preload("Sender").
-		Preload("User").
+		Preload("Sender", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("Opening").
 		Preload("Application").
 		Preload("Invitation").
 		Preload("Task").
 		Preload("Membership").
-		Preload("Membership.User").
+		Preload("Membership.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Where("project_id=?", projectID).
 		Order("created_at DESC").
 		Find(&history).Error; err != nil {
@@ -180,15 +189,25 @@ func GetWorkSpacePopulatedProjectTasks(c *fiber.Ctx) error {
 	slug := c.Params("slug")
 
 	var project models.Project
-	if err := initializers.DB.Preload("User").Preload("Memberships").Preload("Memberships.User").First(&project, "slug = ? ", slug).Error; err != nil {
+	if err := initializers.DB.
+		Preload("User").
+		Preload("Memberships").
+		Preload("Memberships.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
+		First(&project, "slug = ? ", slug).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	var tasks []models.Task
 	if err := initializers.DB.
-		Preload("Users").
+		Preload("Users", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("SubTasks").
-		Preload("SubTasks.Users").
+		Preload("SubTasks.Users", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Find(&tasks, "project_id = ? ", project.ID).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
@@ -208,7 +227,9 @@ func GetWorkSpaceProjectChats(c *fiber.Ctx) error {
 	if err := initializers.DB.
 		Preload("User").
 		Preload("Memberships").
-		Preload("Memberships.User").
+		Preload("Memberships.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Find(&chats, "project_id = ? ", projectID).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
@@ -267,7 +288,9 @@ func GetUserContributingProjects(c *fiber.Ctx) error {
 
 	var memberships []models.Membership
 	if err := paginatedDB.
-		Preload("Project").
+		Preload("Project", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.Project)
+		}).
 		Where("user_id = ?", userID).
 		Order("created_at DESC").
 		Find(&memberships).Error; err != nil {
@@ -341,6 +364,11 @@ func AddProject(c *fiber.Ctx) error {
 				}
 				if !user.Verified {
 					return &fiber.Error{Code: 401, Message: config.VERIFICATION_ERROR}
+				}
+
+				flag, _ := utils.MLFlagReq(reqBody.Title)
+				if flag {
+					return &fiber.Error{Code: 400, Message: "Cannot use this title."}
 				}
 
 				picName, err := utils.UploadImage(c, "coverPic", helpers.ProjectClient, 2560, 2560)
@@ -625,9 +653,10 @@ func SendDeleteVerificationCode(c *fiber.Ctx) error {
 		go helpers.LogServerError("Error while hashing an OTP.", err, c.Path())
 		return helpers.AppError{Code: 500, Message: config.SERVER_ERROR, Err: err}
 	}
-	err = helpers.SendMail(config.VERIFICATION_DELETE_PROJECT_SUBJECT, config.VERIFICATION_EMAIL_BODY+code, user.Name, user.Email, "<div><strong>This is Valid for next 10 minutes only!</strong></div>")
+
+	err = helpers.SendMailReq(user.Email, config.OTP_VERIFICATION_MAIL, &user, &code, nil)
 	if err != nil {
-		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
+		return &fiber.Error{Code: 500, Message: config.SERVER_ERROR}
 	}
 
 	err = cache.SetOtpToCache(user.ID.String()+"-"+project.ID.String(), []byte(hash))

@@ -14,7 +14,6 @@ import (
 	"github.com/Pratham-Mishra04/interact/helpers"
 	"github.com/Pratham-Mishra04/interact/initializers"
 	"github.com/Pratham-Mishra04/interact/models"
-	"github.com/Pratham-Mishra04/interact/validators"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
@@ -70,9 +69,9 @@ func GoogleRedirect(c *fiber.Ctx) error {
 	parameters.Add("response_type", "code")
 	parameters.Add("state", config.GoogleOAuthState)
 
-	if initializers.CONFIG.ENV == initializers.ProductionENV {
-		parameters.Add("hd", config.VALID_DOMAINS[0])
-	}
+	// if initializers.CONFIG.ENV == initializers.ProductionENV {
+	// 	parameters.Add("hd", config.VALID_DOMAINS[0])
+	// }
 
 	URL.RawQuery = parameters.Encode()
 	url := URL.String()
@@ -128,11 +127,11 @@ func GoogleCallback(c *fiber.Ctx) error {
 			return &helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 		}
 
-		if initializers.CONFIG.ENV == initializers.ProductionENV {
-			if err := validators.EmailValidator(userInfo.Email); err != nil {
-				return err
-			}
-		}
+		// if initializers.CONFIG.ENV == initializers.ProductionENV {
+		// 	if err := validators.EmailValidator(userInfo.Email); err != nil {
+		// 		return err
+		// 	}
+		// }
 
 		var user models.User
 		if err := initializers.DB.Session(&gorm.Session{SkipHooks: true}).Preload("OAuth").First(&user, "email = ?", userInfo.Email).Error; err != nil {

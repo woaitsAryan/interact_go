@@ -10,6 +10,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
+	"github.com/Pratham-Mishra04/interact/utils/select_fields"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -32,12 +33,21 @@ func GetFeed(c *fiber.Ctx) error {
 
 	var posts []models.Post
 	if err := paginatedDB.
-		Preload("User").
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("RePost").
-		Preload("RePost.User").
-		Preload("RePost.TaggedUsers").
-		Preload("TaggedUsers").
+		Preload("RePost.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
+		Preload("RePost.TaggedUsers", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.ShorterUser)
+		}).
+		Preload("TaggedUsers", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.ShorterUser)
+		}).
 		Joins("JOIN users ON posts.user_id = users.id AND users.active = ?", true).
+		Where("is_flagged=?", false).
 		Where("user_id = ? OR user_id IN (?)", loggedInUserID, followingIDs).
 		Order("created_at DESC").
 		Find(&posts).Error; err != nil {
@@ -97,11 +107,20 @@ func GetCombinedFeed(c *fiber.Ctx) error {
 
 	var posts []models.Post
 	if err := paginatedDB.
-		Preload("User").
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("RePost").
-		Preload("RePost.User").
-		Preload("RePost.TaggedUsers").
-		Preload("TaggedUsers").
+		Preload("RePost.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
+		Preload("RePost.TaggedUsers", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.ShorterUser)
+		}).
+		Preload("TaggedUsers", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.ShorterUser)
+		}).
+		Where("is_flagged=?", false).
 		Joins("JOIN users ON posts.user_id = users.id AND users.active = ?", true).
 		Where("user_id = ? OR user_id IN (?)", parsedUserID, followingIDs).
 		Order("created_at DESC").
@@ -135,8 +154,12 @@ func GetCombinedFeed(c *fiber.Ctx) error {
 	var announcements []models.Announcement
 	if err := paginatedDB.
 		Preload("Organization").
-		Preload("Organization.User").
-		Preload("TaggedUsers").
+		Preload("Organization.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
+		Preload("TaggedUsers", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.ShorterUser)
+		}).
 		Where("(organization_id IN (?) OR (is_open=true AND organization_id IN (?)))", memberOrgIDs, followingOrgIDs).
 		Order("created_at DESC").
 		Find(&announcements).Error; err != nil {
@@ -147,11 +170,15 @@ func GetCombinedFeed(c *fiber.Ctx) error {
 
 	db := paginatedDB.
 		Preload("Organization").
-		Preload("Organization.User").
+		Preload("Organization.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("Options", func(db *gorm.DB) *gorm.DB {
 			return db.Order("options.created_at DESC")
 		}).
-		Preload("Options.VotedBy", LimitedUsers).
+		Preload("Options.VotedBy", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User).Limit(3)
+		}).
 		Where("(organization_id IN (?) OR (is_open=true AND organization_id IN (?)))", memberOrgIDs, followingOrgIDs)
 
 	var polls []models.Poll
@@ -182,8 +209,4 @@ func GetCombinedFeed(c *fiber.Ctx) error {
 		"status": "success",
 		"feed":   combinedFeed,
 	})
-}
-
-func LimitedUsers(db *gorm.DB) *gorm.DB {
-	return db.Limit(3)
 }

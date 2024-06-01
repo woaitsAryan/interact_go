@@ -8,6 +8,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/schemas"
+	"github.com/Pratham-Mishra04/interact/utils/select_fields"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -23,9 +24,13 @@ func GetOpening(c *fiber.Ctx) error {
 
 	var opening models.Opening
 	if err := initializers.DB.
-		Preload("Project").
+		Preload("Project", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.Project)
+		}).
 		Preload("Organization").
-		Preload("Organization.User").
+		Preload("Organization.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		First(&opening, "id = ?", parsedOpeningID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &fiber.Error{Code: 400, Message: "No Opening of this ID found."}

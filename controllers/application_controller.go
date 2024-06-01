@@ -7,6 +7,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/schemas"
+	"github.com/Pratham-Mishra04/interact/utils/select_fields"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -28,7 +29,12 @@ func GetApplication(applicationType string) func(*fiber.Ctx) error {
 
 		switch applicationType {
 		case "project":
-			if err := initializers.DB.Preload("User").Preload("Project").Preload("Opening").First(&application, "id = ?", parsedApplicationID).Error; err != nil {
+			if err := initializers.DB.Preload("User").
+				Preload("Project", func(db *gorm.DB) *gorm.DB {
+					return db.Select(select_fields.Project)
+				}).
+				Preload("Opening").
+				First(&application, "id = ?", parsedApplicationID).Error; err != nil {
 				if err == gorm.ErrRecordNotFound {
 					return &fiber.Error{Code: 400, Message: "No Application of this ID found."}
 				}
@@ -67,7 +73,6 @@ func GetApplication(applicationType string) func(*fiber.Ctx) error {
 }
 
 func GetAllApplicationsOfOpening(c *fiber.Ctx) error {
-
 	openingID := c.Params("openingID")
 
 	parsedOpeningID, err := uuid.Parse(openingID)
@@ -141,6 +146,7 @@ func AddApplication(applicationType string) func(c *fiber.Ctx) error {
 			Links:         reqBody.Links,
 			IncludeEmail:  reqBody.IncludeEmail,
 			IncludeResume: reqBody.IncludeResume,
+			YOE:           reqBody.YOE,
 		}
 
 		var opening models.Opening
@@ -196,7 +202,7 @@ func AddApplication(applicationType string) func(c *fiber.Ctx) error {
 		}
 
 		go routines.IncrementOpeningApplicationsAndSendNotification(parsedOpeningID, newApplication.ID, parsedUserID)
-
+		go routines.GetApplicationScore(&newApplication)
 		// go cache.RemoveProject("-workspace--" + opening.Project.Slug)
 
 		return c.Status(201).JSON(fiber.Map{

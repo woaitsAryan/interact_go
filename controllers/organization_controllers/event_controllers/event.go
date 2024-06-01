@@ -12,6 +12,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/schemas"
 	"github.com/Pratham-Mishra04/interact/utils"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
+	"github.com/Pratham-Mishra04/interact/utils/select_fields"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -33,10 +34,16 @@ func GetEvent(c *fiber.Ctx) error {
 	var event models.Event
 	if err := initializers.DB.
 		Preload("Organization").
-		Preload("Organization.User").
-		Preload("Coordinators").
+		Preload("Organization.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.ExtendedUser)
+		}).
+		Preload("Coordinators", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.ExtendedUser)
+		}).
 		Preload("CoOwnedBy").
-		Preload("CoOwnedBy.User").
+		Preload("CoOwnedBy.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.ExtendedUser)
+		}).
 		Where("id = ?", eventID).
 		First(&event).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
@@ -57,9 +64,11 @@ func GetEventHistory(c *fiber.Ctx) error {
 
 	var history []models.EventHistory
 	if err := initializers.DB.
-		Preload("User").
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Where("event_id = ?", eventID).
-		First(&history).Error; err != nil {
+		Find(&history).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
@@ -78,10 +87,16 @@ func GetPopulatedOrgEvents(c *fiber.Ctx) error {
 	var events []models.Event
 	if err := paginatedDB.
 		Preload("Organization").
-		Preload("Organization.User").
+		Preload("Organization.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("CoOwnedBy").
-		Preload("CoOwnedBy.User").
-		Preload("Coordinators").
+		Preload("CoOwnedBy.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
+		Preload("Coordinators", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Joins("LEFT JOIN co_owned_events ON co_owned_events.event_id = events.id").
 		Where("events.organization_id = ? OR co_owned_events.organization_id = ?", orgID, orgID).
 		Order("created_at DESC").
@@ -111,6 +126,11 @@ func AddEvent(c *fiber.Ctx) error {
 	parsedOrgID, err := uuid.Parse(c.Params("orgID"))
 	if err != nil {
 		return &fiber.Error{Code: 400, Message: "Invalid Organization ID."}
+	}
+
+	flag, _ := utils.MLFlagReq(reqBody.Title)
+	if flag {
+		return &fiber.Error{Code: 400, Message: "Cannot use this title."}
 	}
 
 	picName, err := utils.UploadImage(c, "coverPic", helpers.EventClient, 1920, 1080)
@@ -150,6 +170,7 @@ func AddEvent(c *fiber.Ctx) error {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: result.Error.Error(), Err: result.Error}
 	}
 
+	//TODO Mark Event Create History
 	go routines.MarkOrganizationHistory(parsedOrgID, parsedUserID, 0, nil, nil, &event.ID, nil, nil, nil, nil, nil, nil, nil, "")
 	go routines.IncrementOrgEvent(parsedOrgID)
 	routines.GetImageBlurHash(c, "coverPic", &event)

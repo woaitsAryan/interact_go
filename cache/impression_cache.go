@@ -11,7 +11,7 @@ import (
 
 func SetImpression(key string, data int) error {
 	if err := initializers.RedisClient.Set(ctx, "impressions_"+key, data, initializers.CacheExpirationTimeLong).Err(); err != nil {
-		go helpers.LogServerError("Error Setting to impressions cache", err, "")
+		go helpers.LogServerError("Error Setting to impressions cache", err, "redis")
 		return fmt.Errorf("error setting to impression cache")
 	}
 
@@ -27,12 +27,12 @@ func IncrementImpression(key string) error {
 			}
 			return nil
 		}
-		go helpers.LogServerError("Error Getting from impression cache", err, "")
+		go helpers.LogServerError("Error Getting from impression cache", err, "redis")
 		return fmt.Errorf("error getting from impression cache")
 	}
 	impressionCount, err := strconv.Atoi(data)
 	if err != nil {
-		go helpers.LogServerError("Error converting impression count to int", err, "")
+		go helpers.LogServerError("Error converting impression count to int", err, "redis")
 		return fmt.Errorf("error converting impression count to int")
 	}
 	if err := SetImpression(key, impressionCount+1); err != nil {
@@ -48,12 +48,12 @@ func GetImpression(key string) (int, error) {
 		if err == redis.Nil {
 			return 0, nil
 		}
-		go helpers.LogServerError("Error Getting from cache", err, "")
+		go helpers.LogServerError("Error Getting from cache", err, "redis")
 		return -1, fmt.Errorf("error getting from cache")
 	}
 	dataToInt, err := strconv.Atoi(data)
 	if err != nil {
-		helpers.LogServerError("Error converting impression count to int", err, "")
+		helpers.LogServerError("Error converting impression count to int", err, "redis")
 		return -1, fmt.Errorf("error converting impression count to int")
 	}
 	return dataToInt, nil

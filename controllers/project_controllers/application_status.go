@@ -53,7 +53,7 @@ func AcceptApplication(c *fiber.Ctx) error {
 	result = initializers.DB.Create(&membership)
 
 	if result.Error != nil {
-		helpers.LogDatabaseError("Error while creating Membership-CreateMembershipAndSendNotification", result.Error, "go_routine")
+		go helpers.LogDatabaseError("Error while creating Membership-CreateMembershipAndSendNotification", result.Error, "go_routine")
 	}
 
 	go routines.ProjectMembershipSendNotification(&application)

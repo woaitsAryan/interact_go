@@ -7,8 +7,10 @@ import (
 	"github.com/Pratham-Mishra04/interact/models"
 	"github.com/Pratham-Mishra04/interact/routines"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
+	"github.com/Pratham-Mishra04/interact/utils/select_fields"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 func GetTrendingSearches(c *fiber.Ctx) error {
@@ -45,33 +47,29 @@ func GetTrendingPosts(c *fiber.Ctx) error {
 
 	searchedDB := API.Search(c, 2)(paginatedDB)
 
-	if loggedInUserID == "" {
-		if err := searchedDB.
-			Preload("User").
-			Preload("RePost").
-			Preload("RePost.User").
-			Preload("RePost.TaggedUsers").
-			Preload("TaggedUsers").
-			Joins("JOIN users ON posts.user_id = users.id AND users.active = ?", true).
-			Select("*, posts.id, posts.created_at, (2 * no_likes + no_comments + 5 * no_shares) / (1 + EXTRACT(EPOCH FROM age(NOW(), posts.created_at)) / 3600 / 24 / 7) AS weighted_average"). //* 7 days
-			Order("weighted_average DESC, posts.created_at ASC").
-			Find(&posts).Error; err != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
-		}
-	} else {
-		if err := searchedDB.
-			Preload("User").
-			Preload("RePost").
-			Preload("RePost.User").
-			Preload("RePost.TaggedUsers").
-			Preload("TaggedUsers").
-			Where("user_id <> ?", loggedInUserID).
-			Joins("JOIN users ON posts.user_id = users.id AND users.active = ?", true).
-			Select("*, posts.id, posts.created_at, (2 * no_likes + no_comments + 5 * no_shares) / (1 + EXTRACT(EPOCH FROM age(NOW(), posts.created_at)) / 3600 / 24 / 7) AS weighted_average"). //* 7 days
-			Order("weighted_average DESC, posts.created_at ASC").
-			Find(&posts).Error; err != nil {
-			return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
-		}
+	query := searchedDB.Preload("User", func(db *gorm.DB) *gorm.DB {
+		return db.Select(select_fields.User)
+	}).Preload("RePost").
+		Preload("RePost.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
+		Preload("RePost.TaggedUsers", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.ShorterUser)
+		}).
+		Preload("TaggedUsers", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.ShorterUser)
+		}).
+		Joins("JOIN users ON posts.user_id = users.id AND users.active = ?", true).
+		Where("is_flagged=?", false).
+		Select("*, posts.id, posts.created_at, (2 * no_likes + no_comments + 5 * no_shares) / (1 + EXTRACT(EPOCH FROM age(NOW(), posts.created_at)) / 3600 / 24 / 7) AS weighted_average"). //* 7 days
+		Order("weighted_average DESC, posts.created_at ASC")
+
+	if loggedInUserID != "" {
+		query = query.Where("user_id <> ?", loggedInUserID)
+	}
+
+	if err := query.Find(&posts).Error; err != nil {
+		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
 
 	go routines.IncrementPostImpression(posts)
@@ -95,9 +93,13 @@ func GetTrendingOpenings(c *fiber.Ctx) error {
 		filteredDB := API.Filter(c, 4)(paginatedDB)
 
 		if err := filteredDB.
-			Preload("Project").
+			Preload("Project", func(db *gorm.DB) *gorm.DB {
+				return db.Select(select_fields.Project)
+			}).
 			Preload("Organization").
-			Preload("Organization.User").
+			Preload("Organization.User", func(db *gorm.DB) *gorm.DB {
+				return db.Select(select_fields.User)
+			}).
 			Where("active=true").
 			Select("openings.*, (no_of_applications * 0.3) / (1 + EXTRACT(EPOCH FROM age(NOW(), openings.created_at)) / 3600 / 24 / 15) AS t_ratio").
 			Order("t_ratio DESC").
@@ -110,9 +112,13 @@ func GetTrendingOpenings(c *fiber.Ctx) error {
 		filteredDB := API.Filter(c, 4)(searchedDB)
 
 		if err := filteredDB.
-			Preload("Project").
+			Preload("Project", func(db *gorm.DB) *gorm.DB {
+				return db.Select(select_fields.Project)
+			}).
 			Preload("Organization").
-			Preload("Organization.User").
+			Preload("Organization.User", func(db *gorm.DB) *gorm.DB {
+				return db.Select(select_fields.User)
+			}).
 			Where("active=true").
 			Select("openings.*, (no_of_applications * 0.3) / (1 + EXTRACT(EPOCH FROM age(NOW(), openings.created_at)) / 3600 / 24 / 15) AS t_ratio").
 			Order("t_ratio DESC").
@@ -214,9 +220,9 @@ func GetTrendingEvents(c *fiber.Ctx) error {
 
 	if err := filteredDB.
 		Preload("Organization").
-		Preload("Organization.User").
-		Preload("CoOwnedBy").
-		Preload("CoOwnedBy.User").
+		Preload("Organization.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Select("*, events.id, (no_views + 3 * no_likes + 2 * no_comments + 5 * no_shares) AS weighted_average").
 		Order("weighted_average DESC").
 		Find(&events).Error; err != nil {

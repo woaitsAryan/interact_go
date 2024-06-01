@@ -14,6 +14,7 @@ import (
 	"github.com/Pratham-Mishra04/interact/schemas"
 	"github.com/Pratham-Mishra04/interact/utils"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
+	"github.com/Pratham-Mishra04/interact/utils/select_fields"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -44,7 +45,9 @@ func GetOrganizationTasks(c *fiber.Ctx) error {
 	var organization models.Organization
 	if err := initializers.DB.
 		Preload("Memberships").
-		Preload("Memberships.User").
+		Preload("Memberships.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Find(&organization, "id = ? ", orgID).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
@@ -53,7 +56,9 @@ func GetOrganizationTasks(c *fiber.Ctx) error {
 	if err := initializers.DB.
 		Preload("Users").
 		Preload("SubTasks").
-		Preload("SubTasks.Users").
+		Preload("SubTasks.Users", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Find(&tasks, "organization_id = ? ", orgID).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
@@ -72,7 +77,9 @@ func GetOrganizationChats(c *fiber.Ctx) error {
 	var organization models.Organization
 	if err := initializers.DB.
 		Preload("Memberships").
-		Preload("Memberships.User").
+		Preload("Memberships.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Find(&organization, "id = ? ", orgID).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
 	}
@@ -81,7 +88,9 @@ func GetOrganizationChats(c *fiber.Ctx) error {
 	if err := initializers.DB.
 		Preload("User").
 		Preload("Memberships").
-		Preload("Memberships.User").
+		Preload("Memberships.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Order("created_at DESC").
 		Find(&chats, "organization_id = ? ", orgID).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
@@ -102,19 +111,29 @@ func GetOrganizationHistory(c *fiber.Ctx) error {
 	var history []models.OrganizationHistory
 
 	if err := paginatedDB.
-		Preload("User").
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("Post").
 		Preload("Event").
-		Preload("Project").
+		Preload("Project", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.Project)
+		}).
 		Preload("Task").
 		Preload("Poll").
 		Preload("Announcement").
 		Preload("Invitation").
-		Preload("Invitation.User").
+		Preload("Invitation.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("Application").
-		Preload("Application.User").
+		Preload("Application.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("Membership").
-		Preload("Membership.User").
+		Preload("Membership.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Where("organization_id=?", orgID).
 		Order("created_at DESC").
 		Find(&history).Error; err != nil {

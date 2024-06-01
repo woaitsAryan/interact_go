@@ -21,11 +21,12 @@ func init() {
 	helpers.InitializeBucketClients()
 	go subscribers.ImpressionsDumpSub(initializers.RedisClient, initializers.DB)
 
+	if initializers.CONFIG.POPULATE_ORGS {
+		populate.PopulateUsersAndOrgs()
+	}
+
 	if initializers.CONFIG.POPULATE_DUMMIES {
 		populate.FillDummies()
-	}
-	if initializers.CONFIG.POPULATE_ORGS {
-		populate.PopulateOrgs()
 	}
 
 	config.InitializeOAuthGoogle()

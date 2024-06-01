@@ -8,16 +8,18 @@ import (
 	"github.com/Pratham-Mishra04/interact/routines"
 	"github.com/Pratham-Mishra04/interact/utils"
 	API "github.com/Pratham-Mishra04/interact/utils/APIFeatures"
+	"github.com/Pratham-Mishra04/interact/utils/select_fields"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 func GetRecommendedPosts(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
-	recommendations, err := utils.MLReq(loggedInUserID, config.POST_RECOMMENDATION)
+	recommendations, err := utils.MLRecommendationsReq(loggedInUserID, config.POST_RECOMMENDATION)
 	if err != nil {
-		helpers.LogServerError("Error Fetching from ML API", err, c.Path())
+		go helpers.LogServerError("Error Fetching from ML API", err, c.Path())
 		return c.Status(200).JSON(fiber.Map{
 			"status": "success",
 			"posts":  nil,
@@ -27,11 +29,20 @@ func GetRecommendedPosts(c *fiber.Ctx) error {
 	var posts []models.Post
 
 	if err := initializers.DB.
-		Preload("User").
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("RePost").
-		Preload("RePost.User").
-		Preload("RePost.TaggedUsers").
-		Preload("TaggedUsers").
+		Preload("RePost.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
+		Preload("RePost.TaggedUsers", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.ShorterUser)
+		}).
+		Preload("TaggedUsers", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.ShorterUser)
+		}).
+		Where("is_flagged=?", false).
 		Where("id IN ?", recommendations).
 		Find(&posts).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
@@ -49,9 +60,9 @@ func GetRecommendedOpenings(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 	parsedLoggedInUserID, _ := uuid.Parse(loggedInUserID)
 
-	recommendations, err := utils.MLReq(loggedInUserID, config.OPENING_RECOMMENDATION)
+	recommendations, err := utils.MLRecommendationsReq(loggedInUserID, config.OPENING_RECOMMENDATION)
 	if err != nil {
-		helpers.LogServerError("Error Fetching from ML API", err, c.Path())
+		go helpers.LogServerError("Error Fetching from ML API", err, c.Path())
 		return c.Status(200).JSON(fiber.Map{
 			"status":   "success",
 			"openings": nil,
@@ -61,7 +72,9 @@ func GetRecommendedOpenings(c *fiber.Ctx) error {
 	var openings []models.Opening
 
 	if err := initializers.DB.
-		Preload("User").
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Where("id IN ?", recommendations).
 		Find(&openings).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}
@@ -85,9 +98,9 @@ func GetRecommendedOpenings(c *fiber.Ctx) error {
 func GetRecommendedProjects(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
-	recommendations, err := utils.MLReq(loggedInUserID, config.PROJECT_RECOMMENDATION)
+	recommendations, err := utils.MLRecommendationsReq(loggedInUserID, config.PROJECT_RECOMMENDATION)
 	if err != nil {
-		helpers.LogServerError("Error Fetching from ML API", err, c.Path())
+		go helpers.LogServerError("Error Fetching from ML API", err, c.Path())
 		return c.Status(200).JSON(fiber.Map{
 			"status":   "success",
 			"projects": nil,
@@ -97,7 +110,9 @@ func GetRecommendedProjects(c *fiber.Ctx) error {
 	var projects []models.Project
 
 	if err := initializers.DB.
-		Preload("User").
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("Memberships").
 		Where("id IN ?", recommendations).
 		Find(&projects).Error; err != nil {
@@ -145,9 +160,9 @@ func GetRecommendedUsers(c *fiber.Ctx) error {
 func GetRecommendedEvents(c *fiber.Ctx) error {
 	loggedInUserID := c.GetRespHeader("loggedInUserID")
 
-	recommendations, err := utils.MLReq(loggedInUserID, config.EVENT_RECOMMENDATION)
+	recommendations, err := utils.MLRecommendationsReq(loggedInUserID, config.EVENT_RECOMMENDATION)
 	if err != nil {
-		helpers.LogServerError("Error Fetching from ML API", err, c.Path())
+		go helpers.LogServerError("Error Fetching from ML API", err, c.Path())
 		return c.Status(200).JSON(fiber.Map{
 			"status": "success",
 			"events": nil,
@@ -158,9 +173,13 @@ func GetRecommendedEvents(c *fiber.Ctx) error {
 
 	if err := initializers.DB.
 		Preload("Organization").
-		Preload("Organization.User").
+		Preload("Organization.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Preload("CoOwnedBy").
-		Preload("CoOwnedBy.User").
+		Preload("CoOwnedBy.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select(select_fields.User)
+		}).
 		Where("id IN ?", recommendations).
 		Find(&events).Error; err != nil {
 		return helpers.AppError{Code: 500, Message: config.DATABASE_ERROR, LogMessage: err.Error(), Err: err}

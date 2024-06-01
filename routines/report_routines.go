@@ -11,6 +11,8 @@ import (
 )
 
 func LogReport(report *models.Report) {
+	//TODO add info logger here to logger microservice
+
 	logFilePath := "log/report.log"
 	absLogFilePath, err := filepath.Abs(logFilePath)
 	if err != nil {
@@ -33,6 +35,8 @@ func LogReport(report *models.Report) {
 }
 
 func LogFeedback(feedback *models.Feedback) {
+	//TODO add info logger here to logger microservice
+
 	logFilePath := "log/feedback.log"
 	absLogFilePath, err := filepath.Abs(logFilePath)
 	if err != nil {
